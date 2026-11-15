@@ -90,6 +90,15 @@ public struct PhotoLibrarySource: AssetSource {
         return current
     }
 
+    func removableAsset(for asset: PhotoAsset) throws -> PHAsset {
+        let current = try currentAsset(for: asset)
+        guard describe(current).photoProperties?.hasAssociatedResources != true else {
+            throw CleanupError.protectedResources
+        }
+        guard current.canPerform(.delete) else { throw AssetAccessError.inaccessible }
+        return current
+    }
+
     private func checkAuthorization() throws {
         switch Self.authorizationStatus() {
         case .authorized, .limited:

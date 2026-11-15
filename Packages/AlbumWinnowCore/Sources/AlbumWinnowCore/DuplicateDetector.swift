@@ -14,9 +14,13 @@ public struct DuplicateDetector: Sendable {
     public init() {}
 
     public func compare(_ first: Data, _ second: Data) throws -> DuplicateMatch {
-        let left = try PreparedImage(data: first)
-        if first == second { return .exactDuplicate }
-        let right = try PreparedImage(data: second)
+        try compare(AssetImage(data: first), AssetImage(data: second))
+    }
+
+    public func compare(_ first: AssetImage, _ second: AssetImage) throws -> DuplicateMatch {
+        let left = try PreparedImage(data: first.data, orientation: first.orientation)
+        if first.data == second.data, first.orientation == second.orientation { return .exactDuplicate }
+        let right = try PreparedImage(data: second.data, orientation: second.orientation)
         return Self.compare(left, right)
     }
 

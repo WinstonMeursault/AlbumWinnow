@@ -6,7 +6,13 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It is design
 
 ## Project status
 
-AlbumWinnow is in the planning stage for v1.0. The repository currently contains project documentation and a license. Application development will start on macOS, followed by iOS and iPadOS. Minimum OS versions will be set when the project is initialized.
+AlbumWinnow is in development for v1.0. The macOS app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup. Development builds target macOS 14 or later. iOS and iPadOS support is in progress.
+
+## Build on macOS
+
+Open `AlbumWinnow.xcodeproj` in Xcode, select the **AlbumWinnow** scheme and **My Mac**, then build and run. In the sidebar, enable Photos or add a folder, then select **Scan**.
+
+The shared Swift package can also be built independently with `swift build --package-path Packages/AlbumWinnowCore`.
 
 ## v1.0 scope
 

@@ -1,0 +1,364 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		995C20DEF25F0E206436F678 /* GroupReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */; };
+		BD334C02554178A420275AC9 /* FolderScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277E3A7EDDA92B1545F436A8 /* FolderScope.swift */; };
+		C5273DA374B8EA1763C7A485 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1989BC72973BF9A3C13774EA /* LibraryView.swift */; };
+		CE291D1F225705633A065040 /* AlbumWinnowCore in Frameworks */ = {isa = PBXBuildFile; productRef = 99B03D7314E9092598247090 /* AlbumWinnowCore */; };
+		D9E2D703945CD72AAA8735AB /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */; };
+		F18A76D3AFFDF7CF36EC83C4 /* AlbumWinnowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1989BC72973BF9A3C13774EA /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlbumWinnow.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		277E3A7EDDA92B1545F436A8 /* FolderScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScope.swift; sourceTree = "<group>"; };
+		2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupReviewView.swift; sourceTree = "<group>"; };
+		AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumWinnowApp.swift; sourceTree = "<group>"; };
+		B487BAB2E5EE0544B5A14BE4 /* AlbumWinnowCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlbumWinnowCore; path = Packages/AlbumWinnowCore; sourceTree = SOURCE_ROOT; };
+		BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
+		F5A11BDE61564068D15F4050 /* AlbumWinnow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AlbumWinnow.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1FCFC39933DED34EA2BDB39F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CE291D1F225705633A065040 /* AlbumWinnowCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6FCB781CC3030AF3914F4522 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				F5A11BDE61564068D15F4050 /* AlbumWinnow.entitlements */,
+			);
+			name = macOS;
+			path = Apps/macOS;
+			sourceTree = "<group>";
+		};
+		8F9C1FBD4C9C24D3D73D900E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A591879E4EFACBF21E184D23 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				B487BAB2E5EE0544B5A14BE4 /* AlbumWinnowCore */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		CC97ED076CD3EC0100A367C0 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */,
+				277E3A7EDDA92B1545F436A8 /* FolderScope.swift */,
+				2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */,
+				1989BC72973BF9A3C13774EA /* LibraryView.swift */,
+				BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */,
+			);
+			name = Shared;
+			path = Apps/Shared;
+			sourceTree = "<group>";
+		};
+		D663F01A0986CFD3CB94D518 = {
+			isa = PBXGroup;
+			children = (
+				6FCB781CC3030AF3914F4522 /* macOS */,
+				A591879E4EFACBF21E184D23 /* Packages */,
+				CC97ED076CD3EC0100A367C0 /* Shared */,
+				8F9C1FBD4C9C24D3D73D900E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A0536DB132F143C5C8D54E7B /* AlbumWinnow */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B458F02C5E245355A23C3730 /* Build configuration list for PBXNativeTarget "AlbumWinnow" */;
+			buildPhases = (
+				ED8FE53FAAECE7EB89CA3470 /* Sources */,
+				1FCFC39933DED34EA2BDB39F /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AlbumWinnow;
+			packageProductDependencies = (
+				99B03D7314E9092598247090 /* AlbumWinnowCore */,
+			);
+			productName = AlbumWinnow;
+			productReference = 1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		160F9B0B87CD4DB686CC882B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					A0536DB132F143C5C8D54E7B = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 0D471A855DB9686AE381EF26 /* Build configuration list for PBXProject "AlbumWinnow" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D663F01A0986CFD3CB94D518;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CC59F96DE9A01B70A0F8E426 /* XCLocalSwiftPackageReference "Packages/AlbumWinnowCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 8F9C1FBD4C9C24D3D73D900E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A0536DB132F143C5C8D54E7B /* AlbumWinnow */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		ED8FE53FAAECE7EB89CA3470 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F18A76D3AFFDF7CF36EC83C4 /* AlbumWinnowApp.swift in Sources */,
+				BD334C02554178A420275AC9 /* FolderScope.swift in Sources */,
+				995C20DEF25F0E206436F678 /* GroupReviewView.swift in Sources */,
+				C5273DA374B8EA1763C7A485 /* LibraryView.swift in Sources */,
+				D9E2D703945CD72AAA8735AB /* ReviewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5F9FC2EE6BB928396661C0B3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Apps/macOS/AlbumWinnow.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		99B8136D7ABD195BD370ECEE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Apps/macOS/AlbumWinnow.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		9FD462E60EEF0DF9BD2C634C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.4.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.winstonmeursault.albumwinnow;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		D06504A11A391D95988FC568 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.4.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.winstonmeursault.albumwinnow;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0D471A855DB9686AE381EF26 /* Build configuration list for PBXProject "AlbumWinnow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D06504A11A391D95988FC568 /* Debug */,
+				9FD462E60EEF0DF9BD2C634C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B458F02C5E245355A23C3730 /* Build configuration list for PBXNativeTarget "AlbumWinnow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5F9FC2EE6BB928396661C0B3 /* Debug */,
+				99B8136D7ABD195BD370ECEE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		CC59F96DE9A01B70A0F8E426 /* XCLocalSwiftPackageReference "Packages/AlbumWinnowCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AlbumWinnowCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		99B03D7314E9092598247090 /* AlbumWinnowCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AlbumWinnowCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 160F9B0B87CD4DB686CC882B /* Project object */;
+}

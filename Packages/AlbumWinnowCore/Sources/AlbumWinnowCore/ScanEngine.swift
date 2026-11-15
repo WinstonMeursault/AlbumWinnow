@@ -36,6 +36,7 @@ public actor ScanEngine {
         defer { scanning = false }
 
         var allIDs = Set<AssetID>()
+        var indexedPaths = Set<String>()
         var issues = [AssetIssue]()
         var indexed = [IndexedAsset]()
         var pending: [(source: any AssetSource, asset: PhotoAsset)] = []
@@ -49,6 +50,7 @@ public actor ScanEngine {
                 guard asset.id.source == source.id, allIDs.insert(asset.id).inserted else {
                     throw ScanError.invalidSourceSnapshot
                 }
+                if source is FileSystemSource, !indexedPaths.insert(asset.id.item).inserted { continue }
                 if let entry = previouslyIndexed[asset.id.item], asset.revision == entry.revision {
                     indexed.append(IndexedAsset(asset: asset, fingerprint: entry.signature))
                 } else {
@@ -59,7 +61,8 @@ public actor ScanEngine {
 
         let reused = indexed.count
         var completed = reused
-        progress(.fingerprinting(completed: completed, total: allIDs.count))
+        let total = reused + pending.count
+        progress(.fingerprinting(completed: completed, total: total))
         let batchSize = 16
         for start in stride(from: 0, to: pending.count, by: batchSize) {
             try Task.checkCancellation()
@@ -80,7 +83,7 @@ public actor ScanEngine {
                 }
             }
             try cache.store(prepared)
-            progress(.fingerprinting(completed: completed, total: allIDs.count))
+            progress(.fingerprinting(completed: completed, total: total))
         }
 
         try Task.checkCancellation()
@@ -137,9 +140,16 @@ public actor ScanEngine {
 
     private func findGroups(_ assets: [IndexedAsset], progress: (ScanProgress) -> Void) throws -> [DuplicateGroup] {
         let ordered = assets.sorted { lhs, rhs in
+            let leftProtected = lhs.asset.photoProperties?.hasAssociatedResources == true
+            let rightProtected = rhs.asset.photoProperties?.hasAssociatedResources == true
+            if leftProtected != rightProtected { return leftProtected }
             let leftArea = lhs.fingerprint.width * lhs.fingerprint.height
             let rightArea = rhs.fingerprint.width * rhs.fingerprint.height
-            return leftArea == rightArea ? Self.precedes(lhs.asset.id, rhs.asset.id) : leftArea > rightArea
+            if leftArea != rightArea { return leftArea > rightArea }
+            if lhs.fingerprint.edgeDetail != rhs.fingerprint.edgeDetail {
+                return lhs.fingerprint.edgeDetail > rhs.fingerprint.edgeDetail
+            }
+            return Self.precedes(lhs.asset.id, rhs.asset.id)
         }
         let index = CandidateIndex(ordered.map(\.fingerprint))
         var assigned = Set<Int>()

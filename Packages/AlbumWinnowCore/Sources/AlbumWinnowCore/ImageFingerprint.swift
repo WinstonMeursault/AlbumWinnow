@@ -18,6 +18,7 @@ struct ImageFingerprint: Codable, Sendable {
     let perceptualHash: UInt64
     let differenceHash: UInt64
     let meanRGBA: [UInt8]
+    let edgeDetail: Double
 
     var aspectRatio: Double { Double(width) / Double(height) }
 }
@@ -60,7 +61,8 @@ struct PreparedImage: Sendable {
             height: image.height,
             perceptualHash: Self.pHash(luminance),
             differenceHash: Self.dHash(Self.luminanceGrid(sample, columns: 9, rows: 8)),
-            meanRGBA: Self.meanRGBA(sample)
+            meanRGBA: Self.meanRGBA(sample),
+            edgeDetail: Self.edgeDetail(luminance)
         )
         comparisonPixels = sample
     }
@@ -110,6 +112,20 @@ struct PreparedImage: Sendable {
         for index in sample.indices { totals[index % 4] += Int(sample[index]) }
         let count = sample.count / 4
         return totals.map { UInt8(($0 + count / 2) / count) }
+    }
+
+    // Estimate sharpness on the same thumbnail grid for all encodings.
+    private static func edgeDetail(_ luminance: [Double]) -> Double {
+        var total = 0.0
+        for row in 1..<31 {
+            for column in 1..<31 {
+                let index = row * 32 + column
+                let horizontal = luminance[index + 1] - luminance[index - 1]
+                let vertical = luminance[index + 32] - luminance[index - 32]
+                total += horizontal * horizontal + vertical * vertical
+            }
+        }
+        return total / 900
     }
 
     private static func render(_ image: CGImage, width: Int, height: Int) throws -> [UInt8] {

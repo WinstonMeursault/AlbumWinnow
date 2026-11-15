@@ -6,7 +6,13 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。项�
 
 ## 项目状态
 
-AlbumWinnow 处于 v1.0 规划阶段。仓库目前包含项目说明和许可证。应用开发从 macOS 开始，随后适配 iOS 和 iPadOS。各平台最低系统版本将在工程初始化时确定。
+AlbumWinnow 正在开发 v1.0。macOS 应用可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。开发版面向 macOS 14 及以上版本，iOS 和 iPadOS 正在适配。
+
+## 在 macOS 上构建
+
+在 Xcode 中打开 `AlbumWinnow.xcodeproj`，选择 **AlbumWinnow** scheme 和 **My Mac** 后构建运行。在侧栏启用 Photos 或添加文件夹，再点击 **Scan**。
+
+也可以用 `swift build --package-path Packages/AlbumWinnowCore` 独立构建共享 Swift 包。
 
 ## v1.0 范围
 

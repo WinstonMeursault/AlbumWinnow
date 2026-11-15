@@ -78,7 +78,13 @@ public struct FileSystemSource: AssetSource {
         AssetID(source: id, item: url.standardizedFileURL.path)
     }
 
-    private static func revision(of url: URL) throws -> String {
+    static func referToSameFile(_ first: URL, _ second: URL) throws -> Bool {
+        let a = try metadata(of: first)
+        let b = try metadata(of: second)
+        return a.st_dev == b.st_dev && a.st_ino == b.st_ino
+    }
+
+    private static func metadata(of url: URL) throws -> stat {
         var metadata = stat()
         let result = url.withUnsafeFileSystemRepresentation { path in
             path.map { lstat($0, &metadata) } ?? -1
@@ -86,6 +92,11 @@ public struct FileSystemSource: AssetSource {
         guard result == 0, metadata.st_mode & S_IFMT == S_IFREG else {
             throw AssetAccessError.inaccessible
         }
+        return metadata
+    }
+
+    private static func revision(of url: URL) throws -> String {
+        let metadata = try metadata(of: url)
         let modified = metadata.st_mtimespec
         let changed = metadata.st_ctimespec
         return "\(metadata.st_dev):\(metadata.st_ino):\(metadata.st_size):"

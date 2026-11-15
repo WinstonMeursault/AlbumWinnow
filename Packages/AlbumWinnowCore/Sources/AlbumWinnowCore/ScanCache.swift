@@ -2,7 +2,7 @@ import Foundation
 import GRDB
 
 struct ScanCache: Sendable {
-    private static let fingerprintVersion = 2
+    private static let fingerprintVersion = 3
     private let database: DatabaseQueue
 
     init(url: URL) throws {
