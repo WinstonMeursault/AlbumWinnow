@@ -1,5 +1,6 @@
 import BLAKE3
 import CoreGraphics
+import CoreImage
 import Foundation
 import ImageIO
 
@@ -24,11 +25,12 @@ struct ImageFingerprint: Codable, Sendable {
 struct PreparedImage: Sendable {
     static let comparisonSize = 128
     static let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
+    private static let orientationContext = CIContext(options: [.cacheIntermediates: false])
 
     let fingerprint: ImageFingerprint
     let comparisonPixels: [UInt8]
 
-    init(data: Data) throws {
+    init(data: Data, orientation: CGImagePropertyOrientation? = nil) throws {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               CGImageSourceGetStatus(source) == .statusComplete,
               let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
@@ -41,15 +43,9 @@ struct PreparedImage: Sendable {
             throw ImageReadError.unsupportedDimensions
         }
 
-        // Apply EXIF orientation without reducing the image used for pixel equality.
-        let options: [CFString: Any] = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceThumbnailMaxPixelSize: max(width, height),
-        ]
-        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
-            throw ImageReadError.unreadableImage
-        }
+        let embedded = properties[kCGImagePropertyOrientation] as? UInt32 ?? CGImagePropertyOrientation.up.rawValue
+        let override = orientation.flatMap { $0.rawValue == embedded ? nil : $0 }
+        let image = try Self.orientedImage(source, longestSide: max(width, height), override: override)
         let pixelHasher = BLAKE3()
         try Self.render(image, width: image.width, height: image.height).withUnsafeBytes {
             pixelHasher.update(bytes: $0)
@@ -58,7 +54,7 @@ struct PreparedImage: Sendable {
         let luminance = Self.luminanceGrid(sample, columns: 32, rows: 32)
 
         fingerprint = ImageFingerprint(
-            fileHash: Self.hash(data),
+            fileHash: Self.hash(data, orientationOverride: override),
             pixelHash: pixelHasher.finalizeData(),
             width: image.width,
             height: image.height,
@@ -69,9 +65,43 @@ struct PreparedImage: Sendable {
         comparisonPixels = sample
     }
 
-    static func hash(_ bytes: Data) -> Data {
+    private static func orientedImage(
+        _ source: CGImageSource, longestSide: Int, override: CGImagePropertyOrientation?
+    ) throws -> CGImage {
+        if let override {
+            guard let sourceImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+                throw ImageReadError.unreadableImage
+            }
+            if override == .up { return sourceImage }
+            let rotated = CIImage(cgImage: sourceImage).oriented(override)
+            guard let rendered = orientationContext.createCGImage(rotated, from: rotated.extent) else {
+                throw ImageReadError.unreadableImage
+            }
+            return rendered
+        }
+
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: longestSide,
+        ]
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            throw ImageReadError.unreadableImage
+        }
+        return image
+    }
+
+    private static func hash(_ bytes: Data, orientationOverride: CGImagePropertyOrientation?) -> Data {
         let hasher = BLAKE3()
         hasher.update(data: bytes)
+        if let orientationOverride {
+            // Preserve a distinct identity when a photo source applies an orientation outside the file.
+            let contentHash = hasher.finalizeData()
+            let orientedHasher = BLAKE3()
+            orientedHasher.update(buffer: [UInt8(orientationOverride.rawValue)])
+            orientedHasher.update(data: contentHash)
+            return orientedHasher.finalizeData()
+        }
         return hasher.finalizeData()
     }
 

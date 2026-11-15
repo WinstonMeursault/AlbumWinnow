@@ -117,13 +117,15 @@ public actor ScanEngine {
     private static func prepare(_ asset: PhotoAsset, using source: any AssetSource) async -> Preparation {
         do {
             try Task.checkCancellation()
-            let data = try await source.imageData(for: asset)
+            let image = try await source.image(for: asset)
             try Task.checkCancellation()
-            return try .ready(asset, PreparedImage(data: data))
+            return try .ready(asset, PreparedImage(data: image.data, orientation: image.orientation))
         } catch is CancellationError {
-            return .cancelled
+            return Task.isCancelled ? .cancelled : .failed(AssetIssue(id: asset.id, reason: .inaccessible))
         } catch AssetAccessError.changedDuringScan {
             return .failed(AssetIssue(id: asset.id, reason: .changedDuringScan))
+        } catch AssetAccessError.cloudDownloadRequired {
+            return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadRequired))
         } catch ImageReadError.unreadableImage {
             return .failed(AssetIssue(id: asset.id, reason: .unreadableImage))
         } catch is ImageReadError {
