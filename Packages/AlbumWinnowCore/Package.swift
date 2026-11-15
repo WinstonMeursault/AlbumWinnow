@@ -5,11 +5,17 @@ let package = Package(
     name: "AlbumWinnowCore",
     platforms: [.macOS(.v14), .iOS(.v17)],
     products: [.library(name: "AlbumWinnowCore", targets: ["AlbumWinnowCore"])],
-    dependencies: [.package(url: "https://github.com/JoshBashed/blake3-swift.git", exact: "0.2.2")],
+    dependencies: [
+        .package(url: "https://github.com/JoshBashed/blake3-swift.git", exact: "0.2.2"),
+        .package(url: "https://github.com/groue/GRDB.swift.git", exact: "7.12.0"),
+    ],
     targets: [
         .target(
             name: "AlbumWinnowCore",
-            dependencies: [.product(name: "BLAKE3", package: "blake3-swift")]
+            dependencies: [
+                .product(name: "BLAKE3", package: "blake3-swift"),
+                .product(name: "GRDB", package: "GRDB.swift"),
+            ]
         ),
     ]
 )

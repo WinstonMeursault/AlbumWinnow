@@ -16,6 +16,7 @@ struct ImageFingerprint: Codable, Sendable {
     let height: Int
     let perceptualHash: UInt64
     let differenceHash: UInt64
+    let meanRGBA: [UInt8]
 
     var aspectRatio: Double { Double(width) / Double(height) }
 }
@@ -62,7 +63,8 @@ struct PreparedImage: Sendable {
             width: image.width,
             height: image.height,
             perceptualHash: Self.pHash(luminance),
-            differenceHash: Self.dHash(Self.luminanceGrid(sample, columns: 9, rows: 8))
+            differenceHash: Self.dHash(Self.luminanceGrid(sample, columns: 9, rows: 8)),
+            meanRGBA: Self.meanRGBA(sample)
         )
         comparisonPixels = sample
     }
@@ -71,6 +73,13 @@ struct PreparedImage: Sendable {
         let hasher = BLAKE3()
         hasher.update(data: bytes)
         return hasher.finalizeData()
+    }
+
+    private static func meanRGBA(_ sample: [UInt8]) -> [UInt8] {
+        var totals = [0, 0, 0, 0]
+        for index in sample.indices { totals[index % 4] += Int(sample[index]) }
+        let count = sample.count / 4
+        return totals.map { UInt8(($0 + count / 2) / count) }
     }
 
     private static func render(_ image: CGImage, width: Int, height: Int) throws -> [UInt8] {

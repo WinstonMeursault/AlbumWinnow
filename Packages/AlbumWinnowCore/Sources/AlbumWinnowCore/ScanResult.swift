@@ -1,0 +1,33 @@
+import Foundation
+
+public struct DuplicateMember: Codable, Equatable, Sendable, Identifiable {
+    public let asset: PhotoAsset
+    public let match: DuplicateMatch
+
+    public var id: AssetID { asset.id }
+}
+
+public struct DuplicateGroup: Codable, Equatable, Sendable, Identifiable {
+    public let preferred: PhotoAsset
+    public let duplicates: [DuplicateMember]
+
+    public var id: AssetID { preferred.id }
+}
+
+public struct ScanResult: Codable, Equatable, Sendable {
+    public let groups: [DuplicateGroup]
+    public let issues: [AssetIssue]
+    public let scanned: Int
+    public let reused: Int
+}
+
+public enum ScanProgress: Equatable, Sendable {
+    case fingerprinting(completed: Int, total: Int)
+    case comparing(completed: Int, total: Int)
+}
+
+public enum ScanError: Error, Equatable, Sendable {
+    case scanInProgress
+    case duplicateSourceID
+    case invalidSourceSnapshot
+}

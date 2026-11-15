@@ -7,6 +7,10 @@ public enum DuplicateMatch: String, Codable, Sendable {
 }
 
 public struct DuplicateDetector: Sendable {
+    static let perceptualRadius = 12
+    static let differenceRadius = 10
+    private static let maximumMeanError = 0.018
+
     public init() {}
 
     public func compare(_ first: Data, _ second: Data) throws -> DuplicateMatch {
@@ -31,11 +35,12 @@ public struct DuplicateDetector: Sendable {
 
     static func isVisualCandidate(_ a: ImageFingerprint, _ b: ImageFingerprint) -> Bool {
         abs(a.aspectRatio - b.aspectRatio) <= 0.006 * max(a.aspectRatio, b.aspectRatio)
-            && ((a.perceptualHash ^ b.perceptualHash).nonzeroBitCount <= 12
-                || (a.differenceHash ^ b.differenceHash).nonzeroBitCount <= 10)
+            && ((a.perceptualHash ^ b.perceptualHash).nonzeroBitCount <= perceptualRadius
+                || (a.differenceHash ^ b.differenceHash).nonzeroBitCount <= differenceRadius)
+            && zip(a.meanRGBA, b.meanRGBA).allSatisfy { abs(Int($0) - Int($1)) <= 5 }
     }
 
-    private static func verifyPixels(_ a: [UInt8], _ b: [UInt8]) -> Bool {
+    static func verifyPixels(_ a: [UInt8], _ b: [UInt8]) -> Bool {
         let size = PreparedImage.comparisonSize
         let blockSize = 8
         let blockPixels = Double(blockSize * blockSize)
@@ -86,7 +91,7 @@ public struct DuplicateDetector: Sendable {
         }
 
         let blocks = Double(size * size) / blockPixels
-        return totalError / blocks <= 0.018 && totalSSIM / blocks >= 0.97
+        return totalError / blocks <= maximumMeanError && totalSSIM / blocks >= 0.97
     }
 
     private static func luminance(_ pixels: [UInt8], at offset: Int) -> Double {
