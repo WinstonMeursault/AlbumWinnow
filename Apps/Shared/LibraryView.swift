@@ -112,7 +112,12 @@ struct LibraryView: View {
         }
         .safeAreaInset(edge: .bottom) {
             VStack(alignment: .leading, spacing: 10) {
-                if let progress = model.progress { progressView(progress) }
+                if let download = model.downloadProgress { downloadStatus(download) }
+                if let progress = model.progress {
+                    progressView(progress)
+                } else if model.running && model.downloadProgress == nil {
+                    ProgressView("Preparing scan…")
+                }
                 if model.cleaning { ProgressView("Moving selected photos…") }
                 #if os(iOS)
                 if model.result != nil && !model.running {
@@ -120,7 +125,9 @@ struct LibraryView: View {
                 }
                 #endif
                 HStack {
-                    if model.running {
+                    if model.running, let download = model.downloadProgress, download.remaining > 0, !download.ended {
+                        Button("Cancel Download") { model.cancelScan() }
+                    } else if model.running {
                         Button("Cancel Scan") { model.cancelScan() }
                     } else {
                         Button("Scan", systemImage: "magnifyingglass") { model.scan() }
@@ -164,7 +171,30 @@ struct LibraryView: View {
 
     private var groups: some View {
         VStack(spacing: 0) {
-            if let result = model.result {
+            if model.cleaning {
+                ContentUnavailableView("Moving Selected Photos", systemImage: "trash")
+            } else if model.running {
+                ContentUnavailableView(
+                    model.downloadProgress == nil ? "Scanning Photos" : "Updating Scan Results",
+                    systemImage: "magnifyingglass",
+                    description: Text("Duplicates will be ready to review when the scan finishes.")
+                )
+            } else if let result = model.result {
+                VStack(alignment: .leading, spacing: 5) {
+                    Label("Scan Complete", systemImage: "checkmark.circle")
+                        .font(.headline)
+                    if !result.groups.isEmpty {
+                        Text("\(result.groups.count) duplicate groups to review")
+                        Text("Photos are moved only after you confirm cleanup.")
+                    } else {
+                        Text("\(result.scanned + result.reused) photos checked")
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.vertical, 10)
                 if result.groups.isEmpty {
                     ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
                 } else {
@@ -184,8 +214,12 @@ struct LibraryView: View {
                     Button("Review \(result.issues.count) Scan Issues") { showingIssues = true }
                         .padding(10)
                 }
-            } else if model.running {
-                ContentUnavailableView("Scanning Photos", systemImage: "magnifyingglass")
+            } else if let cleanup = model.lastCleanup {
+                ContentUnavailableView(
+                    "Cleanup Finished",
+                    systemImage: "clock.arrow.circlepath",
+                    description: Text(cleanupSummary(cleanup) + " Scan again to refresh duplicates.")
+                )
             } else if model.resultsStale {
                 ContentUnavailableView("Scan Again", systemImage: "arrow.clockwise",
                                        description: Text("The selected sources or their contents changed."))
@@ -209,6 +243,33 @@ struct LibraryView: View {
         }
     }
 
+    private func downloadStatus(_ download: CloudDownloadProgress) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            if !download.ended && download.remaining > 0 {
+                let percent = Int(download.processed * 100 / Double(download.total))
+                ProgressView(value: download.processed, total: Double(download.total)) {
+                    Label("Downloading from iCloud", systemImage: "icloud.and.arrow.down")
+                } currentValueLabel: {
+                    Text("\(percent)%").monospacedDigit()
+                }
+                .accessibilityIdentifier("icloud-download-progress")
+            } else {
+                Label(download.cancelled ? "iCloud Download Cancelled" : "iCloud Download Finished",
+                      systemImage: "icloud")
+            }
+            Text("\(download.available) available · \(download.failed) failed · \(download.remaining) pending")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+        }
+        .font(.subheadline)
+    }
+
+    private func cleanupSummary(_ run: CleanupRun) -> String {
+        let moved = run.items.count { $0.status == .movedToTrash || $0.status == .movedToRecentlyDeleted }
+        return "\(moved) moved · \(run.items.count - moved) not moved."
+    }
+
     private var history: some View {
         NavigationStack {
             Group {
@@ -217,6 +278,7 @@ struct LibraryView: View {
                 } else {
                     List(model.history) { run in
                         Section(run.startedAt.formatted()) {
+                            Text(cleanupSummary(run)).font(.subheadline)
                             ForEach(run.items) { item in
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(item.pair.remove.name)
@@ -239,11 +301,18 @@ struct LibraryView: View {
     private var issues: some View {
         NavigationStack {
             List {
-                if model.hasPendingDownloads {
-                    Button("Download Pending Photos from iCloud") {
+                if model.pendingDownloadCount > 0 {
+                    Button {
                         showingIssues = false
                         compactColumn = .sidebar
                         model.downloadPendingPhotos()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label("Download Pending Photos from iCloud", systemImage: "icloud.and.arrow.down")
+                            Text("\(model.pendingDownloadCount) photos pending")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .disabled(!model.canScan)
                 }

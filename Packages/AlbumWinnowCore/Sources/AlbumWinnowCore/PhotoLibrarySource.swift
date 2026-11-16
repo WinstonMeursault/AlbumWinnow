@@ -7,11 +7,18 @@ public enum PhotoLibraryReadError: Error, Sendable {
 }
 
 public struct PhotoLibrarySource: AssetSource {
+    public enum DownloadUpdate: Sendable {
+        case transferring(AssetID, fraction: Double)
+        case finished(AssetID, available: Bool)
+    }
+
     public let id = "photos-library"
     private let downloads: Set<AssetID>
+    private let downloadUpdate: @Sendable (DownloadUpdate) -> Void
 
-    public init(downloads: Set<AssetID> = []) {
+    public init(downloads: Set<AssetID> = [], downloadUpdate: @escaping @Sendable (DownloadUpdate) -> Void = { _ in }) {
         self.downloads = downloads
+        self.downloadUpdate = downloadUpdate
     }
 
     public static func authorizationStatus() -> PHAuthorizationStatus {
@@ -40,12 +47,23 @@ public struct PhotoLibrarySource: AssetSource {
     }
 
     public func image(for asset: PhotoAsset) async throws -> AssetImage {
+        let allowDownload = permitsDownload(for: asset.id)
+        var available = false
+        defer {
+            if allowDownload && !Task.isCancelled {
+                downloadUpdate(.finished(asset.id, available: available))
+            }
+        }
         let current = try currentAsset(for: asset)
         let options = PHImageRequestOptions()
         options.version = .current
         options.deliveryMode = .highQualityFormat
-        let allowDownload = permitsDownload(for: asset.id)
         options.isNetworkAccessAllowed = allowDownload
+        if allowDownload {
+            options.progressHandler = { fraction, _, _, _ in
+                downloadUpdate(.transferring(asset.id, fraction: fraction))
+            }
+        }
 
         let request = PhotoImageRequest()
         let result = try await withTaskCancellationHandler {
@@ -62,6 +80,7 @@ public struct PhotoLibrarySource: AssetSource {
         }
         try Task.checkCancellation()
         _ = try currentAsset(for: asset)
+        available = true
         return result
     }
 

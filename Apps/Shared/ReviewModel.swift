@@ -3,6 +3,41 @@ import Foundation
 import Photos
 import SwiftUI
 
+struct CloudDownloadProgress {
+    let total: Int
+    private(set) var available = 0
+    private(set) var failed = 0
+    private(set) var ended = false
+    private(set) var cancelled = false
+    private var active: [AssetID: Double] = [:]
+    private var finished = Set<AssetID>()
+
+    init(total: Int) { self.total = total }
+
+    var remaining: Int { total - available - failed }
+    var processed: Double { Double(available + failed) + active.values.reduce(0, +) }
+
+    mutating func update(_ update: PhotoLibrarySource.DownloadUpdate) {
+        guard !ended else { return }
+        switch update {
+        case let .transferring(id, fraction):
+            guard !finished.contains(id), fraction.isFinite else { return }
+            active[id] = max(active[id, default: 0], min(0.99, fraction))
+        case let .finished(id, isAvailable):
+            guard finished.insert(id).inserted else { return }
+            active.removeValue(forKey: id)
+            if isAvailable { available += 1 } else { failed += 1 }
+        }
+    }
+
+    mutating func end(cancelled: Bool) {
+        self.cancelled = cancelled
+        ended = true
+        active.removeAll()
+        finished.removeAll()
+    }
+}
+
 @MainActor @Observable final class ReviewModel {
     private static let folderKey = "AlbumWinnow.folderBookmarks"
     private static let photosKey = "AlbumWinnow.photosEnabled"
@@ -13,6 +48,8 @@ import SwiftUI
     private(set) var authorization = PhotoLibrarySource.authorizationStatus()
     private(set) var result: ScanResult?
     private(set) var progress: ScanProgress?
+    private(set) var downloadProgress: CloudDownloadProgress?
+    private(set) var lastCleanup: CleanupRun?
     private(set) var running = false
     private(set) var cleaning = false
     private(set) var resultsStale = false
@@ -31,7 +68,7 @@ import SwiftUI
     var allowsPhotos: Bool { authorization == .authorized || authorization == .limited }
     var canScan: Bool { !running && !cleaning && !sources.isEmpty && engine != nil }
     var canClean: Bool { !running && !cleaning && !resultsStale && cleanup != nil }
-    var hasPendingDownloads: Bool { !pendingDownloads.isEmpty }
+    var pendingDownloadCount: Int { pendingDownloadIDs.count }
 
     init() {
         let data = URL.applicationSupportDirectory.appending(path: "AlbumWinnow", directoryHint: .isDirectory)
@@ -122,11 +159,12 @@ import SwiftUI
     func scan() { startScan(downloads: []) }
 
     func downloadPendingPhotos() {
-        guard !pendingDownloads.isEmpty else { return }
-        startScan(downloads: pendingDownloads)
+        let pending = pendingDownloadIDs
+        guard !pending.isEmpty, photosEnabled, allowsPhotos else { return }
+        startScan(downloads: pending)
     }
 
-    private var pendingDownloads: Set<AssetID> {
+    private var pendingDownloadIDs: Set<AssetID> {
         Set((result?.issues ?? []).filter {
             $0.id.source == photoSource.id && ($0.reason == .cloudDownloadRequired || $0.reason == .cloudDownloadFailed)
         }.map(\.id))
@@ -134,19 +172,26 @@ import SwiftUI
 
     private func startScan(downloads: Set<AssetID>) {
         guard canScan, let engine else { return }
+        let (downloadUpdates, downloadContinuation) = AsyncStream.makeStream(of: PhotoLibrarySource.DownloadUpdate.self)
         let selectedSources = sources.map { source -> any AssetSource in
-            source.id == photoSource.id && !downloads.isEmpty ? PhotoLibrarySource(downloads: downloads) : source
+            guard source.id == photoSource.id, !downloads.isEmpty else { return source }
+            return PhotoLibrarySource(downloads: downloads) { update in downloadContinuation.yield(update) }
         }
         #if os(iOS)
         UserDefaults.standard.set(true, forKey: Self.interruptedScanKey)
         #endif
         running = true
         resultsStale = false
+        lastCleanup = nil
+        downloadProgress = downloads.isEmpty ? nil : CloudDownloadProgress(total: downloads.count)
         if downloads.isEmpty { result = nil }
         let (updates, continuation) = AsyncStream.makeStream(of: ScanProgress.self, bufferingPolicy: .bufferingNewest(1))
         scanTask = Task {
             let observer = Task {
                 for await update in updates { progress = update }
+            }
+            let downloadObserver = Task {
+                for await update in downloadUpdates { downloadProgress?.update(update) }
             }
             defer {
                 continuation.finish()
@@ -164,11 +209,14 @@ import SwiftUI
                 result = next
                 clearInterruptedScan()
             } catch is CancellationError {
-                return
+                // A user cancellation keeps the previous scan issues available for retry.
             } catch {
                 clearInterruptedScan()
                 errorMessage = error.localizedDescription
             }
+            downloadContinuation.finish()
+            await downloadObserver.value
+            downloadProgress?.end(cancelled: Task.isCancelled)
         }
     }
 
@@ -195,7 +243,7 @@ import SwiftUI
         cleaning = true
         defer { cleaning = false }
         do {
-            _ = try await cleanup.apply(pairs, sources: sources)
+            lastCleanup = try await cleanup.apply(pairs, sources: sources)
             invalidateResults()
             history = try await cleanup.recentRuns()
         } catch {

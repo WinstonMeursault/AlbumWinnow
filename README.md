@@ -21,14 +21,14 @@ The shared Swift package can also be built independently with `swift build --pac
 - Group matches for side-by-side review and recommend a copy to keep based on image quality, resolution, and associated data such as a Live Photo video or the original version of an edited photo.
 - Reuse scan results for unchanged assets and update the index when photos are added, edited, or removed.
 
-Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. On iOS and iPadOS, an interrupted scan resumes in the foreground using the saved sources and cached fingerprints. Grouping visually similar shots, such as distinct frames in a burst, is planned for v1.1.
+Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. The Sources sidebar shows iCloud transfer progress separately from scan progress, with counts of available, failed, and pending photos. After a scan, Duplicates shows the groups awaiting review. Cleanup History shows the outcome of each confirmed move. On iOS and iPadOS, an interrupted scan resumes in the foreground using the saved sources and cached fingerprints. Grouping visually similar shots, such as distinct frames in a burst, is planned for v1.1.
 
 ## Matching and cleanup
 
 | Category | Criteria | Cleanup behavior |
 | --- | --- | --- |
 | Exact duplicate | Identical file bytes or verified pixel equality. | Eligible for cleanup after review. |
-| Visual duplicate | The same image after accounting for differences in resolution, compression, or encoding. | Eligible for cleanup after review. |
+| Possible same image | Pixel comparison suggests the same image across differences in resolution, compression, or encoding. | Compare the details before selecting copies to move. |
 | Similar photo | A separate shot with a change in expression, motion, or composition. | Organization suggestions only. Planned for v1.1. |
 
 Matching and indexing run on device, and locally available photos can be scanned offline. Every cleanup operation requires explicit confirmation. Confirmed items move to Photos’ Recently Deleted album or to the filesystem Trash when available. If a file provider has no Trash, the app keeps the file and records the failure.

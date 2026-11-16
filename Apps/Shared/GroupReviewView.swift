@@ -32,6 +32,11 @@ struct GroupReviewView: View {
                         .fixedSize(horizontal: true, vertical: false)
                     VStack(alignment: .leading, spacing: 12) { previews }
                 }
+                if group.duplicates.contains(where: { $0.match == .visualDuplicate }) {
+                    Label("Compare details before moving a possible match.", systemImage: "eye")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
                 LazyVStack(alignment: .leading, spacing: 8) {
                     ForEach(rows) { asset in
                         row(asset)
@@ -44,7 +49,8 @@ struct GroupReviewView: View {
         .navigationTitle("Review Group")
         .safeAreaInset(edge: .bottom) {
             HStack {
-                Text("\(pairs.count) selected").foregroundStyle(.secondary)
+                Text(pairs.isEmpty ? "Select copies to move" : "\(pairs.count) selected to move")
+                    .foregroundStyle(.secondary)
                 Spacer()
                 Button("Review Cleanup…") { confirming = true }
                     .buttonStyle(.borderedProminent)
@@ -58,7 +64,7 @@ struct GroupReviewView: View {
     }
 
     @ViewBuilder private var previews: some View {
-        PreviewCard(asset: keep, label: "Keep", model: model)
+        PreviewCard(asset: keep, label: "Copy to Keep", model: model)
         if let comparison { PreviewCard(asset: comparison, label: "Compare", model: model) }
     }
 
@@ -105,9 +111,9 @@ struct GroupReviewView: View {
 
     private func description(for asset: PhotoAsset) -> String {
         let source = model.sourceLabel(asset.id.source)
-        if asset.id == group.preferred.id { return "\(source) · Recommended" }
+        if asset.id == group.preferred.id { return "\(source) · Recommended to keep" }
         guard let match = group.duplicates.first(where: { $0.id == asset.id })?.match else { return source }
-        return "\(source) · \(match == .exactDuplicate ? "Exact duplicate" : "Same image")"
+        return "\(source) · \(match == .exactDuplicate ? "Exact duplicate" : "Possible same image")"
     }
 
     private func canMark(_ asset: PhotoAsset) -> Bool {
