@@ -47,20 +47,36 @@ struct GroupReviewView: View {
             .padding(18)
         }
         .navigationTitle("Review Group")
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                Text(pairs.isEmpty ? "Select copies to move" : "\(pairs.count) selected to move")
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Button("Review Cleanup…") { confirming = true }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!model.canClean || pairs.isEmpty)
-                    .accessibilityIdentifier("review-cleanup")
+        .toolbarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    selectionSummary.fixedSize()
+                    Spacer(minLength: 0)
+                    reviewButton.fixedSize()
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    selectionSummary
+                    reviewButton
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
             .background(.bar)
         }
         .sheet(isPresented: $confirming) { confirmation }
+    }
+
+    private var selectionSummary: some View {
+        Text(pairs.isEmpty ? "Select copies to move" : "\(pairs.count) selected to move")
+            .foregroundStyle(.secondary)
+    }
+
+    private var reviewButton: some View {
+        Button("Review Cleanup…") { confirming = true }
+            .buttonStyle(.borderedProminent)
+            .disabled(!model.canClean || pairs.isEmpty)
+            .accessibilityIdentifier("review-cleanup")
     }
 
     @ViewBuilder private var previews: some View {
@@ -138,6 +154,7 @@ struct GroupReviewView: View {
                 }
             }
             .navigationTitle("Confirm Cleanup")
+            .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { confirming = false } }
                 ToolbarItem(placement: .confirmationAction) {

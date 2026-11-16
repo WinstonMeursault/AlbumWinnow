@@ -11,6 +11,7 @@ import UIKit
 
 struct LibraryView: View {
     let model: ReviewModel
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var selectedGroup: AssetID?
     @State private var compactColumn = NavigationSplitViewColumn.sidebar
     @State private var importing = false
@@ -34,10 +35,15 @@ struct LibraryView: View {
         NavigationSplitView(preferredCompactColumn: $compactColumn) {
             sidebar
                 .navigationTitle("Sources")
-                .navigationSplitViewColumnWidth(min: 180, ideal: 215, max: 300)
+                .navigationSplitViewColumnWidth(
+                    min: dynamicTypeSize.isAccessibilitySize ? 250 : 180,
+                    ideal: dynamicTypeSize.isAccessibilitySize ? 280 : 215,
+                    max: 300
+                )
         } content: {
             groups
                 .navigationTitle("Duplicates")
+                .toolbarTitleDisplayMode(.inline)
                 .navigationSplitViewColumnWidth(min: 210, ideal: 260, max: 350)
         } detail: {
             if let group = model.result?.groups.first(where: { $0.id == selectedGroup }) {
@@ -77,7 +83,11 @@ struct LibraryView: View {
                     get: { model.photosEnabled && model.allowsPhotos },
                     set: { enabled in Task { await model.setPhotosEnabled(enabled) } }
                 )) {
-                    Label("Photos", systemImage: "photo.on.rectangle")
+                    if dynamicTypeSize.isAccessibilitySize {
+                        Text("Photos")
+                    } else {
+                        Label("Photos", systemImage: "photo.on.rectangle")
+                    }
                 }
                 .disabled(model.running || model.cleaning)
                 .accessibilityIdentifier("photos-source")
@@ -98,6 +108,8 @@ struct LibraryView: View {
             Section("Folders") {
                 ForEach(model.folders) { folder in
                     Label(folder.name, systemImage: "folder")
+                        .lineLimit(1)
+                        .truncationMode(.middle)
                         .contextMenu {
                             Button("Remove Source", role: .destructive) { model.removeFolder(folder.id) }
                                 .disabled(model.running || model.cleaning)
@@ -180,25 +192,13 @@ struct LibraryView: View {
                     description: Text("Duplicates will be ready to review when the scan finishes.")
                 )
             } else if let result = model.result {
-                VStack(alignment: .leading, spacing: 5) {
-                    Label("Scan Complete", systemImage: "checkmark.circle")
-                        .font(.headline)
-                    if !result.groups.isEmpty {
-                        Text("\(result.groups.count) duplicate groups to review")
-                        Text("Photos are moved only after you confirm cleanup.")
+                List(selection: $selectedGroup) {
+                    scanSummary(result)
+                        .listRowSeparator(.hidden)
+                    if result.groups.isEmpty {
+                        ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
+                            .listRowSeparator(.hidden)
                     } else {
-                        Text("\(result.scanned + result.reused) photos checked")
-                    }
-                }
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-                if result.groups.isEmpty {
-                    ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
-                } else {
-                    List(selection: $selectedGroup) {
                         ForEach(result.groups) { group in
                             NavigationLink(value: group.id) {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -210,9 +210,15 @@ struct LibraryView: View {
                         }
                     }
                 }
-                if !result.issues.isEmpty {
-                    Button("Review \(result.issues.count) Scan Issues") { showingIssues = true }
-                        .padding(10)
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if !result.issues.isEmpty {
+                        Button(result.issues.count == 1 ? "Review 1 Scan Issue" : "Review \(result.issues.count) Scan Issues") {
+                            showingIssues = true
+                        }
+                            .padding(10)
+                            .frame(maxWidth: .infinity)
+                            .background(.bar)
+                    }
                 }
             } else if let cleanup = model.lastCleanup {
                 ContentUnavailableView(
@@ -228,6 +234,25 @@ struct LibraryView: View {
                                        description: Text("Choose a source and start a scan."))
             }
         }
+    }
+
+    private func scanSummary(_ result: ScanResult) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Label("Scan Complete", systemImage: "checkmark.circle")
+                .font(.headline)
+                .foregroundStyle(.primary)
+                .accessibilityAddTraits(.isHeader)
+            if result.groups.isEmpty {
+                Text("\(result.scanned + result.reused) photos checked")
+            } else {
+                Text(result.groups.count == 1 ? "1 duplicate group to review" : "\(result.groups.count) duplicate groups to review")
+                Text("Photos are moved only after you confirm cleanup.")
+            }
+        }
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 8)
     }
 
     private func progressView(_ progress: ScanProgress) -> some View {
@@ -291,6 +316,7 @@ struct LibraryView: View {
                 }
             }
             .navigationTitle("Cleanup History")
+            .toolbarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { showingHistory = false } }
         }
         #if os(macOS)
@@ -324,6 +350,7 @@ struct LibraryView: View {
                 }
             }
             .navigationTitle("Scan Issues")
+            .toolbarTitleDisplayMode(.inline)
             .toolbar { Button("Done") { showingIssues = false } }
         }
         #if os(macOS)
