@@ -10,6 +10,7 @@ struct LibraryView: View {
     #endif
     @State private var showingHistory = false
     @State private var showingIssues = false
+    @State private var confirmingCleanup = false
 
     var body: some View {
         NavigationSplitView(preferredCompactColumn: $compactColumn) {
@@ -32,7 +33,7 @@ struct LibraryView: View {
                 }
         } detail: {
             if let group = model.result?.groups.first(where: { $0.id == selectedGroup }) {
-                GroupReviewView(group: group, model: model) { showingHistory = true }
+                GroupReviewView(group: group, model: model) { confirmingCleanup = true }
                     .id(group.id)
             } else {
                 ContentUnavailableView("Select a Group", systemImage: "photo.on.rectangle.angled")
@@ -53,6 +54,7 @@ struct LibraryView: View {
             history.task { await model.loadHistory() }
         }
         .sheet(isPresented: $showingIssues) { issues }
+        .sheet(isPresented: $confirmingCleanup) { cleanupConfirmation }
         #if os(iOS)
         .sheet(isPresented: $showingSettings) {
             NavigationStack {
@@ -97,12 +99,18 @@ struct LibraryView: View {
                 } else if model.running {
                     Button("Cancel Scan") { model.cancelScan() }
                 } else {
-                    Button("Scan", systemImage: "magnifyingglass") { model.scan() }
+                    Button(model.lastCleanup == nil ? "Scan" : "Scan Again", systemImage: "magnifyingglass") { model.scan() }
                         .buttonStyle(.glassProminent)
                         .disabled(!model.canScan)
                         .accessibilityIdentifier("start-scan")
                 }
                 Spacer(minLength: 0)
+            }
+            if model.selectedCount > 0 {
+                Button("Review Cleanup (\(model.selectedCount))…") { confirmingCleanup = true }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!model.canClean)
+                    .accessibilityIdentifier("review-batch-cleanup")
             }
         }
         .padding()
@@ -125,11 +133,13 @@ struct LibraryView: View {
                 Divider()
                 scanResults(result)
             } else if let cleanup = model.lastCleanup {
-                ContentUnavailableView(
-                    "Cleanup Finished",
-                    systemImage: "clock.arrow.circlepath",
-                    description: Text(cleanupSummary(cleanup) + " Scan again to refresh duplicates.")
-                )
+                ContentUnavailableView {
+                    Label("Cleanup Finished", systemImage: "clock.arrow.circlepath")
+                } description: {
+                    Text(cleanupSummary(cleanup))
+                } actions: {
+                    Button("View Cleanup History") { showingHistory = true }
+                }
             } else if !model.hasScanSources {
                 ContentUnavailableView {
                     Label("Choose Scan Sources", systemImage: "photo.stack")
@@ -155,10 +165,11 @@ struct LibraryView: View {
             } else {
                 List(selection: $selectedGroup) {
                     ForEach(result.groups) { group in
+                        let count = model.selection(for: group.id).selected.count
                         NavigationLink(value: group.id) {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(group.preferred.name).lineLimit(1)
-                                Text("\(group.duplicates.count + 1) photos")
+                                Text(count == 0 ? "\(group.duplicates.count + 1) photos" : "\(group.duplicates.count + 1) photos · \(count) selected")
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                         }
@@ -235,8 +246,50 @@ struct LibraryView: View {
     }
 
     private func cleanupSummary(_ run: CleanupRun) -> String {
-        let moved = run.items.count { $0.status == .movedToTrash || $0.status == .movedToRecentlyDeleted }
-        return "\(moved) moved · \(run.items.count - moved) not moved."
+        let counts = Dictionary(grouping: run.items, by: \.status).mapValues(\.count)
+        let moved = counts[.movedToTrash, default: 0] + counts[.movedToRecentlyDeleted, default: 0]
+        let summary = "\(moved) moved · \(counts[.skipped, default: 0]) skipped · \(counts[.failed, default: 0]) failed"
+        let pending = counts[.pending, default: 0]
+        return pending == 0 ? summary : summary + " · \(pending) interrupted"
+    }
+
+    private var cleanupConfirmation: some View {
+        let groups = model.cleanupGroups
+        let pairs = groups.flatMap(\.pairs)
+        return NavigationStack {
+            List(groups) { group in
+                Section {
+                    ForEach(group.pairs) { pair in
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(pair.remove.name)
+                            let destination = pair.remove.id.source == "photos-library" ? "Recently Deleted" : "Trash"
+                            Text("\(model.sourceLabel(pair.remove.id.source)) → \(destination)")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Keep \(group.keep.name) · \(model.sourceLabel(group.keep.id.source))")
+                }
+            }
+            .navigationTitle("Confirm Cleanup")
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { confirmingCleanup = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Move Selected", role: .destructive) {
+                        confirmingCleanup = false
+                        Task { await model.applyCleanup(pairs) }
+                    }
+                    .disabled(!model.canClean || pairs.isEmpty)
+                    .accessibilityIdentifier("confirm-cleanup")
+                }
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 480, minHeight: 340)
+        #endif
     }
 
     private var history: some View {

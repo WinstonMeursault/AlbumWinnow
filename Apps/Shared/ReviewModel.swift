@@ -39,6 +39,17 @@ struct CloudDownloadProgress {
 }
 
 @MainActor @Observable final class ReviewModel {
+    struct GroupSelection {
+        var keepID: AssetID?
+        var selected = Set<AssetID>()
+    }
+
+    struct CleanupGroup: Identifiable {
+        let id: AssetID
+        let keep: PhotoAsset
+        let pairs: [CleanupPair]
+    }
+
     private static let folderKey = "AlbumWinnow.folderBookmarks"
     private static let photosKey = "AlbumWinnow.photosEnabled"
     private static let interruptedScanKey = "AlbumWinnow.interruptedScan"
@@ -54,6 +65,7 @@ struct CloudDownloadProgress {
     private(set) var cleaning = false
     private(set) var resultsStale = false
     private(set) var history: [CleanupRun] = []
+    private var selections: [AssetID: GroupSelection] = [:]
     var errorMessage: String?
     var sourceErrorMessage: String?
 
@@ -70,8 +82,32 @@ struct CloudDownloadProgress {
     var hasScanSources: Bool { !folders.isEmpty || (photosEnabled && allowsPhotos) }
     var canEditSources: Bool { !running && !cleaning }
     var canScan: Bool { canEditSources && hasScanSources && engine != nil }
-    var canClean: Bool { !running && !cleaning && !resultsStale && cleanup != nil }
+    var canClean: Bool { !running && !cleaning && !resultsStale && result != nil && cleanup != nil }
     var pendingDownloadCount: Int { pendingDownloadIDs.count }
+    var selectedCount: Int { selections.values.reduce(0) { $0 + $1.selected.count } }
+    var cleanupGroups: [CleanupGroup] {
+        guard selectedCount > 0, let result else { return [] }
+        return result.groups.compactMap { group in
+            guard let selection = selections[group.id], !selection.selected.isEmpty else { return nil }
+            let assets = [group.preferred] + group.duplicates.map(\.asset)
+            let keep = assets.first(where: { $0.id == selection.keepID }) ?? group.preferred
+            let pairs = assets.compactMap { asset -> CleanupPair? in
+                guard selection.selected.contains(asset.id), asset.id != keep.id,
+                      asset.photoProperties?.hasAssociatedResources != true else { return nil }
+                return CleanupPair(keep: keep, remove: asset)
+            }
+            return pairs.isEmpty ? nil : CleanupGroup(id: group.id, keep: keep, pairs: pairs)
+        }
+    }
+
+    func selection(for groupID: AssetID) -> GroupSelection {
+        selections[groupID] ?? GroupSelection()
+    }
+
+    func setSelection(_ selection: GroupSelection, for groupID: AssetID) {
+        guard canClean else { return }
+        selections[groupID] = selection.keepID == nil && selection.selected.isEmpty ? nil : selection
+    }
 
     init() {
         let data = URL.applicationSupportDirectory.appending(path: "AlbumWinnow", directoryHint: .isDirectory)
@@ -188,6 +224,7 @@ struct CloudDownloadProgress {
         UserDefaults.standard.set(true, forKey: Self.interruptedScanKey)
         #endif
         running = true
+        selections.removeAll()
         resultsStale = false
         lastCleanup = nil
         downloadProgress = downloads.isEmpty ? nil : CloudDownloadProgress(total: downloads.count)
@@ -246,7 +283,7 @@ struct CloudDownloadProgress {
     #endif
 
     func applyCleanup(_ pairs: [CleanupPair]) async {
-        guard canClean, let cleanup else { return }
+        guard canClean, let cleanup, !pairs.isEmpty, pairs == cleanupGroups.flatMap(\.pairs) else { return }
         cleaning = true
         defer { cleaning = false }
         do {
@@ -287,6 +324,7 @@ struct CloudDownloadProgress {
 
     private func invalidateResults() {
         if result != nil || running { resultsStale = true }
+        selections.removeAll()
         result = nil
         scanTask?.cancel()
     }

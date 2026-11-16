@@ -6,32 +6,28 @@ import SwiftUI
 struct GroupReviewView: View {
     let group: DuplicateGroup
     let model: ReviewModel
-    let showHistory: () -> Void
+    let reviewCleanup: () -> Void
 
-    @State private var keepID: AssetID?
     @State private var compareID: AssetID?
-    @State private var selected = Set<AssetID>()
-    @State private var confirming = false
+    @State private var presentedComparison: PhotoAsset?
 
     private var assets: [PhotoAsset] { [group.preferred] + group.duplicates.map(\.asset) }
-    private var keep: PhotoAsset { assets.first(where: { $0.id == keepID }) ?? group.preferred }
+    private var selection: ReviewModel.GroupSelection { model.selection(for: group.id) }
+    private var keep: PhotoAsset { assets.first(where: { $0.id == selection.keepID }) ?? group.preferred }
     private var comparison: PhotoAsset? {
         let alternatives = assets.filter { $0.id != keep.id }
         return alternatives.first(where: { $0.id == compareID }) ?? alternatives.first
     }
-    private var pairs: [CleanupPair] {
-        assets.filter { selected.contains($0.id) && canMark($0) }.map { CleanupPair(keep: keep, remove: $0) }
-    }
-
     var body: some View {
         let rows = assets
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .top, spacing: 12) { previews }
-                        .fixedSize(horizontal: true, vertical: false)
-                    VStack(alignment: .leading, spacing: 12) { previews }
+                if let comparison {
+                    Button("Compare…", systemImage: "rectangle.split.2x1") { presentedComparison = comparison }
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier("open-comparison")
                 }
+                previews(comparing: comparison)
                 if group.duplicates.contains(where: { $0.match == .visualDuplicate }) {
                     Label("Compare details before moving a possible match.", systemImage: "eye")
                         .font(.subheadline)
@@ -64,24 +60,49 @@ struct GroupReviewView: View {
             .padding()
             .background(.bar)
         }
-        .sheet(isPresented: $confirming) { confirmation }
+        .sheet(item: $presentedComparison) { asset in
+            NavigationStack {
+                ScrollView {
+                    previews(comparing: asset)
+                        .padding(18)
+                }
+                .navigationTitle("Compare Photos")
+                .toolbarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { presentedComparison = nil }
+                    }
+                }
+            }
+            #if os(macOS)
+            .frame(minWidth: 640, minHeight: 380)
+            #endif
+        }
     }
 
     private var selectionSummary: some View {
-        Text(pairs.isEmpty ? "Select copies to move" : "\(pairs.count) selected to move")
+        Text(model.selectedCount == 0 ? "Select copies to move" : "\(model.selectedCount) selected across all groups")
             .foregroundStyle(.secondary)
     }
 
     private var reviewButton: some View {
-        Button("Review Cleanup…") { confirming = true }
+        Button("Review Cleanup…", action: reviewCleanup)
             .buttonStyle(.borderedProminent)
-            .disabled(!model.canClean || pairs.isEmpty)
+            .disabled(!model.canClean || model.selectedCount == 0)
             .accessibilityIdentifier("review-cleanup")
     }
 
-    @ViewBuilder private var previews: some View {
+    private func previews(comparing asset: PhotoAsset?) -> some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .top, spacing: 12) { cards(comparing: asset) }
+                .fixedSize(horizontal: true, vertical: false)
+            VStack(alignment: .leading, spacing: 12) { cards(comparing: asset) }
+        }
+    }
+
+    @ViewBuilder private func cards(comparing asset: PhotoAsset?) -> some View {
         PreviewCard(asset: keep, label: "Copy to Keep", model: model)
-        if let comparison { PreviewCard(asset: comparison, label: "Compare", model: model) }
+        if let asset { PreviewCard(asset: asset, label: "Comparison Copy", model: model) }
     }
 
     private func row(_ asset: PhotoAsset) -> some View {
@@ -100,11 +121,13 @@ struct GroupReviewView: View {
                     .foregroundStyle(.tint)
             } else {
                 Menu {
-                    Button("Compare") { compareID = asset.id }
+                    Button("Compare") {
+                        compareID = asset.id
+                        presentedComparison = asset
+                    }
                     Button("Keep This Copy") {
-                        keepID = asset.id
+                        model.setSelection(.init(keepID: asset.id), for: group.id)
                         compareID = nil
-                        selected.removeAll()
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -112,8 +135,12 @@ struct GroupReviewView: View {
                 .accessibilityLabel("Review options for \(asset.name)")
 
                 Toggle("Move \(asset.name)", isOn: Binding(
-                    get: { selected.contains(asset.id) },
-                    set: { if $0 { selected.insert(asset.id) } else { selected.remove(asset.id) } }
+                    get: { selection.selected.contains(asset.id) },
+                    set: {
+                        var next = selection
+                        if $0 { next.selected.insert(asset.id) } else { next.selected.remove(asset.id) }
+                        model.setSelection(next, for: group.id)
+                    }
                 ))
                 .labelsHidden()
                 #if os(macOS)
@@ -134,46 +161,6 @@ struct GroupReviewView: View {
 
     private func canMark(_ asset: PhotoAsset) -> Bool {
         asset.id != keep.id && asset.photoProperties?.hasAssociatedResources != true
-    }
-
-    private var confirmation: some View {
-        NavigationStack {
-            List {
-                Section("Keep") {
-                    LabeledContent(keep.name, value: model.sourceLabel(keep.id.source))
-                }
-                Section("Move") {
-                    ForEach(pairs) { pair in
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(pair.remove.name)
-                            let destination = pair.remove.id.source == "photos-library" ? "Recently Deleted" : "Trash"
-                            Text("\(model.sourceLabel(pair.remove.id.source)) → \(destination)")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Confirm Cleanup")
-            .toolbarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { confirming = false } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Move Selected", role: .destructive) {
-                        let reviewed = pairs
-                        confirming = false
-                        Task {
-                            await model.applyCleanup(reviewed)
-                            showHistory()
-                        }
-                    }
-                    .disabled(!model.canClean || pairs.isEmpty)
-                    .accessibilityIdentifier("confirm-cleanup")
-                }
-            }
-        }
-        #if os(macOS)
-        .frame(minWidth: 480, minHeight: 340)
-        #endif
     }
 }
 
