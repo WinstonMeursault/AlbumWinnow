@@ -8,8 +8,11 @@ public enum PhotoLibraryReadError: Error, Sendable {
 
 public struct PhotoLibrarySource: AssetSource {
     public let id = "photos-library"
+    private let downloads: Set<AssetID>
 
-    public init() {}
+    public init(downloads: Set<AssetID> = []) {
+        self.downloads = downloads
+    }
 
     public static func authorizationStatus() -> PHAuthorizationStatus {
         PHPhotoLibrary.authorizationStatus(for: .readWrite)
@@ -41,7 +44,8 @@ public struct PhotoLibrarySource: AssetSource {
         let options = PHImageRequestOptions()
         options.version = .current
         options.deliveryMode = .highQualityFormat
-        options.isNetworkAccessAllowed = false
+        let allowDownload = permitsDownload(for: asset.id)
+        options.isNetworkAccessAllowed = allowDownload
 
         let request = PhotoImageRequest()
         let result = try await withTaskCancellationHandler {
@@ -49,17 +53,7 @@ public struct PhotoLibrarySource: AssetSource {
                 guard request.begin(continuation) else { return }
                 let requestID = PHImageManager.default().requestImageDataAndOrientation(for: current, options: options) {
                     data, _, orientation, info in
-                    if info?[PHImageCancelledKey] as? Bool == true {
-                        request.complete(.failure(CancellationError()))
-                    } else if data == nil, info?[PHImageResultIsInCloudKey] as? Bool == true {
-                        request.complete(.failure(AssetAccessError.cloudDownloadRequired))
-                    } else if info?[PHImageResultIsDegradedKey] as? Bool != true {
-                        if let data, !data.isEmpty {
-                            request.complete(.success(AssetImage(data: data, orientation: orientation)))
-                        } else {
-                            request.complete(.failure(info?[PHImageErrorKey] as? Error ?? AssetAccessError.inaccessible))
-                        }
-                    }
+                    request.complete(data: data, orientation: orientation, info: info, allowsDownload: allowDownload)
                 }
                 request.bind(requestID)
             }
@@ -70,6 +64,8 @@ public struct PhotoLibrarySource: AssetSource {
         _ = try currentAsset(for: asset)
         return result
     }
+
+    func permitsDownload(for id: AssetID) -> Bool { downloads.contains(id) }
 
     public func changes() -> AsyncStream<Void> {
         let (stream, continuation) = AsyncStream.makeStream(of: Void.self, bufferingPolicy: .bufferingNewest(1))
@@ -141,7 +137,7 @@ public struct PhotoLibrarySource: AssetSource {
     }
 }
 
-private final class PhotoImageRequest: @unchecked Sendable {
+final class PhotoImageRequest: @unchecked Sendable {
     private let lock = NSLock()
     private var continuation: CheckedContinuation<AssetImage, any Error>?
     private var requestID: PHImageRequestID?
@@ -166,7 +162,20 @@ private final class PhotoImageRequest: @unchecked Sendable {
         if shouldCancel { PHImageManager.default().cancelImageRequest(id) }
     }
 
-    func complete(_ result: Result<AssetImage, any Error>) {
+    func complete(data: Data?, orientation: CGImagePropertyOrientation, info: [AnyHashable: Any]?, allowsDownload: Bool) {
+        let result: Result<AssetImage, any Error>
+        if info?[PHImageCancelledKey] as? Bool == true {
+            result = .failure(CancellationError())
+        } else if !allowsDownload, data?.isEmpty != false, info?[PHImageResultIsInCloudKey] as? Bool == true {
+            result = .failure(AssetAccessError.cloudDownloadRequired)
+        } else if let data, !data.isEmpty {
+            result = .success(AssetImage(data: data, orientation: orientation))
+        } else if allowsDownload {
+            result = .failure(AssetAccessError.cloudDownloadFailed)
+        } else {
+            result = .failure(info?[PHImageErrorKey] as? Error ?? AssetAccessError.inaccessible)
+        }
+
         let next = lock.withLock {
             defer {
                 continuation = nil

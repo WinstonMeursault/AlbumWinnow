@@ -4,11 +4,15 @@ import SwiftUI
 import UniformTypeIdentifiers
 #if os(macOS)
 import AppKit
+#else
+import PhotosUI
+import UIKit
 #endif
 
 struct LibraryView: View {
     let model: ReviewModel
     @State private var selectedGroup: AssetID?
+    @State private var compactColumn = NavigationSplitViewColumn.sidebar
     @State private var importing = false
     @State private var showingHistory = false
     @State private var showingIssues = false
@@ -27,7 +31,7 @@ struct LibraryView: View {
     }
 
     private var content: some View {
-        NavigationSplitView {
+        NavigationSplitView(preferredCompactColumn: $compactColumn) {
             sidebar
                 .navigationTitle("Sources")
                 .navigationSplitViewColumnWidth(min: 180, ideal: 215, max: 300)
@@ -44,8 +48,13 @@ struct LibraryView: View {
             }
         }
         .onChange(of: model.result) { _, result in
+            #if os(iOS)
+            if result != nil { compactColumn = .content }
+            if result?.groups.contains(where: { $0.id == selectedGroup }) != true { selectedGroup = nil }
+            #else
             if let result, result.groups.contains(where: { $0.id == selectedGroup }) { return }
             selectedGroup = result?.groups.first?.id
+            #endif
         }
         .sheet(isPresented: $showingHistory) {
             history.task { await model.loadHistory() }
@@ -74,6 +83,15 @@ struct LibraryView: View {
                 .accessibilityIdentifier("photos-source")
                 if model.authorization == .limited {
                     Text("Limited access").foregroundStyle(.secondary)
+                    #if os(iOS)
+                    Button("Manage Photo Access") { managePhotoAccess() }
+                    #endif
+                } else if model.authorization == .denied {
+                    #if os(iOS)
+                    Button("Open Settings") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                    }
+                    #endif
                 }
             }
 
@@ -96,6 +114,11 @@ struct LibraryView: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let progress = model.progress { progressView(progress) }
                 if model.cleaning { ProgressView("Moving selected photos…") }
+                #if os(iOS)
+                if model.result != nil && !model.running {
+                    Button("View Results") { compactColumn = .content }
+                }
+                #endif
                 HStack {
                     if model.running {
                         Button("Cancel Scan") { model.cancelScan() }
@@ -115,6 +138,15 @@ struct LibraryView: View {
             .background(.bar)
         }
     }
+
+    #if os(iOS)
+    private func managePhotoAccess() {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard let window = scenes.first(where: { $0.activationState == .foregroundActive })?.keyWindow,
+              let controller = window.rootViewController else { return }
+        PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: controller)
+    }
+    #endif
 
     private func pickFolder() {
         #if os(macOS)
@@ -206,10 +238,20 @@ struct LibraryView: View {
 
     private var issues: some View {
         NavigationStack {
-            List(Array((model.result?.issues ?? []).enumerated()), id: \.offset) { _, issue in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(issue.id.source.hasPrefix("folder:") ? URL(fileURLWithPath: issue.id.item).lastPathComponent : "Photos")
-                    Text(issue.reason.label).font(.caption).foregroundStyle(.secondary)
+            List {
+                if model.hasPendingDownloads {
+                    Button("Download Pending Photos from iCloud") {
+                        showingIssues = false
+                        compactColumn = .sidebar
+                        model.downloadPendingPhotos()
+                    }
+                    .disabled(!model.canScan)
+                }
+                ForEach(Array((model.result?.issues ?? []).enumerated()), id: \.offset) { _, issue in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(issue.id.source.hasPrefix("folder:") ? URL(fileURLWithPath: issue.id.item).lastPathComponent : "Photos")
+                        Text(issue.reason.label).font(.caption).foregroundStyle(.secondary)
+                    }
                 }
             }
             .navigationTitle("Scan Issues")
@@ -241,6 +283,7 @@ private extension AssetIssueReason {
         case .unreadableImage: "Unreadable image"
         case .unsupportedImage: "Unsupported image"
         case .cloudDownloadRequired: "iCloud download required"
+        case .cloudDownloadFailed: "iCloud download failed"
         }
     }
 }

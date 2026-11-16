@@ -7,11 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		004544D8146902FB7745C798 /* GroupReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */; };
+		0E7D913A238401877DDEBED9 /* FolderScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277E3A7EDDA92B1545F436A8 /* FolderScope.swift */; };
+		56C93C2E206CD9F463BB7975 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1989BC72973BF9A3C13774EA /* LibraryView.swift */; };
+		84858ADCA1BE3815203516E7 /* AlbumWinnowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */; };
 		995C20DEF25F0E206436F678 /* GroupReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */; };
 		BD334C02554178A420275AC9 /* FolderScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277E3A7EDDA92B1545F436A8 /* FolderScope.swift */; };
 		C5273DA374B8EA1763C7A485 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1989BC72973BF9A3C13774EA /* LibraryView.swift */; };
 		CE291D1F225705633A065040 /* AlbumWinnowCore in Frameworks */ = {isa = PBXBuildFile; productRef = 99B03D7314E9092598247090 /* AlbumWinnowCore */; };
 		D9E2D703945CD72AAA8735AB /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */; };
+		ECDE43020DC076132E7D0EA9 /* AlbumWinnowCore in Frameworks */ = {isa = PBXBuildFile; productRef = 6C75E88DE8098F1031C1D8CA /* AlbumWinnowCore */; };
+		EDE4F3779D4526022A0C4FE6 /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */; };
 		F18A76D3AFFDF7CF36EC83C4 /* AlbumWinnowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -20,6 +26,7 @@
 		1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlbumWinnow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		277E3A7EDDA92B1545F436A8 /* FolderScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScope.swift; sourceTree = "<group>"; };
 		2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupReviewView.swift; sourceTree = "<group>"; };
+		3834DC4BEBE6D52E0C84C1A7 /* AlbumWinnowMobile.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AlbumWinnowMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumWinnowApp.swift; sourceTree = "<group>"; };
 		B487BAB2E5EE0544B5A14BE4 /* AlbumWinnowCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlbumWinnowCore; path = Packages/AlbumWinnowCore; sourceTree = SOURCE_ROOT; };
 		BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
@@ -27,6 +34,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		04FE9BCAD5BACFFBFBC65B7B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ECDE43020DC076132E7D0EA9 /* AlbumWinnowCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1FCFC39933DED34EA2BDB39F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -51,6 +66,7 @@
 			isa = PBXGroup;
 			children = (
 				1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */,
+				3834DC4BEBE6D52E0C84C1A7 /* AlbumWinnowMobile.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,6 +124,25 @@
 			productReference = 1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A452557ADE3639A14C2B5AF7 /* AlbumWinnowMobile */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2B7A9042EA51A40855D58748 /* Build configuration list for PBXNativeTarget "AlbumWinnowMobile" */;
+			buildPhases = (
+				50F51E1D0C4B9FCCD1D6E153 /* Sources */,
+				04FE9BCAD5BACFFBFBC65B7B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AlbumWinnowMobile;
+			packageProductDependencies = (
+				6C75E88DE8098F1031C1D8CA /* AlbumWinnowCore */,
+			);
+			productName = AlbumWinnowMobile;
+			productReference = 3834DC4BEBE6D52E0C84C1A7 /* AlbumWinnowMobile.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -140,11 +175,24 @@
 			projectRoot = "";
 			targets = (
 				A0536DB132F143C5C8D54E7B /* AlbumWinnow */,
+				A452557ADE3639A14C2B5AF7 /* AlbumWinnowMobile */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		50F51E1D0C4B9FCCD1D6E153 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84858ADCA1BE3815203516E7 /* AlbumWinnowApp.swift in Sources */,
+				0E7D913A238401877DDEBED9 /* FolderScope.swift in Sources */,
+				004544D8146902FB7745C798 /* GroupReviewView.swift in Sources */,
+				56C93C2E206CD9F463BB7975 /* LibraryView.swift in Sources */,
+				EDE4F3779D4526022A0C4FE6 /* ReviewModel.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		ED8FE53FAAECE7EB89CA3470 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -242,17 +290,32 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.4.0;
+				MARKETING_VERSION = 0.5.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.winstonmeursault.albumwinnow;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
 			};
 			name = Release;
+		};
+		BBE194C088552F9921830A08 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_NAME = AlbumWinnow;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
 		};
 		D06504A11A391D95988FC568 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -310,18 +373,33 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.4.0;
+				MARKETING_VERSION = 0.5.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.winstonmeursault.albumwinnow;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
+		};
+		DF4D843641EDB87EAAEF0567 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_NAME = AlbumWinnow;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -331,6 +409,15 @@
 			buildConfigurations = (
 				D06504A11A391D95988FC568 /* Debug */,
 				9FD462E60EEF0DF9BD2C634C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2B7A9042EA51A40855D58748 /* Build configuration list for PBXNativeTarget "AlbumWinnowMobile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BBE194C088552F9921830A08 /* Debug */,
+				DF4D843641EDB87EAAEF0567 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -354,6 +441,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		6C75E88DE8098F1031C1D8CA /* AlbumWinnowCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AlbumWinnowCore;
+		};
 		99B03D7314E9092598247090 /* AlbumWinnowCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AlbumWinnowCore;

@@ -6,6 +6,7 @@ import SwiftUI
 @MainActor @Observable final class ReviewModel {
     private static let folderKey = "AlbumWinnow.folderBookmarks"
     private static let photosKey = "AlbumWinnow.photosEnabled"
+    private static let interruptedScanKey = "AlbumWinnow.interruptedScan"
 
     private(set) var folders: [FolderScope] = []
     private(set) var photosEnabled = false
@@ -23,10 +24,14 @@ import SwiftUI
     private let cleanup: AssetMutationService?
     private var scanTask: Task<Void, Never>?
     private var libraryTask: Task<Void, Never>?
+    #if os(iOS)
+    private var inForeground = false
+    #endif
 
     var allowsPhotos: Bool { authorization == .authorized || authorization == .limited }
     var canScan: Bool { !running && !cleaning && !sources.isEmpty && engine != nil }
     var canClean: Bool { !running && !cleaning && !resultsStale && cleanup != nil }
+    var hasPendingDownloads: Bool { !pendingDownloads.isEmpty }
 
     init() {
         let data = URL.applicationSupportDirectory.appending(path: "AlbumWinnow", directoryHint: .isDirectory)
@@ -90,7 +95,23 @@ import SwiftUI
         watchLibrary()
     }
 
-    func refreshAuthorization() {
+    func sceneChanged(_ phase: ScenePhase) {
+        if phase == .active {
+            refreshAuthorization()
+            #if os(iOS)
+            inForeground = true
+            resumeInterruptedScan()
+            #endif
+        }
+        #if os(iOS)
+        if phase == .background {
+            inForeground = false
+            scanTask?.cancel()
+        }
+        #endif
+    }
+
+    private func refreshAuthorization() {
         let latest = PhotoLibrarySource.authorizationStatus()
         guard latest != authorization else { return }
         authorization = latest
@@ -98,12 +119,30 @@ import SwiftUI
         watchLibrary()
     }
 
-    func scan() {
+    func scan() { startScan(downloads: []) }
+
+    func downloadPendingPhotos() {
+        guard !pendingDownloads.isEmpty else { return }
+        startScan(downloads: pendingDownloads)
+    }
+
+    private var pendingDownloads: Set<AssetID> {
+        Set((result?.issues ?? []).filter {
+            $0.id.source == photoSource.id && ($0.reason == .cloudDownloadRequired || $0.reason == .cloudDownloadFailed)
+        }.map(\.id))
+    }
+
+    private func startScan(downloads: Set<AssetID>) {
         guard canScan, let engine else { return }
-        let selectedSources = sources
+        let selectedSources = sources.map { source -> any AssetSource in
+            source.id == photoSource.id && !downloads.isEmpty ? PhotoLibrarySource(downloads: downloads) : source
+        }
+        #if os(iOS)
+        UserDefaults.standard.set(true, forKey: Self.interruptedScanKey)
+        #endif
         running = true
         resultsStale = false
-        result = nil
+        if downloads.isEmpty { result = nil }
         let (updates, continuation) = AsyncStream.makeStream(of: ScanProgress.self, bufferingPolicy: .bufferingNewest(1))
         scanTask = Task {
             let observer = Task {
@@ -115,22 +154,41 @@ import SwiftUI
                 running = false
                 progress = nil
                 scanTask = nil
+                #if os(iOS)
+                resumeInterruptedScan()
+                #endif
             }
             do {
                 let next = try await engine.scan(selectedSources) { continuation.yield($0) }
                 try Task.checkCancellation()
                 result = next
+                clearInterruptedScan()
             } catch is CancellationError {
                 return
             } catch {
+                clearInterruptedScan()
                 errorMessage = error.localizedDescription
             }
         }
     }
 
     func cancelScan() {
+        clearInterruptedScan()
         scanTask?.cancel()
     }
+
+    private func clearInterruptedScan() {
+        #if os(iOS)
+        UserDefaults.standard.removeObject(forKey: Self.interruptedScanKey)
+        #endif
+    }
+
+    #if os(iOS)
+    private func resumeInterruptedScan() {
+        guard inForeground, canScan, UserDefaults.standard.bool(forKey: Self.interruptedScanKey) else { return }
+        scan()
+    }
+    #endif
 
     func applyCleanup(_ pairs: [CleanupPair]) async {
         guard canClean, let cleanup else { return }

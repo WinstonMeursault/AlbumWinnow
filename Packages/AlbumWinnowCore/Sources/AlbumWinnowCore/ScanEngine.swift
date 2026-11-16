@@ -129,6 +129,8 @@ public actor ScanEngine {
             return .failed(AssetIssue(id: asset.id, reason: .changedDuringScan))
         } catch AssetAccessError.cloudDownloadRequired {
             return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadRequired))
+        } catch AssetAccessError.cloudDownloadFailed {
+            return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadFailed))
         } catch ImageReadError.unreadableImage {
             return .failed(AssetIssue(id: asset.id, reason: .unreadableImage))
         } catch is ImageReadError {

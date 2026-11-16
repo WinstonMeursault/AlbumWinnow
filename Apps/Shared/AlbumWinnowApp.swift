@@ -7,8 +7,9 @@ import SwiftUI
     var body: some Scene {
         WindowGroup("AlbumWinnow") {
             LibraryView(model: model)
+                .task { model.sceneChanged(scenePhase) }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active { model.refreshAuthorization() }
+                    model.sceneChanged(phase)
                 }
         }
         #if os(macOS)

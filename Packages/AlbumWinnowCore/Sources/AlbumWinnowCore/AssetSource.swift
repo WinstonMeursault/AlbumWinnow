@@ -49,6 +49,7 @@ public enum AssetIssueReason: String, Codable, Sendable {
     case unreadableImage
     case unsupportedImage
     case cloudDownloadRequired
+    case cloudDownloadFailed
 }
 
 public struct AssetIssue: Codable, Equatable, Sendable {
@@ -65,6 +66,7 @@ public enum AssetAccessError: Error, Sendable {
     case inaccessible
     case changedDuringScan
     case cloudDownloadRequired
+    case cloudDownloadFailed
 }
 
 public struct AssetSnapshot: Sendable {

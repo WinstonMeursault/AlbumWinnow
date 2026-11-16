@@ -6,11 +6,11 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It is design
 
 ## Project status
 
-AlbumWinnow is in development for v1.0. The macOS app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup. Development builds target macOS 14 or later. iOS and iPadOS support is in progress.
+AlbumWinnow is in development for v1.0. Development builds target macOS 14 and iOS or iPadOS 17 and later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
 
-## Build on macOS
+## Build and run
 
-Open `AlbumWinnow.xcodeproj` in Xcode, select the **AlbumWinnow** scheme and **My Mac**, then build and run. In the sidebar, enable Photos or add a folder, then select **Scan**.
+Open `AlbumWinnow.xcodeproj` in Xcode. Select **AlbumWinnow** for macOS or **AlbumWinnowMobile** for an iPhone or iPad simulator. In Sources, enable Photos or add a folder, then select **Scan**.
 
 The shared Swift package can also be built independently with `swift build --package-path Packages/AlbumWinnowCore`.
 
@@ -21,7 +21,7 @@ The shared Swift package can also be built independently with `swift build --pac
 - Group matches for side-by-side review and recommend a copy to keep based on image quality, resolution, and associated data such as a Live Photo video or the original version of an edited photo.
 - Reuse scan results for unchanged assets and update the index when photos are added, edited, or removed.
 
-The initial iCloud Photos integration will scan locally available assets and mark cloud-only items as pending. On-demand downloads are planned for a later stage. Grouping visually similar shots, such as distinct frames in a burst, is planned for v1.1.
+Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. On iOS and iPadOS, an interrupted scan resumes in the foreground using the saved sources and cached fingerprints. Grouping visually similar shots, such as distinct frames in a burst, is planned for v1.1.
 
 ## Matching and cleanup
 
@@ -31,7 +31,7 @@ The initial iCloud Photos integration will scan locally available assets and mar
 | Visual duplicate | The same image after accounting for differences in resolution, compression, or encoding. | Eligible for cleanup after review. |
 | Similar photo | A separate shot with a change in expression, motion, or composition. | Organization suggestions only. Planned for v1.1. |
 
-Matching and indexing run on device, and locally available photos can be scanned offline. Every cleanup operation requires explicit confirmation. Confirmed items go to Photos’ Recently Deleted album or the filesystem Trash, depending on the source. Each item’s outcome is recorded.
+Matching and indexing run on device, and locally available photos can be scanned offline. Every cleanup operation requires explicit confirmation. Confirmed items move to Photos’ Recently Deleted album or to the filesystem Trash when available. If a file provider has no Trash, the app keeps the file and records the failure.
 
 ## Technical design
 
