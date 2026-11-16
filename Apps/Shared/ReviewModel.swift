@@ -55,6 +55,7 @@ struct CloudDownloadProgress {
     private(set) var resultsStale = false
     private(set) var history: [CleanupRun] = []
     var errorMessage: String?
+    var sourceErrorMessage: String?
 
     private let photoSource = PhotoLibrarySource()
     private let engine: ScanEngine?
@@ -66,7 +67,9 @@ struct CloudDownloadProgress {
     #endif
 
     var allowsPhotos: Bool { authorization == .authorized || authorization == .limited }
-    var canScan: Bool { !running && !cleaning && !sources.isEmpty && engine != nil }
+    var hasScanSources: Bool { !folders.isEmpty || (photosEnabled && allowsPhotos) }
+    var canEditSources: Bool { !running && !cleaning }
+    var canScan: Bool { canEditSources && hasScanSources && engine != nil }
     var canClean: Bool { !running && !cleaning && !resultsStale && cleanup != nil }
     var pendingDownloadCount: Int { pendingDownloadIDs.count }
 
@@ -100,6 +103,7 @@ struct CloudDownloadProgress {
     }
 
     func addFolder(_ url: URL) {
+        guard canEditSources else { return }
         do {
             let folder = try FolderScope(url: url)
             guard !folders.contains(where: { $0.id == folder.id }) else { return }
@@ -107,25 +111,28 @@ struct CloudDownloadProgress {
             saveFolders()
             invalidateResults()
         } catch {
-            errorMessage = error.localizedDescription
+            sourceErrorMessage = error.localizedDescription
         }
     }
 
     func removeFolder(_ id: String) {
+        guard canEditSources else { return }
         folders.removeAll { $0.id == id }
         saveFolders()
         invalidateResults()
     }
 
     func setPhotosEnabled(_ enabled: Bool) async {
+        guard canEditSources else { return }
         if enabled && authorization == .notDetermined {
             authorization = await PhotoLibrarySource.requestAuthorization()
         } else {
             authorization = PhotoLibrarySource.authorizationStatus()
         }
+        guard canEditSources else { return }
         photosEnabled = enabled && allowsPhotos
         if enabled && !allowsPhotos {
-            errorMessage = "Allow access to Photos in System Settings to include the photo library."
+            sourceErrorMessage = "Allow access to Photos in System Settings to include the photo library."
         }
         UserDefaults.standard.set(photosEnabled, forKey: Self.photosKey)
         invalidateResults()

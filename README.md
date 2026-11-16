@@ -6,11 +6,11 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It is design
 
 ## Project status
 
-AlbumWinnow is in development for v1.0. Development builds target macOS 14 and iOS or iPadOS 17 and later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+AlbumWinnow is in development for v1.0. Development builds target macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
 
 ## Build and run
 
-Open `AlbumWinnow.xcodeproj` in Xcode. Select **AlbumWinnow** for macOS or **AlbumWinnowMobile** for an iPhone or iPad simulator. In Sources, enable Photos or add a folder, then select **Scan**.
+Open `AlbumWinnow.xcodeproj` in Xcode. Select **AlbumWinnow** for macOS or **AlbumWinnowMobile** for an iPhone or iPad simulator. Open **Settings** to enable Photos or add a folder under **Scan Sources**, then select **Scan** on the Duplicates screen.
 
 The shared Swift package can also be built independently with `swift build --package-path Packages/AlbumWinnowCore`.
 
@@ -21,7 +21,7 @@ The shared Swift package can also be built independently with `swift build --pac
 - Group matches for side-by-side review and recommend a copy to keep based on image quality, resolution, and associated data such as a Live Photo video or the original version of an edited photo.
 - Reuse scan results for unchanged assets and update the index when photos are added, edited, or removed.
 
-Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. The Sources sidebar shows iCloud transfer progress separately from scan progress, with counts of available, failed, and pending photos. After a scan, Duplicates shows the groups awaiting review. Cleanup History shows the outcome of each confirmed move. On iOS and iPadOS, an interrupted scan resumes in the foreground using the saved sources and cached fingerprints. Grouping visually similar shots, such as distinct frames in a burst, is planned for v1.1.
+Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. The Duplicates screen shows iCloud transfer progress separately from scan progress, with counts of available, failed, and pending photos. After a scan, Duplicates shows the groups awaiting review. Cleanup History shows the outcome of each confirmed move. On iOS and iPadOS, an interrupted scan resumes in the foreground using the saved sources and cached fingerprints. Grouping visually similar shots, such as distinct frames in a burst, is planned for v1.1.
 
 ## Matching and cleanup
 

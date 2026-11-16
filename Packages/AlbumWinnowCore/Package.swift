@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "AlbumWinnowCore",
-    platforms: [.macOS(.v14), .iOS(.v17)],
+    platforms: [.macOS("26.0"), .iOS("26.0")],
     products: [.library(name: "AlbumWinnowCore", targets: ["AlbumWinnowCore"])],
     dependencies: [
         .package(url: "https://github.com/JoshBashed/blake3-swift.git", exact: "0.2.2"),

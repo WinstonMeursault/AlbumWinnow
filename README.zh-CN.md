@@ -6,11 +6,11 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。项�
 
 ## 项目状态
 
-AlbumWinnow 正在开发 v1.0。开发版面向 macOS 14、iOS 17、iPadOS 17 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow 正在开发 v1.0。开发版面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
 
 ## 构建与运行
 
-在 Xcode 中打开 `AlbumWinnow.xcodeproj`。运行 macOS 版时选择 **AlbumWinnow**，运行 iPhone 或 iPad 模拟器时选择 **AlbumWinnowMobile**。在 Sources 启用 Photos 或添加文件夹，再点击 **Scan**。
+在 Xcode 中打开 `AlbumWinnow.xcodeproj`。运行 macOS 版时选择 **AlbumWinnow**，运行 iPhone 或 iPad 模拟器时选择 **AlbumWinnowMobile**。在 **Settings** 的 **Scan Sources** 页面启用照片图库或添加文件夹，再回到重复项页面点击 **Scan**。
 
 也可以用 `swift build --package-path Packages/AlbumWinnowCore` 独立构建共享 Swift 包。
 
@@ -21,7 +21,7 @@ AlbumWinnow 正在开发 v1.0。开发版面向 macOS 14、iOS 17、iPadOS 17 �
 - 将匹配项分组供用户并排对比，结合画质、分辨率及 Live Photo 配对视频、编辑前原件等关联数据推荐保留版本。
 - 复用未变化资源的扫描结果，在照片新增、编辑或删除后更新索引。
 
-扫描会读取本地可用的图库资源，并在 Scan Issues 列出仅存于 iCloud 的照片。点击 **Download Pending Photos from iCloud** 可授权下载并重试这些项目。来源侧栏分别显示 iCloud 下载和扫描进度，并列出可用、失败和待处理数量。扫描结束后，重复项列表显示待核对的组数。确认清理后，可在清理历史查看每项结果。在 iOS 和 iPadOS 上，中断的扫描会在回到前台后按已保存来源续扫，并复用缓存的指纹。连拍中不同帧等视觉相似照片的整理功能计划在 v1.1 加入。
+扫描会读取本地可用的图库资源，并在 Scan Issues 列出仅存于 iCloud 的照片。点击 **Download Pending Photos from iCloud** 可授权下载并重试这些项目。重复项页面分别显示 iCloud 下载和扫描进度，并列出可用、失败和待处理数量。扫描结束后，重复项列表显示待核对的组数。确认清理后，可在清理历史查看每项结果。在 iOS 和 iPadOS 上，中断的扫描会在回到前台后按已保存来源续扫，并复用缓存的指纹。连拍中不同帧等视觉相似照片的整理功能计划在 v1.1 加入。
 
 ## 匹配与清理
 

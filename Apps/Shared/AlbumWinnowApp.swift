@@ -15,5 +15,11 @@ import SwiftUI
         #if os(macOS)
         .defaultSize(width: 1200, height: 760)
         #endif
+        #if os(macOS)
+        Settings {
+            ScanSourcesView(model: model)
+                .frame(width: 460, height: 400)
+        }
+        #endif
     }
 }

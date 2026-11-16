@@ -1,50 +1,35 @@
 import AlbumWinnowCore
-import Photos
 import SwiftUI
-import UniformTypeIdentifiers
-#if os(macOS)
-import AppKit
-#else
-import PhotosUI
-import UIKit
-#endif
 
 struct LibraryView: View {
     let model: ReviewModel
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var selectedGroup: AssetID?
     @State private var compactColumn = NavigationSplitViewColumn.sidebar
-    @State private var importing = false
+    #if os(iOS)
+    @State private var showingSettings = false
+    #endif
     @State private var showingHistory = false
     @State private var showingIssues = false
 
     var body: some View {
-        #if os(macOS)
-        content
-        #else
-        content.fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
-            switch result {
-            case .success(let url): model.addFolder(url)
-            case .failure(let error): model.errorMessage = error.localizedDescription
-            }
-        }
-        #endif
-    }
-
-    private var content: some View {
         NavigationSplitView(preferredCompactColumn: $compactColumn) {
-            sidebar
-                .navigationTitle("Sources")
-                .navigationSplitViewColumnWidth(
-                    min: dynamicTypeSize.isAccessibilitySize ? 250 : 180,
-                    ideal: dynamicTypeSize.isAccessibilitySize ? 280 : 215,
-                    max: 300
-                )
-        } content: {
             groups
                 .navigationTitle("Duplicates")
                 .toolbarTitleDisplayMode(.inline)
-                .navigationSplitViewColumnWidth(min: 210, ideal: 260, max: 350)
+                .navigationSplitViewColumnWidth(min: 250, ideal: 310, max: 420)
+                .safeAreaInset(edge: .bottom, spacing: 0) { scanControls }
+                .toolbar {
+                    ToolbarItemGroup(placement: .primaryAction) {
+                        Button("Cleanup History", systemImage: "clock.arrow.circlepath") {
+                            showingHistory = true
+                        }
+                        .labelStyle(.iconOnly)
+                        .help("Cleanup History")
+                        settingsButton("Settings", systemImage: "gearshape")
+                            .labelStyle(.iconOnly)
+                            .help("Settings")
+                    }
+                }
         } detail: {
             if let group = model.result?.groups.first(where: { $0.id == selectedGroup }) {
                 GroupReviewView(group: group, model: model) { showingHistory = true }
@@ -55,8 +40,10 @@ struct LibraryView: View {
         }
         .onChange(of: model.result) { _, result in
             #if os(iOS)
-            if result != nil { compactColumn = .content }
-            if result?.groups.contains(where: { $0.id == selectedGroup }) != true { selectedGroup = nil }
+            if let selectedGroup, result?.groups.contains(where: { $0.id == selectedGroup }) != true {
+                self.selectedGroup = nil
+                compactColumn = .sidebar
+            }
             #else
             if let result, result.groups.contains(where: { $0.id == selectedGroup }) { return }
             selectedGroup = result?.groups.first?.id
@@ -66,6 +53,18 @@ struct LibraryView: View {
             history.task { await model.loadHistory() }
         }
         .sheet(isPresented: $showingIssues) { issues }
+        #if os(iOS)
+        .sheet(isPresented: $showingSettings) {
+            NavigationStack {
+                ScanSourcesView(model: model)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { showingSettings = false }
+                        }
+                    }
+            }
+        }
+        #endif
         .alert("AlbumWinnow", isPresented: Binding(
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
@@ -76,109 +75,38 @@ struct LibraryView: View {
         }
     }
 
-    private var sidebar: some View {
-        List {
-            Section("Photo Library") {
-                Toggle(isOn: Binding(
-                    get: { model.photosEnabled && model.allowsPhotos },
-                    set: { enabled in Task { await model.setPhotosEnabled(enabled) } }
-                )) {
-                    if dynamicTypeSize.isAccessibilitySize {
-                        Text("Photos")
-                    } else {
-                        Label("Photos", systemImage: "photo.on.rectangle")
-                    }
-                }
-                .disabled(model.running || model.cleaning)
-                .accessibilityIdentifier("photos-source")
-                if model.authorization == .limited {
-                    Text("Limited access").foregroundStyle(.secondary)
-                    #if os(iOS)
-                    Button("Manage Photo Access") { managePhotoAccess() }
-                    #endif
-                } else if model.authorization == .denied {
-                    #if os(iOS)
-                    Button("Open Settings") {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
-                    }
-                    #endif
-                }
-            }
-
-            Section("Folders") {
-                ForEach(model.folders) { folder in
-                    Label(folder.name, systemImage: "folder")
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .contextMenu {
-                            Button("Remove Source", role: .destructive) { model.removeFolder(folder.id) }
-                                .disabled(model.running || model.cleaning)
-                        }
-                }
-                Button(action: pickFolder) {
-                    Label("Add Folder", systemImage: "plus")
-                }
-                .disabled(model.running || model.cleaning)
-                .accessibilityIdentifier("add-folder")
-            }
-        }
-        .safeAreaInset(edge: .bottom) {
-            VStack(alignment: .leading, spacing: 10) {
-                if let download = model.downloadProgress { downloadStatus(download) }
-                if let progress = model.progress {
-                    progressView(progress)
-                } else if model.running && model.downloadProgress == nil {
-                    ProgressView("Preparing scan…")
-                }
-                if model.cleaning { ProgressView("Moving selected photos…") }
-                #if os(iOS)
-                if model.result != nil && !model.running {
-                    Button("View Results") { compactColumn = .content }
-                }
-                #endif
-                HStack {
-                    if model.running, let download = model.downloadProgress, download.remaining > 0, !download.ended {
-                        Button("Cancel Download") { model.cancelScan() }
-                    } else if model.running {
-                        Button("Cancel Scan") { model.cancelScan() }
-                    } else {
-                        Button("Scan", systemImage: "magnifyingglass") { model.scan() }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(!model.canScan)
-                            .accessibilityIdentifier("start-scan")
-                    }
-                    Spacer()
-                    Button("Cleanup History", systemImage: "clock.arrow.circlepath") { showingHistory = true }
-                        .labelStyle(.iconOnly)
-                        .help("Cleanup History")
-                }
-            }
-            .padding()
-            .background(.bar)
-        }
-    }
-
-    #if os(iOS)
-    private func managePhotoAccess() {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        guard let window = scenes.first(where: { $0.activationState == .foregroundActive })?.keyWindow,
-              let controller = window.rootViewController else { return }
-        PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: controller)
-    }
-    #endif
-
-    private func pickFolder() {
+    private func settingsButton(_ title: LocalizedStringKey, systemImage: String) -> some View {
         #if os(macOS)
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.prompt = "Add Folder"
-        panel.begin { response in
-            if response == .OK, let url = panel.url { model.addFolder(url) }
-        }
+        SettingsLink { Label(title, systemImage: systemImage) }
         #else
-        importing = true
+        Button { showingSettings = true } label: { Label(title, systemImage: systemImage) }
         #endif
+    }
+
+    private var scanControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let download = model.downloadProgress { downloadStatus(download) }
+            if let progress = model.progress {
+                progressView(progress)
+            } else if model.running && model.downloadProgress == nil {
+                ProgressView("Preparing scan…")
+            }
+            HStack {
+                if model.running, let download = model.downloadProgress, download.remaining > 0, !download.ended {
+                    Button("Cancel Download") { model.cancelScan() }
+                } else if model.running {
+                    Button("Cancel Scan") { model.cancelScan() }
+                } else {
+                    Button("Scan", systemImage: "magnifyingglass") { model.scan() }
+                        .buttonStyle(.glassProminent)
+                        .disabled(!model.canScan)
+                        .accessibilityIdentifier("start-scan")
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .padding()
+        .background(.bar)
     }
 
     private var groups: some View {
@@ -202,12 +130,20 @@ struct LibraryView: View {
                     systemImage: "clock.arrow.circlepath",
                     description: Text(cleanupSummary(cleanup) + " Scan again to refresh duplicates.")
                 )
+            } else if !model.hasScanSources {
+                ContentUnavailableView {
+                    Label("Choose Scan Sources", systemImage: "photo.stack")
+                } description: {
+                    Text("Enable Photos or add a folder to start scanning.")
+                } actions: {
+                    settingsButton("Configure Scan Sources", systemImage: "gearshape")
+                        .buttonStyle(.glass)
+                }
             } else if model.resultsStale {
                 ContentUnavailableView("Scan Again", systemImage: "arrow.clockwise",
                                        description: Text("The selected sources or their contents changed."))
             } else {
-                ContentUnavailableView("Ready to Scan", systemImage: "photo.stack",
-                                       description: Text("Choose a source and start a scan."))
+                ContentUnavailableView("Ready to Scan", systemImage: "photo.stack")
             }
         }
     }
@@ -338,7 +274,6 @@ struct LibraryView: View {
                 if model.pendingDownloadCount > 0 {
                     Button {
                         showingIssues = false
-                        compactColumn = .sidebar
                         model.downloadPendingPhotos()
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
