@@ -192,34 +192,10 @@ struct LibraryView: View {
                     description: Text("Duplicates will be ready to review when the scan finishes.")
                 )
             } else if let result = model.result {
-                List(selection: $selectedGroup) {
-                    scanSummary(result)
-                        .listRowSeparator(.hidden)
-                    if result.groups.isEmpty {
-                        ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
-                            .listRowSeparator(.hidden)
-                    } else {
-                        ForEach(result.groups) { group in
-                            NavigationLink(value: group.id) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(group.preferred.name).lineLimit(1)
-                                    Text("\(group.duplicates.count + 1) photos")
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                }
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    if !result.issues.isEmpty {
-                        Button(result.issues.count == 1 ? "Review 1 Scan Issue" : "Review \(result.issues.count) Scan Issues") {
-                            showingIssues = true
-                        }
-                            .padding(10)
-                            .frame(maxWidth: .infinity)
-                            .background(.bar)
-                    }
-                }
+                scanSummary(result)
+                    .padding(.horizontal)
+                Divider()
+                scanResults(result)
             } else if let cleanup = model.lastCleanup {
                 ContentUnavailableView(
                     "Cleanup Finished",
@@ -232,6 +208,37 @@ struct LibraryView: View {
             } else {
                 ContentUnavailableView("Ready to Scan", systemImage: "photo.stack",
                                        description: Text("Choose a source and start a scan."))
+            }
+        }
+    }
+
+    private func scanResults(_ result: ScanResult) -> some View {
+        Group {
+            if result.groups.isEmpty {
+                ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
+            } else {
+                List(selection: $selectedGroup) {
+                    ForEach(result.groups) { group in
+                        NavigationLink(value: group.id) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(group.preferred.name).lineLimit(1)
+                                Text("\(group.duplicates.count + 1) photos")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                .accessibilityIdentifier("duplicate-groups")
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !result.issues.isEmpty {
+                Button(result.issues.count == 1 ? "Review 1 Scan Issue" : "Review \(result.issues.count) Scan Issues") {
+                    showingIssues = true
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity)
+                .background(.bar)
             }
         }
     }
@@ -252,7 +259,8 @@ struct LibraryView: View {
         .font(.subheadline)
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 8)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.vertical, 10)
     }
 
     private func progressView(_ progress: ScanProgress) -> some View {
