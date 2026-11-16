@@ -93,24 +93,32 @@ struct LibraryView: View {
             } else if model.running && model.downloadProgress == nil {
                 ProgressView("Preparing scan…")
             }
-            HStack {
+            HStack(spacing: 8) {
                 if model.running, let download = model.downloadProgress, download.remaining > 0, !download.ended {
                     Button("Cancel Download") { model.cancelScan() }
                 } else if model.running {
                     Button("Cancel Scan") { model.cancelScan() }
                 } else {
-                    Button(model.lastCleanup == nil ? "Scan" : "Scan Again", systemImage: "magnifyingglass") { model.scan() }
-                        .buttonStyle(.glassProminent)
-                        .disabled(!model.canScan)
-                        .accessibilityIdentifier("start-scan")
+                    Button { model.scan() } label: {
+                        Label(model.lastCleanup == nil ? "Scan" : "Scan Again", systemImage: "magnifyingglass")
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .disabled(!model.canScan)
+                    .accessibilityIdentifier("start-scan")
                 }
                 Spacer(minLength: 0)
-            }
-            if model.selectedCount > 0 {
-                Button("Review Cleanup (\(model.selectedCount))…") { confirmingCleanup = true }
+                if model.selectedCount > 0 {
+                    Button { confirmingCleanup = true } label: {
+                        Text("Confirm Cleanup (\(model.selectedCount))")
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                    }
                     .buttonStyle(.borderedProminent)
                     .disabled(!model.canClean)
                     .accessibilityIdentifier("review-batch-cleanup")
+                }
             }
         }
         .padding()
