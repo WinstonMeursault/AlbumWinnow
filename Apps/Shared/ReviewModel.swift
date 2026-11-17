@@ -40,6 +40,8 @@ struct CloudDownloadProgress {
 }
 
 @MainActor @Observable final class ReviewModel {
+    static let showReviewFilenamesKey = "AlbumWinnow.showReviewFilenames"
+
     struct GroupSelection {
         var keepID: AssetID?
         var selected = Set<AssetID>()

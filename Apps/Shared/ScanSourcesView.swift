@@ -9,12 +9,18 @@ import UIKit
 
 struct ScanSourcesView: View {
     let model: ReviewModel
+    @AppStorage(ReviewModel.showReviewFilenamesKey) private var showReviewFilenames = false
     #if os(iOS)
     @State private var importing = false
     #endif
 
     var body: some View {
         Form {
+            Section("Review") {
+                Toggle("Show Filenames in Review", isOn: $showReviewFilenames)
+                    .accessibilityIdentifier("show-review-filenames")
+            }
+
             Section("Photo Library") {
                 Toggle("Photos", systemImage: "photo.on.rectangle", isOn: Binding(
                     get: { model.photosEnabled && model.allowsPhotos },

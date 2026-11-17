@@ -9,7 +9,7 @@ struct GroupReviewView: View {
     let reviewCleanup: () -> Void
 
     @State private var compareID: AssetID?
-    @State private var presentedComparison: PhotoAsset?
+    @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
 
     private var assets: [PhotoAsset] { [group.preferred] + group.duplicates.map(\.asset) }
     private var selection: ReviewModel.GroupSelection { model.selection(for: group.id) }
@@ -22,11 +22,6 @@ struct GroupReviewView: View {
         let rows = assets
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                if let comparison {
-                    Button("Compare…", systemImage: "rectangle.split.2x1") { presentedComparison = comparison }
-                        .buttonStyle(.bordered)
-                        .accessibilityIdentifier("open-comparison")
-                }
                 previews(comparing: comparison)
                 if group.duplicates.contains(where: { $0.match == .visualDuplicate }) {
                     Label("Compare details before moving a possible match.", systemImage: "eye")
@@ -34,8 +29,8 @@ struct GroupReviewView: View {
                         .foregroundStyle(.secondary)
                 }
                 LazyVStack(alignment: .leading, spacing: 8) {
-                    ForEach(rows) { asset in
-                        row(asset)
+                    ForEach(Array(rows.enumerated()), id: \.element.id) { index, asset in
+                        row(asset, number: index + 1)
                         if asset.id != rows.last?.id { Divider() }
                     }
                 }
@@ -57,24 +52,6 @@ struct GroupReviewView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
             .background(.bar)
-        }
-        .sheet(item: $presentedComparison) { asset in
-            NavigationStack {
-                ScrollView {
-                    previews(comparing: asset)
-                        .padding(18)
-                }
-                .navigationTitle("Compare Photos")
-                .toolbarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") { presentedComparison = nil }
-                    }
-                }
-            }
-            #if os(macOS)
-            .frame(minWidth: 640, minHeight: 380)
-            #endif
         }
     }
 
@@ -99,14 +76,15 @@ struct GroupReviewView: View {
     }
 
     @ViewBuilder private func cards(comparing asset: PhotoAsset?) -> some View {
-        PreviewCard(asset: keep, label: "Copy to Keep", model: model)
-        if let asset { PreviewCard(asset: asset, label: "Comparison Copy", model: model) }
+        PreviewCard(asset: keep, label: "Copy to Keep", showFilename: showFilenames, model: model)
+        if let asset { PreviewCard(asset: asset, label: "Comparison Copy", showFilename: showFilenames, model: model) }
     }
 
-    private func row(_ asset: PhotoAsset) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+    private func row(_ asset: PhotoAsset, number: Int) -> some View {
+        let title = showFilenames ? asset.name : "Copy \(number)"
+        return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(asset.name).fontWeight(.medium).lineLimit(1)
+                Text(title).fontWeight(.medium).lineLimit(1)
                 Text(description(for: asset)).font(.caption).foregroundStyle(.secondary)
                 if asset.photoProperties?.hasAssociatedResources == true {
                     Label("Associated resources protected", systemImage: "lock")
@@ -119,10 +97,8 @@ struct GroupReviewView: View {
                     .foregroundStyle(.tint)
             } else {
                 Menu {
-                    Button("Compare") {
-                        compareID = asset.id
-                        presentedComparison = asset
-                    }
+                    Button("Show in Preview") { compareID = asset.id }
+                        .disabled(comparison?.id == asset.id)
                     Button("Keep This Copy") {
                         model.setSelection(.init(keepID: asset.id), for: group.id)
                         compareID = nil
@@ -130,9 +106,9 @@ struct GroupReviewView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
-                .accessibilityLabel("Review options for \(asset.name)")
+                .accessibilityLabel("Review options for \(title)")
 
-                Toggle("Move \(asset.name)", isOn: Binding(
+                Toggle("Move \(title)", isOn: Binding(
                     get: { selection.selected.contains(asset.id) },
                     set: {
                         var next = selection
@@ -165,6 +141,7 @@ struct GroupReviewView: View {
 private struct PreviewCard: View {
     let asset: PhotoAsset
     let label: String
+    let showFilename: Bool
     let model: ReviewModel
 
     @State private var preview: CGImage?
@@ -177,7 +154,6 @@ private struct PreviewCard: View {
                 RoundedRectangle(cornerRadius: 8).fill(.quaternary)
                 if let preview {
                     Image(decorative: preview, scale: 1).resizable().scaledToFit()
-                        .accessibilityLabel(asset.name)
                 } else if failed {
                     Label("Preview unavailable", systemImage: "photo.badge.exclamationmark").font(.caption)
                 } else {
@@ -185,7 +161,7 @@ private struct PreviewCard: View {
                 }
             }
             .frame(minWidth: 210, idealWidth: 255, maxWidth: .infinity, minHeight: 180, idealHeight: 225, maxHeight: 260)
-            Text(asset.name).font(.caption).lineLimit(1)
+            if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
         }
         .task(id: asset) {
             preview = nil
