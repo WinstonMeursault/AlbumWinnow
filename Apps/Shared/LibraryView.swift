@@ -4,7 +4,7 @@ import SwiftUI
 struct LibraryView: View {
     let model: ReviewModel
     @State private var selectedGroup: AssetID?
-    @State private var compactColumn = NavigationSplitViewColumn.sidebar
+    @State private var reviewPath: [AssetID] = []
     #if os(iOS)
     @State private var showingSettings = false
     #endif
@@ -13,42 +13,57 @@ struct LibraryView: View {
     @State private var confirmingCleanup = false
 
     var body: some View {
-        NavigationSplitView(preferredCompactColumn: $compactColumn) {
-            groups
-                .navigationTitle("Duplicates")
-                .toolbarTitleDisplayMode(.inline)
-                .navigationSplitViewColumnWidth(min: 250, ideal: 310, max: 420)
-                .safeAreaInset(edge: .bottom, spacing: 0) { scanControls }
-                .toolbar {
-                    ToolbarItemGroup(placement: .primaryAction) {
-                        Button("Cleanup History", systemImage: "clock.arrow.circlepath") {
-                            showingHistory = true
-                        }
-                        .labelStyle(.iconOnly)
-                        .help("Cleanup History")
-                        settingsButton("Settings", systemImage: "gearshape")
-                            .labelStyle(.iconOnly)
-                            .help("Settings")
+        NavigationStack(path: $reviewPath) {
+            GeometryReader { geometry in
+                let width = geometry.size.width
+                let wide = width >= 760
+                let group = wide ? group(withID: selectedGroup) : nil
+                HStack(spacing: 0) {
+                    groups(wide: wide, narrowed: group != nil)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .safeAreaInset(edge: .bottom, spacing: 0) { scanControls }
+                        .frame(width: group == nil ? nil : min(470, max(330, width * 0.36)))
+                    if let group {
+                        Divider()
+                        reviewPane(group)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
-        } detail: {
-            if let group = model.result?.groups.first(where: { $0.id == selectedGroup }) {
-                GroupReviewView(group: group, model: model) { confirmingCleanup = true }
-                    .id(group.id)
-            } else {
-                ContentUnavailableView("Select a Group", systemImage: "photo.on.rectangle.angled")
+                .onChange(of: wide) { _, wide in
+                    if wide {
+                        selectedGroup = reviewPath.last
+                        reviewPath.removeAll()
+                    } else {
+                        reviewPath = selectedGroup.map { [$0] } ?? []
+                        selectedGroup = nil
+                    }
+                }
+            }
+            .navigationTitle("Duplicates")
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button("Cleanup History", systemImage: "clock.arrow.circlepath") {
+                        showingHistory = true
+                    }
+                    .labelStyle(.iconOnly)
+                    .help("Cleanup History")
+                    settingsButton("Settings", systemImage: "gearshape")
+                        .labelStyle(.iconOnly)
+                        .help("Settings")
+                }
+            }
+            .navigationDestination(for: AssetID.self) { id in
+                if let group = group(withID: id) {
+                    review(group)
+                        .navigationTitle("Review Group")
+                        .toolbarTitleDisplayMode(.inline)
+                }
             }
         }
-        .onChange(of: model.result) { _, result in
-            #if os(iOS)
-            if let selectedGroup, result?.groups.contains(where: { $0.id == selectedGroup }) != true {
-                self.selectedGroup = nil
-                compactColumn = .sidebar
-            }
-            #else
-            if let result, result.groups.contains(where: { $0.id == selectedGroup }) { return }
-            selectedGroup = result?.groups.first?.id
-            #endif
+        .onChange(of: model.result) {
+            if group(withID: selectedGroup) == nil { selectedGroup = nil }
+            if group(withID: reviewPath.last) == nil { reviewPath.removeAll() }
         }
         .sheet(isPresented: $showingHistory) {
             history.task { await model.loadHistory() }
@@ -74,6 +89,32 @@ struct LibraryView: View {
             Button("OK", role: .cancel) { model.errorMessage = nil }
         } message: {
             Text(model.errorMessage ?? "")
+        }
+    }
+
+    private func group(withID id: AssetID?) -> DuplicateGroup? {
+        guard let id else { return nil }
+        return model.result?.groups.first { $0.id == id }
+    }
+
+    private func review(_ group: DuplicateGroup) -> some View {
+        GroupReviewView(group: group, model: model) { confirmingCleanup = true }
+            .id(group.id)
+    }
+
+    private func reviewPane(_ group: DuplicateGroup) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Review Group").font(.headline)
+                Spacer()
+                Button("Close Review", systemImage: "xmark") { selectedGroup = nil }
+                    .labelStyle(.iconOnly)
+                    .help("Close Review")
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            Divider()
+            review(group)
         }
     }
 
@@ -125,7 +166,7 @@ struct LibraryView: View {
         .background(.bar)
     }
 
-    private var groups: some View {
+    private func groups(wide: Bool, narrowed: Bool) -> some View {
         VStack(spacing: 0) {
             if model.cleaning {
                 ContentUnavailableView("Moving Selected Photos", systemImage: "trash")
@@ -139,7 +180,7 @@ struct LibraryView: View {
                 scanSummary(result)
                     .padding(.horizontal)
                 Divider()
-                scanResults(result)
+                scanResults(result, wide: wide, narrowed: narrowed)
             } else if let cleanup = model.lastCleanup {
                 ContentUnavailableView {
                     Label("Cleanup Finished", systemImage: "clock.arrow.circlepath")
@@ -166,24 +207,16 @@ struct LibraryView: View {
         }
     }
 
-    private func scanResults(_ result: ScanResult) -> some View {
+    private func scanResults(_ result: ScanResult, wide: Bool, narrowed: Bool) -> some View {
         Group {
             if result.groups.isEmpty {
                 ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
             } else {
-                List(selection: $selectedGroup) {
-                    ForEach(result.groups) { group in
-                        let count = model.selection(for: group.id).selected.count
-                        NavigationLink(value: group.id) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(group.preferred.name).lineLimit(1)
-                                Text(count == 0 ? "\(group.duplicates.count + 1) photos" : "\(group.duplicates.count + 1) photos · \(count) selected")
-                                    .font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                    }
+                DuplicateGallery(groups: result.groups, model: model, selectedGroup: selectedGroup,
+                                 narrowed: narrowed, isActive: reviewPath.isEmpty) { group in
+                    if wide { selectedGroup = group.id }
+                    else { reviewPath = [group.id] }
                 }
-                .accessibilityIdentifier("duplicate-groups")
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {

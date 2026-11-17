@@ -1,4 +1,5 @@
 import AlbumWinnowCore
+import CoreGraphics
 import Foundation
 import Photos
 import SwiftUI
@@ -70,6 +71,7 @@ struct CloudDownloadProgress {
     var sourceErrorMessage: String?
 
     private let photoSource = PhotoLibrarySource()
+    private let galleryThumbnails = GalleryThumbnails()
     private let engine: ScanEngine?
     private let cleanup: AssetMutationService?
     private var scanTask: Task<Void, Never>?
@@ -311,6 +313,24 @@ struct CloudDownloadProgress {
         return try await source.image(for: asset)
     }
 
+    func thumbnail(for asset: PhotoAsset, pixelSize: Int) async throws -> CGImage {
+        let key = GalleryThumbnailKey(asset: asset, pixelSize: pixelSize)
+        if asset.id.source == photoSource.id, photosEnabled, allowsPhotos {
+            let source = photoSource
+            return try await galleryThumbnails.image(for: key) {
+                try await source.thumbnail(for: asset, maxPixelSize: pixelSize)
+            }
+        }
+        guard let folder = folders.first(where: { $0.id == asset.id.source }) else {
+            throw AssetAccessError.inaccessible
+        }
+        defer { withExtendedLifetime(folder) {} }
+        let source = folder.source
+        return try await galleryThumbnails.image(for: key) {
+            try await source.thumbnail(for: asset, maxPixelSize: pixelSize)
+        }
+    }
+
     func sourceLabel(_ id: String) -> String {
         if id == photoSource.id { return "Photos" }
         return folders.first(where: { $0.id == id })?.name ?? "Folder"
@@ -326,6 +346,7 @@ struct CloudDownloadProgress {
         if result != nil || running { resultsStale = true }
         selections.removeAll()
         result = nil
+        Task { await galleryThumbnails.clear() }
         scanTask?.cancel()
     }
 

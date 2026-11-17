@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import ImageIO
 import UniformTypeIdentifiers
 
 public struct FileSystemSource: AssetSource {
@@ -59,6 +60,24 @@ public struct FileSystemSource: AssetSource {
         let data = try Data(contentsOf: url)
         _ = try currentURL(for: asset)
         return data
+    }
+
+    public func thumbnail(for asset: PhotoAsset, maxPixelSize: Int) async throws -> CGImage {
+        try Task.checkCancellation()
+        let url = try currentURL(for: asset)
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: max(1, maxPixelSize),
+            kCGImageSourceShouldCache: false,
+        ]
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let thumbnail = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            throw ImageReadError.unreadableImage
+        }
+        try Task.checkCancellation()
+        _ = try currentURL(for: asset)
+        return thumbnail
     }
 
     public func currentURL(for asset: PhotoAsset) throws -> URL {

@@ -42,8 +42,6 @@ struct GroupReviewView: View {
             }
             .padding(18)
         }
-        .navigationTitle("Review Group")
-        .toolbarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 12) {

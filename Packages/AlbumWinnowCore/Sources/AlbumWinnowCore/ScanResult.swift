@@ -1,5 +1,10 @@
 import Foundation
 
+public struct ImageDimensions: Codable, Equatable, Sendable {
+    public let width: Int
+    public let height: Int
+}
+
 public struct DuplicateMember: Codable, Equatable, Sendable, Identifiable {
     public let asset: PhotoAsset
     public let match: DuplicateMatch
@@ -10,6 +15,7 @@ public struct DuplicateMember: Codable, Equatable, Sendable, Identifiable {
 public struct DuplicateGroup: Codable, Equatable, Sendable, Identifiable {
     public let preferred: PhotoAsset
     public let duplicates: [DuplicateMember]
+    public let preferredDimensions: ImageDimensions?
 
     public var id: AssetID { preferred.id }
 }

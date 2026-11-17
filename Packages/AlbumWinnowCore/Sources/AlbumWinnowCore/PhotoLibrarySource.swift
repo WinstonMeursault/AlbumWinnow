@@ -1,6 +1,12 @@
 import Foundation
 import ImageIO
 import Photos
+#if os(macOS)
+import AppKit
+#else
+import CoreImage
+import UIKit
+#endif
 
 public enum PhotoLibraryReadError: Error, Sendable {
     case authorizationRequired
@@ -84,6 +90,69 @@ public struct PhotoLibrarySource: AssetSource {
         return result
     }
 
+    public func thumbnail(for asset: PhotoAsset, maxPixelSize: Int) async throws -> CGImage {
+        try Task.checkCancellation()
+        let current = try currentAsset(for: asset)
+        let options = PHImageRequestOptions()
+        options.version = .current
+        options.deliveryMode = .highQualityFormat
+        options.resizeMode = .exact
+        options.isNetworkAccessAllowed = false
+        let side = CGFloat(max(1, maxPixelSize))
+        let request = PhotoRequest<CGImage>()
+        let thumbnail = try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                guard request.begin(continuation) else { return }
+                let id = PHImageManager.default().requestImage(
+                    for: current, targetSize: CGSize(width: side, height: side),
+                    contentMode: .aspectFit, options: options
+                ) { image, info in
+                    if info?[PHImageCancelledKey] as? Bool == true {
+                        request.complete(.failure(CancellationError()))
+                    } else if let image, let thumbnail = Self.thumbnailCGImage(image) {
+                        request.complete(.success(thumbnail))
+                    } else if info?[PHImageResultIsInCloudKey] as? Bool == true {
+                        request.complete(.failure(AssetAccessError.cloudDownloadRequired))
+                    } else {
+                        request.complete(.failure(info?[PHImageErrorKey] as? Error ?? AssetAccessError.inaccessible))
+                    }
+                }
+                request.bind(id)
+            }
+        } onCancel: {
+            request.cancel()
+        }
+        try Task.checkCancellation()
+        _ = try currentAsset(for: asset)
+        return thumbnail
+    }
+
+    #if os(macOS)
+    private static func thumbnailCGImage(_ image: NSImage) -> CGImage? {
+        image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    }
+    #else
+    private static let thumbnailContext = CIContext(options: [.cacheIntermediates: false])
+
+    private static func thumbnailCGImage(_ image: UIImage) -> CGImage? {
+        guard let pixels = image.cgImage else { return nil }
+        let orientation: CGImagePropertyOrientation
+        switch image.imageOrientation {
+        case .up: return pixels
+        case .upMirrored: orientation = .upMirrored
+        case .down: orientation = .down
+        case .downMirrored: orientation = .downMirrored
+        case .left: orientation = .left
+        case .leftMirrored: orientation = .leftMirrored
+        case .right: orientation = .right
+        case .rightMirrored: orientation = .rightMirrored
+        @unknown default: return pixels
+        }
+        let oriented = CIImage(cgImage: pixels).oriented(orientation)
+        return thumbnailContext.createCGImage(oriented, from: oriented.extent)
+    }
+    #endif
+
     func permitsDownload(for id: AssetID) -> Bool { downloads.contains(id) }
 
     public func changes() -> AsyncStream<Void> {
@@ -156,13 +225,15 @@ public struct PhotoLibrarySource: AssetSource {
     }
 }
 
-final class PhotoImageRequest: @unchecked Sendable {
+typealias PhotoImageRequest = PhotoRequest<AssetImage>
+
+final class PhotoRequest<Value: Sendable>: @unchecked Sendable {
     private let lock = NSLock()
-    private var continuation: CheckedContinuation<AssetImage, any Error>?
+    private var continuation: CheckedContinuation<Value, any Error>?
     private var requestID: PHImageRequestID?
     private var cancelled = false
 
-    func begin(_ continuation: CheckedContinuation<AssetImage, any Error>) -> Bool {
+    func begin(_ continuation: CheckedContinuation<Value, any Error>) -> Bool {
         let active = lock.withLock {
             guard !cancelled else { return false }
             self.continuation = continuation
@@ -181,20 +252,7 @@ final class PhotoImageRequest: @unchecked Sendable {
         if shouldCancel { PHImageManager.default().cancelImageRequest(id) }
     }
 
-    func complete(data: Data?, orientation: CGImagePropertyOrientation, info: [AnyHashable: Any]?, allowsDownload: Bool) {
-        let result: Result<AssetImage, any Error>
-        if info?[PHImageCancelledKey] as? Bool == true {
-            result = .failure(CancellationError())
-        } else if !allowsDownload, data?.isEmpty != false, info?[PHImageResultIsInCloudKey] as? Bool == true {
-            result = .failure(AssetAccessError.cloudDownloadRequired)
-        } else if let data, !data.isEmpty {
-            result = .success(AssetImage(data: data, orientation: orientation))
-        } else if allowsDownload {
-            result = .failure(AssetAccessError.cloudDownloadFailed)
-        } else {
-            result = .failure(info?[PHImageErrorKey] as? Error ?? AssetAccessError.inaccessible)
-        }
-
+    func complete(_ result: Result<Value, any Error>) {
         let next = lock.withLock {
             defer {
                 continuation = nil
@@ -216,5 +274,23 @@ final class PhotoImageRequest: @unchecked Sendable {
         }
         next?.resume(throwing: CancellationError())
         if let id { PHImageManager.default().cancelImageRequest(id) }
+    }
+}
+
+extension PhotoRequest where Value == AssetImage {
+    func complete(data: Data?, orientation: CGImagePropertyOrientation, info: [AnyHashable: Any]?, allowsDownload: Bool) {
+        let result: Result<AssetImage, any Error>
+        if info?[PHImageCancelledKey] as? Bool == true {
+            result = .failure(CancellationError())
+        } else if !allowsDownload, data?.isEmpty != false, info?[PHImageResultIsInCloudKey] as? Bool == true {
+            result = .failure(AssetAccessError.cloudDownloadRequired)
+        } else if let data, !data.isEmpty {
+            result = .success(AssetImage(data: data, orientation: orientation))
+        } else if allowsDownload {
+            result = .failure(AssetAccessError.cloudDownloadFailed)
+        } else {
+            result = .failure(info?[PHImageErrorKey] as? Error ?? AssetAccessError.inaccessible)
+        }
+        complete(result)
     }
 }

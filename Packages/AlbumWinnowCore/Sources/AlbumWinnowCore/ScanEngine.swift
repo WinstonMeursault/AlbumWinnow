@@ -185,7 +185,10 @@ public actor ScanEngine {
                 duplicates.append(DuplicateMember(asset: other.asset, match: match))
             }
             if !duplicates.isEmpty {
-                groups.append(DuplicateGroup(preferred: representative.asset, duplicates: duplicates))
+                let dimensions = ImageDimensions(width: representative.fingerprint.width,
+                                                 height: representative.fingerprint.height)
+                groups.append(DuplicateGroup(preferred: representative.asset, duplicates: duplicates,
+                                             preferredDimensions: dimensions))
             }
         }
         progress(.comparing(completed: ordered.count, total: ordered.count))
