@@ -179,7 +179,7 @@ struct LibraryView: View {
             } else if let result = model.result {
                 scanSummary(result)
                     .padding(.horizontal)
-                Divider()
+                    .padding(.top, 8)
                 scanResults(result, wide: wide, narrowed: narrowed)
             } else if let cleanup = model.lastCleanup {
                 ContentUnavailableView {
@@ -232,23 +232,39 @@ struct LibraryView: View {
     }
 
     private func scanSummary(_ result: ScanResult) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Label("Scan Complete", systemImage: "checkmark.circle")
-                .font(.headline)
-                .foregroundStyle(.primary)
-                .accessibilityAddTraits(.isHeader)
-            if result.groups.isEmpty {
-                Text("\(result.scanned + result.reused) photos checked")
-            } else {
-                Text(result.groups.count == 1 ? "1 duplicate group to review" : "\(result.groups.count) duplicate groups to review")
-                Text("Photos are moved only after you confirm cleanup.")
+        let shape = RoundedRectangle(cornerRadius: 18)
+        return HStack(spacing: 12) {
+            ZStack {
+                Circle().fill(.blue)
+                Image(systemName: "checkmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
             }
+            .frame(width: 36, height: 36)
+            .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Scan Complete")
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .accessibilityAddTraits(.isHeader)
+                if result.groups.isEmpty {
+                    Text("\(result.scanned + result.reused) photos checked")
+                } else {
+                    Text(result.groups.count == 1 ? "1 duplicate group to review" : "\(result.groups.count) duplicate groups to review")
+                }
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
         }
-        .font(.subheadline)
-        .foregroundStyle(.secondary)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.regularMaterial, in: shape)
+        .overlay { shape.strokeBorder(.primary.opacity(0.08)) }
         .fixedSize(horizontal: false, vertical: true)
-        .padding(.vertical, 10)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("scan-summary")
     }
 
     private func progressView(_ progress: ScanProgress) -> some View {
