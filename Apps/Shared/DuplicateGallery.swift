@@ -64,6 +64,7 @@ struct DuplicateGallery: View {
     let selectedGroup: AssetID?
     let narrowed: Bool
     let isActive: Bool
+    let bottomRequest: Int
     let open: (DuplicateGroup) -> Void
 
     @Environment(\.displayScale) private var displayScale
@@ -73,12 +74,14 @@ struct DuplicateGallery: View {
     @State private var viewport = CGRect.zero
     @State private var position = ScrollPosition(edge: .top)
     @State private var overviewAnchor: Anchor?
+    @State private var pendingBottomScroll = false
 
     private struct Configuration: Equatable {
         let width: CGFloat
         let columns: Int
         let captionHeight: CGFloat
         let narrowed: Bool
+        let bottomRequest: Int
     }
 
     private struct Anchor {
@@ -90,7 +93,8 @@ struct DuplicateGallery: View {
         GeometryReader { geometry in
             let width = geometry.size.width.rounded(.down)
             let configuration = Configuration(width: width, columns: columnCount(at: width),
-                                              captionHeight: captionHeight, narrowed: narrowed)
+                                              captionHeight: captionHeight, narrowed: narrowed,
+                                              bottomRequest: bottomRequest)
             let top = max(0, viewport.minY)
             let bottom = top + max(viewport.height, geometry.size.height)
             let loadedRange = max(0, top - 220)..<(bottom + 220)
@@ -121,13 +125,25 @@ struct DuplicateGallery: View {
                 let anchor = masonry.anchor(at: top).map { Anchor(tile: $0.id, offset: top - $0.frame.minY) }
                 if old.narrowed != new.narrowed, new.narrowed { overviewAnchor = anchor }
                 rebuild(new)
-                restore(old.narrowed && !new.narrowed ? overviewAnchor ?? anchor : anchor)
+                if old.bottomRequest != new.bottomRequest {
+                    pendingBottomScroll = true
+                } else {
+                    restore(old.narrowed && !new.narrowed ? overviewAnchor ?? anchor : anchor)
+                }
                 if !new.narrowed { overviewAnchor = nil }
             }
             .onChange(of: groups) {
                 overviewAnchor = nil
+                pendingBottomScroll = false
                 rebuild(configuration)
                 restore(nil)
+            }
+            .task(id: isActive && pendingBottomScroll) {
+                guard isActive && pendingBottomScroll else { return }
+                await Task.yield()
+                guard !Task.isCancelled else { return }
+                position.scrollTo(edge: .bottom)
+                pendingBottomScroll = false
             }
         }
     }

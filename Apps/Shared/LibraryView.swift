@@ -5,6 +5,7 @@ struct LibraryView: View {
     let model: ReviewModel
     @State private var selectedGroup: AssetID?
     @State private var reviewPath: [AssetID] = []
+    @State private var galleryBottomRequest = 0
     #if os(iOS)
     @State private var showingSettings = false
     #endif
@@ -31,12 +32,13 @@ struct LibraryView: View {
                 }
                 .onChange(of: wide) { _, wide in
                     if wide {
-                        selectedGroup = reviewPath.last
                         reviewPath.removeAll()
                     } else {
                         reviewPath = selectedGroup.map { [$0] } ?? []
-                        selectedGroup = nil
                     }
+                }
+                .onChange(of: reviewPath.isEmpty) { _, closed in
+                    if closed && !wide { selectedGroup = nil }
                 }
             }
             .navigationTitle("Duplicates")
@@ -53,8 +55,8 @@ struct LibraryView: View {
                         .help("Settings")
                 }
             }
-            .navigationDestination(for: AssetID.self) { id in
-                if let group = group(withID: id) {
+            .navigationDestination(for: AssetID.self) { _ in
+                if let group = group(withID: selectedGroup) {
                     review(group)
                         .navigationTitle("Review Group")
                         .toolbarTitleDisplayMode(.inline)
@@ -62,8 +64,10 @@ struct LibraryView: View {
             }
         }
         .onChange(of: model.result) {
-            if group(withID: selectedGroup) == nil { selectedGroup = nil }
-            if group(withID: reviewPath.last) == nil { reviewPath.removeAll() }
+            if group(withID: selectedGroup) == nil {
+                selectedGroup = nil
+                reviewPath.removeAll()
+            }
         }
         .sheet(isPresented: $showingHistory) {
             history.task { await model.loadHistory() }
@@ -98,8 +102,23 @@ struct LibraryView: View {
     }
 
     private func review(_ group: DuplicateGroup) -> some View {
-        GroupReviewView(group: group, model: model) { confirmingCleanup = true }
-            .id(group.id)
+        GroupReviewView(group: group, model: model, moveGroup: moveReview) {
+            confirmingCleanup = true
+        }
+        .id(group.id)
+    }
+
+    private func moveReview(forward: Bool) {
+        guard let groups = model.result?.groups,
+              let index = groups.firstIndex(where: { $0.id == selectedGroup }) else { return }
+        let next = index + (forward ? 1 : -1)
+        if groups.indices.contains(next) {
+            selectedGroup = groups[next].id
+        } else if forward {
+            galleryBottomRequest += 1
+            if reviewPath.isEmpty { selectedGroup = nil }
+            else { reviewPath.removeAll() }
+        }
     }
 
     private func reviewPane(_ group: DuplicateGroup) -> some View {
@@ -213,9 +232,10 @@ struct LibraryView: View {
                 ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
             } else {
                 DuplicateGallery(groups: result.groups, model: model, selectedGroup: selectedGroup,
-                                 narrowed: narrowed, isActive: reviewPath.isEmpty) { group in
-                    if wide { selectedGroup = group.id }
-                    else { reviewPath = [group.id] }
+                                 narrowed: narrowed, isActive: reviewPath.isEmpty,
+                                 bottomRequest: galleryBottomRequest) { group in
+                    selectedGroup = group.id
+                    if !wide { reviewPath = [group.id] }
                 }
             }
         }
