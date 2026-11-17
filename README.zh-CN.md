@@ -10,7 +10,7 @@ AlbumWinnow 正在开发 v1.0。开发版面向 macOS 26、iOS 26、iPadOS 26 �
 
 ## 构建与运行
 
-在 Xcode 中打开 `AlbumWinnow.xcodeproj`。运行 macOS 版时选择 **AlbumWinnow**，运行 iPhone 或 iPad 模拟器时选择 **AlbumWinnowMobile**。在 **Settings** 的 **Scan Sources** 页面启用照片图库或添加文件夹，再回到重复项页面点击 **Scan**。
+在 Xcode 中打开 `AlbumWinnow.xcodeproj`。运行 macOS 版时选择 **AlbumWinnow**，运行 iPhone 或 iPad 模拟器时选择 **AlbumWinnowMobile**。在 **Settings** 的 **Scan Sources** 分区启用照片图库或添加文件夹，再回到重复项页面点击 **Scan**。
 
 也可以用 `swift build --package-path Packages/AlbumWinnowCore` 独立构建共享 Swift 包。
 

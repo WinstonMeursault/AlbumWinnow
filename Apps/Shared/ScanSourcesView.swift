@@ -16,12 +16,7 @@ struct ScanSourcesView: View {
 
     var body: some View {
         Form {
-            Section("Review") {
-                Toggle("Show Filenames in Review", isOn: $showReviewFilenames)
-                    .accessibilityIdentifier("show-review-filenames")
-            }
-
-            Section("Photo Library") {
+            Section("Scan Sources") {
                 Toggle("Photos", systemImage: "photo.on.rectangle", isOn: Binding(
                     get: { model.photosEnabled && model.allowsPhotos },
                     set: { enabled in Task { await model.setPhotosEnabled(enabled) } }
@@ -46,9 +41,7 @@ struct ScanSourcesView: View {
                     }
                     #endif
                 }
-            }
 
-            Section("Folders") {
                 ForEach(model.folders) { folder in
                     HStack {
                         Label(folder.name, systemImage: "folder")
@@ -66,14 +59,19 @@ struct ScanSourcesView: View {
                     }
                 }
                 Button(action: pickFolder) {
-                    Label("Add Folder", systemImage: "plus")
+                    Label("Add Folder…", systemImage: "plus")
                 }
                 .disabled(!model.canEditSources)
                 .accessibilityIdentifier("add-folder")
             }
+
+            Section("Review") {
+                Toggle("Show Filenames in Review", isOn: $showReviewFilenames)
+                    .accessibilityIdentifier("show-review-filenames")
+            }
         }
         .formStyle(.grouped)
-        .navigationTitle("Scan Sources")
+        .navigationTitle("Settings")
         #if os(iOS)
         .toolbarTitleDisplayMode(.inline)
         .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
