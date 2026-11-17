@@ -9,6 +9,8 @@ struct GroupReviewView: View {
     let reviewCleanup: () -> Void
 
     @State private var compareID: AssetID?
+    @State private var keepPreview: LoadedPreview?
+    @State private var comparisonPreview: LoadedPreview?
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
 
     private var assets: [PhotoAsset] { [group.preferred] + group.duplicates.map(\.asset) }
@@ -20,22 +22,26 @@ struct GroupReviewView: View {
     }
     var body: some View {
         let rows = assets
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                previews(comparing: comparison)
-                if group.duplicates.contains(where: { $0.match == .visualDuplicate }) {
-                    Label("Compare details before moving a possible match.", systemImage: "eye")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                LazyVStack(alignment: .leading, spacing: 8) {
-                    ForEach(Array(rows.enumerated()), id: \.element.id) { index, asset in
-                        row(asset, number: index + 1)
-                        if asset.id != rows.last?.id { Divider() }
+        let kept = keep
+        let compared = comparison
+        GeometryReader { viewport in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    previews(keep: kept, comparison: compared, height: viewport.size.height - 36)
+                    if group.duplicates.contains(where: { $0.match == .visualDuplicate }) {
+                        Label("Compare details before moving a possible match.", systemImage: "eye")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    LazyVStack(alignment: .leading, spacing: 8) {
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, asset in
+                            row(asset, number: index + 1)
+                            if asset.id != rows.last?.id { Divider() }
+                        }
                     }
                 }
+                .padding(18)
             }
-            .padding(18)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             ViewThatFits(in: .horizontal) {
@@ -67,17 +73,31 @@ struct GroupReviewView: View {
             .accessibilityIdentifier("review-cleanup")
     }
 
-    private func previews(comparing asset: PhotoAsset?) -> some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .top, spacing: 12) { cards(comparing: asset) }
-                .fixedSize(horizontal: true, vertical: false)
-            VStack(alignment: .leading, spacing: 12) { cards(comparing: asset) }
+    private func previews(keep: PhotoAsset, comparison: PhotoAsset?, height: CGFloat) -> some View {
+        let first = keepPreview?.asset == keep ? keepPreview : nil
+        let second = comparisonPreview?.asset == comparison ? comparisonPreview : nil
+        let firstAspect = first?.aspectRatio ?? second?.aspectRatio ?? 1
+        let secondAspect = second?.aspectRatio ?? firstAspect
+        return ReviewPreviewLayout(height: height, aspects: comparison == nil ? [firstAspect] : [firstAspect, secondAspect]) {
+            PreviewCard(asset: keep, label: "Copy to Keep", showFilename: showFilenames, preview: first)
+                .task(id: keep) { await loadPreview(for: keep, into: $keepPreview) }
+            if let comparison {
+                PreviewCard(asset: comparison, label: "Comparison Copy", showFilename: showFilenames, preview: second)
+                    .task(id: comparison) { await loadPreview(for: comparison, into: $comparisonPreview) }
+            }
         }
     }
 
-    @ViewBuilder private func cards(comparing asset: PhotoAsset?) -> some View {
-        PreviewCard(asset: keep, label: "Copy to Keep", showFilename: showFilenames, model: model)
-        if let asset { PreviewCard(asset: asset, label: "Comparison Copy", showFilename: showFilenames, model: model) }
+    private func loadPreview(for asset: PhotoAsset, into state: Binding<LoadedPreview?>) async {
+        state.wrappedValue = nil
+        let image: CGImage?
+        if let input = try? await model.image(for: asset) {
+            image = await LoadedPreview.thumbnail(input)
+        } else {
+            image = nil
+        }
+        guard !Task.isCancelled else { return }
+        state.wrappedValue = LoadedPreview(asset: asset, image: image)
     }
 
     private func row(_ asset: PhotoAsset, number: Int) -> some View {
@@ -138,49 +158,100 @@ struct GroupReviewView: View {
     }
 }
 
+private struct ReviewPreviewLayout: Layout {
+    let height: CGFloat
+    let aspects: [CGFloat]
+    private let spacing: CGFloat = 12
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.replacingUnspecifiedDimensions().width
+        let frames = frames(width: width, subviews: subviews)
+        return CGSize(width: width, height: frames.map(\.maxY).max() ?? 0)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (subview, frame) in zip(subviews, frames(width: bounds.width, subviews: subviews)) {
+            subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                          anchor: .topLeading,
+                          proposal: ProposedViewSize(frame.size))
+        }
+    }
+
+    private func frames(width: CGFloat, subviews: Subviews) -> [CGRect] {
+        let captions = subviews.map { $0.sizeThatFits(.init(width: width, height: 0)).height }
+        let idealHeights = aspects.map { width / $0 }
+        let gap = aspects.count == 2 ? spacing : 0
+        let availableHeight = max(100, height - captions.reduce(0, +) - gap)
+        let scale = min(1, availableHeight / max(1, idealHeights.reduce(0, +)))
+        let stackedImages = idealHeights.map { $0 * scale }
+        let first = CGRect(x: 0, y: 0, width: width, height: captions[0] + stackedImages[0])
+
+        guard aspects.count == 2 else { return [first] }
+        let second = CGRect(x: 0, y: first.maxY + gap, width: width, height: captions[1] + stackedImages[1])
+        guard width > spacing else { return [first, second] }
+
+        // Compare the actual fitted image area after reserving room for each card's text.
+        let rowWidth = width - spacing
+        let minimumColumnWidth = min(120, rowWidth / 2)
+        let proportionalWidth = rowWidth * aspects[0] / (aspects[0] + aspects[1])
+        let firstWidth = min(rowWidth - minimumColumnWidth, max(minimumColumnWidth, proportionalWidth))
+        let columnWidths = [firstWidth, rowWidth - firstWidth]
+        let rowCaptions = zip(subviews, columnWidths).map { view, width in
+            view.sizeThatFits(.init(width: width, height: 0)).height
+        }
+        let rowHeight = max(100, height - (rowCaptions.max() ?? 0))
+        let rowImages = zip(columnWidths, aspects).map { min(rowHeight, $0 / $1) }
+        let rowArea = zip(aspects, rowImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }
+        let stackedArea = zip(aspects, stackedImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }
+        guard rowArea > stackedArea || (rowArea == stackedArea && aspects.allSatisfy { $0 < 1 }) else {
+            return [first, second]
+        }
+        return [
+            CGRect(x: 0, y: 0, width: firstWidth, height: rowCaptions[0] + rowImages[0]),
+            CGRect(x: firstWidth + spacing, y: 0, width: columnWidths[1], height: rowCaptions[1] + rowImages[1]),
+        ]
+    }
+}
+
 private struct PreviewCard: View {
     let asset: PhotoAsset
     let label: String
     let showFilename: Bool
-    let model: ReviewModel
-
-    @State private var preview: CGImage?
-    @State private var failed = false
+    let preview: LoadedPreview?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label).font(.headline)
             ZStack {
                 RoundedRectangle(cornerRadius: 8).fill(.quaternary)
-                if let preview {
-                    Image(decorative: preview, scale: 1).resizable().scaledToFit()
-                } else if failed {
-                    Label("Preview unavailable", systemImage: "photo.badge.exclamationmark").font(.caption)
+                if let image = preview?.image {
+                    Image(image, scale: 1, label: Text(label))
+                        .resizable()
+                        .scaledToFit()
+                        .accessibilityIdentifier("preview-\(asset.name)")
+                } else if preview != nil {
+                    Label("Preview unavailable", systemImage: "photo.badge.exclamationmark")
+                        .font(.caption)
                 } else {
                     ProgressView()
                 }
             }
-            .frame(minWidth: 210, idealWidth: 255, maxWidth: .infinity, minHeight: 180, idealHeight: 225, maxHeight: 260)
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+            .clipped()
             if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
         }
-        .task(id: asset) {
-            preview = nil
-            failed = false
-            do {
-                let image = try await model.image(for: asset)
-                let next = await Self.thumbnail(image)
-                try Task.checkCancellation()
-                preview = next
-                failed = next == nil
-            } catch is CancellationError {
-                return
-            } catch {
-                failed = true
-            }
-        }
+    }
+}
+
+private struct LoadedPreview {
+    let asset: PhotoAsset
+    let image: CGImage?
+
+    var aspectRatio: CGFloat? {
+        image.map { CGFloat($0.width) / CGFloat($0.height) }
     }
 
-    private nonisolated static func thumbnail(_ input: AssetImage) async -> CGImage? {
+    nonisolated static func thumbnail(_ input: AssetImage) async -> CGImage? {
         guard let source = CGImageSourceCreateWithData(input.data as CFData, nil) else { return nil }
         let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
         let embedded = properties?[kCGImagePropertyOrientation] as? UInt32 ?? CGImagePropertyOrientation.up.rawValue
