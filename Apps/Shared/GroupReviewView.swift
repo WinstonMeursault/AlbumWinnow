@@ -153,17 +153,19 @@ struct GroupReviewView: View {
     }
 
     private func card(_ asset: PhotoAsset, number: Int) -> some View {
+        let recommended = !deletingAll && asset.id == group.preferred.id
         let selected = !deletingAll && keepID == asset.id
+        let title = showFilenames ? Text(asset.name) : Text("Photo \(number)")
         return Button {
             keepDraft = .changed(selected ? nil : asset.id)
             deleteAllDraft = false
         } label: {
-            PreviewCard(asset: asset, selected: selected, deletingAll: deletingAll,
+            PreviewCard(asset: asset, recommended: recommended, selected: selected, deletingAll: deletingAll,
                         showFilename: showFilenames, isActive: isActive, preview: previews[asset.id])
         }
         .buttonStyle(.plain)
         .disabled(!isActive || !model.canClean)
-        .accessibilityLabel(showFilenames ? Text(asset.name) : Text("Photo \(number)"))
+        .accessibilityLabel(recommended ? Text("\(title), recommended to keep") : title)
         .accessibilityValue(deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier(isActive ? "review-photo-\(asset.name)" : "")
@@ -243,6 +245,7 @@ private struct ReviewPreviewLayout: Layout {
 
 private struct PreviewCard: View {
     let asset: PhotoAsset
+    let recommended: Bool
     let selected: Bool
     let deletingAll: Bool
     let showFilename: Bool
@@ -284,6 +287,20 @@ private struct PreviewCard: View {
                             .padding(.vertical, 4)
                             .background(Color.accentColor, in: .capsule)
                             .padding(8)
+                    }
+                }
+                .overlay(alignment: .bottomLeading) {
+                    if recommended {
+                        Text("Recommended")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.65)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.regularMaterial, in: .capsule)
+                            .padding(8)
+                            .accessibilityHidden(true)
                     }
                 }
             }
