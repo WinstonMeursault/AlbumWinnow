@@ -314,7 +314,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.8.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.winstonmeursault.albumwinnow;
@@ -397,7 +397,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.8.2;
+				MARKETING_VERSION = 0.8.3;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

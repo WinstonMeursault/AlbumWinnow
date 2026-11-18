@@ -11,6 +11,7 @@ struct ScanSourcesView: View {
     let model: ReviewModel
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showReviewFilenames = false
     @AppStorage(ReviewAnimation.defaultsKey) private var reviewAnimation = ReviewAnimation.slide.rawValue
+    @AppStorage(ReviewHand.defaultsKey) private var reviewHand = ReviewHand.right.rawValue
     #if os(iOS)
     @State private var importing = false
     #endif
@@ -72,6 +73,16 @@ struct ScanSourcesView: View {
             }
 
             Section("Interaction") {
+                Picker("Review Button Layout", selection: $reviewHand) {
+                    Text("Left Hand").tag(ReviewHand.left.rawValue)
+                    Text("Right Hand").tag(ReviewHand.right.rawValue)
+                }
+                .accessibilityIdentifier("review-hand")
+                Text(reviewHand == ReviewHand.left.rawValue
+                     ? "Confirm  ·  Skip  ·  Delete All"
+                     : "Delete All  ·  Skip  ·  Confirm")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 Picker("Group Transition", selection: $reviewAnimation) {
                     ForEach(ReviewAnimation.allCases) { animation in
                         Text(animation.title).tag(animation.rawValue)

@@ -1,14 +1,22 @@
 import Foundation
 
 public struct CleanupPair: Codable, Equatable, Sendable, Identifiable {
-    public let keep: PhotoAsset
+    public let keep: PhotoAsset?
     public let remove: PhotoAsset
+    public let wholeGroupID: AssetID?
 
     public var id: AssetID { remove.id }
 
     public init(keep: PhotoAsset, remove: PhotoAsset) {
         self.keep = keep
         self.remove = remove
+        self.wholeGroupID = nil
+    }
+
+    public init(remove: PhotoAsset, fromWholeGroup groupID: AssetID) {
+        self.keep = nil
+        self.remove = remove
+        self.wholeGroupID = groupID
     }
 }
 

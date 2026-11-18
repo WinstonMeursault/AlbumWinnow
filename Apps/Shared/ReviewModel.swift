@@ -45,11 +45,12 @@ struct CloudDownloadProgress {
     struct GroupSelection {
         var keepID: AssetID?
         var selected = Set<AssetID>()
+        var deleteAll = false
     }
 
     struct CleanupGroup: Identifiable {
         let id: AssetID
-        let keep: PhotoAsset
+        let keep: PhotoAsset?
         let pairs: [CleanupPair]
     }
 
@@ -94,6 +95,10 @@ struct CloudDownloadProgress {
         return result.groups.compactMap { group in
             guard let selection = selections[group.id], !selection.selected.isEmpty else { return nil }
             let assets = [group.preferred] + group.duplicates.map(\.asset)
+            if selection.deleteAll {
+                let pairs = assets.map { CleanupPair(remove: $0, fromWholeGroup: group.id) }
+                return CleanupGroup(id: group.id, keep: nil, pairs: pairs)
+            }
             let keep = assets.first(where: { $0.id == selection.keepID }) ?? group.preferred
             let pairs = assets.compactMap { asset -> CleanupPair? in
                 guard selection.selected.contains(asset.id), asset.id != keep.id,
@@ -108,9 +113,34 @@ struct CloudDownloadProgress {
         selections[groupID] ?? GroupSelection()
     }
 
-    func setSelection(_ selection: GroupSelection, for groupID: AssetID) {
-        guard canClean else { return }
-        selections[groupID] = selection.keepID == nil && selection.selected.isEmpty ? nil : selection
+    func confirmSelection(in group: DuplicateGroup, keepID: AssetID?, deleteAll: Bool) -> Bool {
+        guard canClean else { return false }
+        let assets = [group.preferred] + group.duplicates.map(\.asset)
+        if deleteAll {
+            if let reason = deleteAllUnavailableReason(for: assets) {
+                errorMessage = reason
+                return false
+            }
+            selections[group.id] = GroupSelection(selected: Set(assets.map(\.id)), deleteAll: true)
+        } else {
+            guard let keepID, assets.contains(where: { $0.id == keepID }) else { return false }
+            let removable = assets.filter { $0.id != keepID && $0.photoProperties?.hasAssociatedResources != true }
+            selections[group.id] = GroupSelection(keepID: keepID, selected: Set(removable.map(\.id)))
+        }
+        return true
+    }
+
+    func deleteAllUnavailableReason(for assets: [PhotoAsset]) -> String? {
+        do {
+            try AssetMutationService.validateRemovals(assets, sources: sources)
+            return nil
+        } catch AssetAccessError.inaccessible {
+            return "At least one photo cannot be moved from its source."
+        } catch AssetAccessError.changedDuringScan {
+            return CleanupError.changedAsset.localizedDescription
+        } catch {
+            return error.localizedDescription
+        }
     }
 
     init() {

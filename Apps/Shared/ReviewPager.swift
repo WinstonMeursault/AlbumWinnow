@@ -27,7 +27,6 @@ struct ReviewPager: View {
     @Binding var selectedID: AssetID?
     let model: ReviewModel
     let finishReview: () -> Void
-    let reviewCleanup: () -> Void
 
     @AppStorage(ReviewAnimation.defaultsKey) private var preference = ReviewAnimation.slide.rawValue
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -50,7 +49,9 @@ struct ReviewPager: View {
                     background
                     ForEach(neighbors) { group in
                         let relative = group.id == selectedID ? 0 : (group.id == previousID ? -1 : 1)
-                        GroupReviewView(group: group, model: model, isActive: relative == 0, reviewCleanup: reviewCleanup)
+                        GroupReviewView(group: group, model: model, isActive: relative == 0) {
+                            navigate(forward: true, width: width, index: index)
+                        }
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .background { background }
                             .overlay {

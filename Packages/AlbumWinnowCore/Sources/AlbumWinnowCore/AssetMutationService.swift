@@ -17,8 +17,11 @@ public actor AssetMutationService {
     public func apply(_ pairs: [CleanupPair], sources: [any AssetSource]) async throws -> CleanupRun {
         guard !applying else { throw CleanupError.operationInProgress }
         let removals = Set(pairs.map(\.remove.id))
+        let wholeGroups = Dictionary(grouping: pairs.filter { $0.wholeGroupID != nil }, by: \.wholeGroupID)
         guard !pairs.isEmpty, removals.count == pairs.count,
-              removals.isDisjoint(with: pairs.map(\.keep.id)),
+              removals.isDisjoint(with: pairs.compactMap { $0.keep?.id }),
+              pairs.allSatisfy({ ($0.keep == nil) != ($0.wholeGroupID == nil) }),
+              wholeGroups.allSatisfy({ id, group in group.count > 1 && group.contains { $0.remove.id == id } }),
               Set(sources.map(\.id)).count == sources.count else {
             throw CleanupError.invalidSelection
         }
@@ -31,10 +34,23 @@ public actor AssetMutationService {
         try journal.begin(pairs, id: run, at: start)
         var items = pairs.map { CleanupItem(pair: $0, status: .pending, detail: nil) }
         var queuedPhotos: [(Int, CleanupPair)] = []
+        var rejectedGroups: [AssetID: any Error] = [:]
+        for (id, group) in wholeGroups {
+            guard let id else { continue }
+            do {
+                for pair in group {
+                    try Task.checkCancellation()
+                    try Self.validateRemoval(pair.remove, sources: byID)
+                }
+            } catch {
+                rejectedGroups[id] = error
+            }
+        }
 
         for (position, pair) in pairs.enumerated() {
             do {
                 try Task.checkCancellation()
+                if let id = pair.wholeGroupID, let error = rejectedGroups[id] { throw error }
                 try await Self.verify(pair, sources: byID)
                 try Task.checkCancellation()
                 if let folder = byID[pair.remove.id.source] as? FileSystemSource {
@@ -76,21 +92,39 @@ public actor AssetMutationService {
     }
 
     private static func verify(_ pair: CleanupPair, sources: [String: any AssetSource]) async throws {
-        guard let keep = sources[pair.keep.id.source], let remove = sources[pair.remove.id.source] else {
+        try validateRemoval(pair.remove, sources: sources)
+        guard let retained = pair.keep else { return }
+        guard let keep = sources[retained.id.source], let remove = sources[pair.remove.id.source] else {
             throw CleanupError.unavailableSource
         }
-        guard pair.remove.photoProperties?.hasAssociatedResources != true else { throw CleanupError.protectedResources }
         if let keepFolder = keep as? FileSystemSource, let removeFolder = remove as? FileSystemSource,
-           try FileSystemSource.referToSameFile(keepFolder.currentURL(for: pair.keep), removeFolder.currentURL(for: pair.remove)) {
+           try FileSystemSource.referToSameFile(keepFolder.currentURL(for: retained), removeFolder.currentURL(for: pair.remove)) {
             throw CleanupError.sameFile
         }
-        try validate(pair.keep, sources: sources)
-        if let photos = remove as? PhotoLibrarySource {
-            _ = try photos.removableAsset(for: pair.remove)
-        }
-        let first = try await keep.image(for: pair.keep)
+        try validate(retained, sources: sources)
+        let first = try await keep.image(for: retained)
         let second = try await remove.image(for: pair.remove)
         guard try DuplicateDetector().compare(first, second) != .distinct else { throw CleanupError.noLongerDuplicate }
+    }
+
+    public nonisolated static func validateRemovals(_ assets: [PhotoAsset], sources: [any AssetSource]) throws {
+        let byID = Dictionary(sources.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        for asset in assets { try validateRemoval(asset, sources: byID) }
+    }
+
+    private static func validateRemoval(_ asset: PhotoAsset, sources: [String: any AssetSource]) throws {
+        guard asset.photoProperties?.hasAssociatedResources != true else { throw CleanupError.protectedResources }
+        switch sources[asset.id.source] {
+        case let folder as FileSystemSource:
+            let url = try folder.currentURL(for: asset)
+            guard FileManager.default.isDeletableFile(atPath: url.path) else { throw AssetAccessError.inaccessible }
+        case let photos as PhotoLibrarySource:
+            _ = try photos.removableAsset(for: asset)
+        case nil:
+            throw CleanupError.unavailableSource
+        default:
+            throw CleanupError.unsupportedSource
+        }
     }
 
     private static func validate(_ asset: PhotoAsset, sources: [String: any AssetSource]) throws {
@@ -114,13 +148,15 @@ public actor AssetMutationService {
         var result: Result<String?, any Error>?
         NSFileCoordinator().coordinate(writingItemAt: url, options: .forDeleting, error: &coordinationError) { coordinatedURL in
             result = Result {
-                try validate(pair.keep, sources: sources)
                 guard try folder.currentURL(for: pair.remove).path == coordinatedURL.standardizedFileURL.path else {
                     throw CleanupError.changedAsset
                 }
-                if let keepFolder = sources[pair.keep.id.source] as? FileSystemSource,
-                   try FileSystemSource.referToSameFile(keepFolder.currentURL(for: pair.keep), coordinatedURL) {
-                    throw CleanupError.sameFile
+                if let retained = pair.keep {
+                    try validate(retained, sources: sources)
+                    if let keepFolder = sources[retained.id.source] as? FileSystemSource,
+                       try FileSystemSource.referToSameFile(keepFolder.currentURL(for: retained), coordinatedURL) {
+                        throw CleanupError.sameFile
+                    }
                 }
                 var destination: NSURL?
                 try FileManager.default.trashItem(at: coordinatedURL, resultingItemURL: &destination)
@@ -137,7 +173,7 @@ public actor AssetMutationService {
         try await PHPhotoLibrary.shared().performChanges {
             do {
                 let assets = try pairs.map { pair in
-                    try validate(pair.keep, sources: sources)
+                    if let retained = pair.keep { try validate(retained, sources: sources) }
                     guard let library = sources[pair.remove.id.source] as? PhotoLibrarySource else {
                         throw CleanupError.unavailableSource
                     }

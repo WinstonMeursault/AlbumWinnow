@@ -3,163 +3,178 @@ import CoreImage
 import ImageIO
 import SwiftUI
 
+enum ReviewHand: String {
+    static let defaultsKey = "AlbumWinnow.reviewHand"
+    case left, right
+}
+
 struct GroupReviewView: View {
     let group: DuplicateGroup
     let model: ReviewModel
     let isActive: Bool
-    let reviewCleanup: () -> Void
+    let advance: () -> Void
 
-    @State private var compareID: AssetID?
-    @State private var keepPreview: LoadedPreview?
-    @State private var comparisonPreview: LoadedPreview?
+    @State private var keepDraft: AssetID?
+    @State private var deleteAllDraft: Bool?
+    @State private var deleteAllUnavailable: String?
+    @State private var checkedRemovability = false
+    @State private var previews: [AssetID: LoadedPreview] = [:]
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
+    @AppStorage(ReviewHand.defaultsKey) private var hand = ReviewHand.right.rawValue
 
     private var assets: [PhotoAsset] { [group.preferred] + group.duplicates.map(\.asset) }
     private var selection: ReviewModel.GroupSelection { model.selection(for: group.id) }
-    private var keep: PhotoAsset { assets.first(where: { $0.id == selection.keepID }) ?? group.preferred }
-    private var comparison: PhotoAsset? {
-        let alternatives = assets.filter { $0.id != keep.id }
-        return alternatives.first(where: { $0.id == compareID }) ?? alternatives.first
-    }
+    private var keepID: AssetID? { keepDraft ?? selection.keepID }
+    private var deletingAll: Bool { deleteAllDraft ?? selection.deleteAll }
+
     var body: some View {
-        let rows = assets
-        let kept = keep
-        let compared = comparison
         GeometryReader { viewport in
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    previews(keep: kept, comparison: compared, height: viewport.size.height - 36)
-                    if group.duplicates.contains(where: { $0.match == .visualDuplicate }) {
-                        Label("Compare details before moving a possible match.", systemImage: "eye")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    LazyVStack(alignment: .leading, spacing: 8) {
-                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, asset in
-                            row(asset, number: index + 1)
-                            if asset.id != rows.last?.id { Divider() }
+                let copies = assets
+                if copies.count == 2 {
+                    ReviewPreviewLayout(height: viewport.size.height - 32, aspects: copies.map(aspect)) {
+                        ForEach(Array(copies.enumerated()), id: \.element.id) { index, asset in
+                            card(asset, number: index + 1)
                         }
                     }
+                    .padding(16)
+                } else {
+                    LazyVStack(spacing: 12) {
+                        ForEach(Array(copies.enumerated()), id: \.element.id) { index, asset in
+                            card(asset, number: index + 1)
+                                .frame(height: min(viewport.size.height * 0.7,
+                                                   max(160, (viewport.size.width - 32) / aspect(asset))))
+                        }
+                    }
+                    .padding(16)
                 }
-                .padding(18)
             }
             .accessibilityIdentifier(isActive ? "group-review" : "")
-            .accessibilityHidden(!isActive)
-
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 12) {
-                    selectionSummary.fixedSize()
-                    Spacer(minLength: 0)
-                    reviewButton.fixedSize()
-                }
-                VStack(alignment: .leading, spacing: 8) {
-                    selectionSummary
-                    reviewButton
-                }
+        .safeAreaInset(edge: .bottom, spacing: 0) { controls }
+        .task(id: isActive && model.canClean) {
+            checkedRemovability = false
+            guard isActive, model.canClean else { return }
+            deleteAllUnavailable = model.deleteAllUnavailableReason(for: assets)
+            checkedRemovability = true
+        }
+        .onChange(of: isActive) { _, active in
+            if !active { resetDraft() }
+        }
+    }
+
+    private var controls: some View {
+        VStack(spacing: 6) {
+            if checkedRemovability, let deleteAllUnavailable {
+                Text("Delete All unavailable: \(deleteAllUnavailable)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if group.duplicates.contains(where: { $0.match == .visualDuplicate }) {
+                Text("Possible matches · Compare details before confirming.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-            .background(.bar)
-        }
-    }
-
-    private var selectionSummary: some View {
-        Text(model.selectedCount == 0 ? "Select copies to move" : "\(model.selectedCount) selected across all groups")
-            .foregroundStyle(.secondary)
-    }
-
-    private var reviewButton: some View {
-        Button("Review Cleanup…", action: reviewCleanup)
-            .buttonStyle(.borderedProminent)
-            .disabled(!isActive || !model.canClean || model.selectedCount == 0)
-            .accessibilityIdentifier(isActive ? "review-cleanup" : "")
-    }
-
-    private func previews(keep: PhotoAsset, comparison: PhotoAsset?, height: CGFloat) -> some View {
-        let first = keepPreview?.asset == keep ? keepPreview : nil
-        let second = comparisonPreview?.asset == comparison ? comparisonPreview : nil
-        let fallbackAspect = group.preferredDimensions.map { CGFloat($0.width) / CGFloat(max(1, $0.height)) } ?? 1
-        let firstAspect = first?.aspectRatio ?? second?.aspectRatio ?? fallbackAspect
-        let secondAspect = second?.aspectRatio ?? firstAspect
-        return ReviewPreviewLayout(height: height, aspects: comparison == nil ? [firstAspect] : [firstAspect, secondAspect]) {
-            PreviewCard(asset: keep, label: "Copy to Keep", showFilename: showFilenames, preview: first)
-                .task(id: keep) { await loadPreview(for: keep, into: $keepPreview) }
-            if let comparison {
-                PreviewCard(asset: comparison, label: "Comparison Copy", showFilename: showFilenames, preview: second)
-                    .task(id: comparison) { await loadPreview(for: comparison, into: $comparisonPreview) }
-            }
-        }
-    }
-
-    private func loadPreview(for asset: PhotoAsset, into state: Binding<LoadedPreview?>) async {
-        state.wrappedValue = nil
-        let image: CGImage?
-        if let input = try? await model.image(for: asset) {
-            image = await LoadedPreview.thumbnail(input)
-        } else {
-            image = nil
-        }
-        guard !Task.isCancelled else { return }
-        state.wrappedValue = LoadedPreview(asset: asset, image: image)
-    }
-
-    private func row(_ asset: PhotoAsset, number: Int) -> some View {
-        let title = showFilenames ? asset.name : "Copy \(number)"
-        return HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title).fontWeight(.medium).lineLimit(1)
-                Text(description(for: asset)).font(.caption).foregroundStyle(.secondary)
-                if asset.photoProperties?.hasAssociatedResources == true {
-                    Label("Associated resources protected", systemImage: "lock")
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            Spacer()
-            if asset.id == keep.id {
-                Label("Keep", systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.tint)
-            } else {
-                Menu {
-                    Button("Show in Preview") { compareID = asset.id }
-                        .disabled(comparison?.id == asset.id)
-                    Button("Keep This Copy") {
-                        model.setSelection(.init(keepID: asset.id), for: group.id)
-                        compareID = nil
-                    }
+            HStack(spacing: 8) {
+                if hand == ReviewHand.left.rawValue { confirmButton } else { deleteAllButton }
+                Button {
+                    resetDraft()
+                    advance()
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    actionTitle("Skip")
                 }
-                .accessibilityLabel("Review options for \(title)")
+                .foregroundStyle(.primary)
+                .disabled(!isActive)
+                .accessibilityIdentifier(isActive ? "review-skip" : "")
+                if hand == ReviewHand.left.rawValue { deleteAllButton } else { confirmButton }
+            }
+            .environment(\.layoutDirection, .leftToRight)
+            .controlSize(.large)
+            .buttonStyle(.bordered)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(.bar)
+    }
 
-                Toggle("Move \(title)", isOn: Binding(
-                    get: { selection.selected.contains(asset.id) },
-                    set: {
-                        var next = selection
-                        if $0 { next.selected.insert(asset.id) } else { next.selected.remove(asset.id) }
-                        model.setSelection(next, for: group.id)
-                    }
-                ))
-                .labelsHidden()
-                #if os(macOS)
-                .toggleStyle(.checkbox)
-                #endif
-                .disabled(!canMark(asset) || !model.canClean)
-                .accessibilityIdentifier("mark-\(asset.name)")
+    private var confirmButton: some View {
+        Button {
+            guard model.confirmSelection(in: group, keepID: keepID, deleteAll: deletingAll) else { return }
+            resetDraft()
+            advance()
+        } label: {
+            actionTitle("Confirm")
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(deletingAll ? .red : .accentColor)
+        .disabled(!isActive || !model.canClean ||
+                  (deletingAll ? !checkedRemovability || deleteAllUnavailable != nil : keepID == nil))
+        .accessibilityIdentifier(isActive ? "review-confirm" : "")
+        .accessibilityHint(deletingAll ? Text("Adds the entire group to pending cleanup") :
+                                        Text("Keeps the selected photo and queues removable copies"))
+    }
+
+    private var deleteAllButton: some View {
+        Button {
+            deleteAllDraft = !deletingAll
+        } label: {
+            actionTitle("Delete All")
+        }
+        .foregroundStyle(.red)
+        .tint(deletingAll ? .red : nil)
+        .disabled(!isActive || !checkedRemovability || !model.canClean || deleteAllUnavailable != nil)
+        .accessibilityIdentifier(isActive ? "review-delete-all" : "")
+        .accessibilityValue(deletingAll ? Text("On") : Text("Off"))
+        .accessibilityHint(Text("Previews removing every photo in this group"))
+    }
+
+    private func actionTitle(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .lineLimit(1)
+            .minimumScaleFactor(0.65)
+            .frame(maxWidth: .infinity, minHeight: 32)
+    }
+
+    private func resetDraft() {
+        keepDraft = nil
+        deleteAllDraft = nil
+    }
+
+    private func aspect(_ asset: PhotoAsset) -> CGFloat {
+        if let aspect = previews[asset.id]?.aspectRatio { return aspect }
+        return group.preferredDimensions.map { CGFloat($0.width) / CGFloat(max(1, $0.height)) } ?? 1
+    }
+
+    private func card(_ asset: PhotoAsset, number: Int) -> some View {
+        let selected = !deletingAll && keepID == asset.id
+        return Button {
+            keepDraft = asset.id
+            deleteAllDraft = false
+        } label: {
+            PreviewCard(asset: asset, selected: selected, deletingAll: deletingAll,
+                        showFilename: showFilenames, isActive: isActive, preview: previews[asset.id])
+        }
+        .buttonStyle(.plain)
+        .disabled(!isActive || !model.canClean)
+        .accessibilityLabel(showFilenames ? Text(asset.name) : Text("Photo \(number)"))
+        .accessibilityValue(deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier(isActive ? "review-photo-\(asset.name)" : "")
+        .task(id: asset) {
+            guard previews[asset.id]?.asset != asset else { return }
+            let image: CGImage?
+            if let input = try? await model.image(for: asset) {
+                image = await LoadedPreview.thumbnail(input)
+            } else {
+                image = nil
+            }
+            guard !Task.isCancelled else { return }
+            previews[asset.id] = LoadedPreview(asset: asset, image: image)
+        }
+        .onDisappear {
+            if group.duplicates.count > 1 {
+                previews.removeValue(forKey: asset.id)
             }
         }
-    }
-
-    private func description(for asset: PhotoAsset) -> String {
-        let source = model.sourceLabel(asset.id.source)
-        if asset.id == group.preferred.id { return "\(source) · Recommended to keep" }
-        guard let match = group.duplicates.first(where: { $0.id == asset.id })?.match else { return source }
-        return "\(source) · \(match == .exactDuplicate ? "Exact duplicate" : "Possible same image")"
-    }
-
-    private func canMark(_ asset: PhotoAsset) -> Bool {
-        asset.id != keep.id && asset.photoProperties?.hasAssociatedResources != true
     }
 }
 
@@ -220,29 +235,52 @@ private struct ReviewPreviewLayout: Layout {
 
 private struct PreviewCard: View {
     let asset: PhotoAsset
-    let label: String
+    let selected: Bool
+    let deletingAll: Bool
     let showFilename: Bool
+    let isActive: Bool
     let preview: LoadedPreview?
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 14)
         VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(.headline)
             ZStack {
-                RoundedRectangle(cornerRadius: 8).fill(.quaternary)
-                if let image = preview?.image {
-                    Image(image, scale: 1, label: Text(label))
-                        .resizable()
-                        .scaledToFit()
-                        .accessibilityIdentifier("preview-\(asset.name)")
-                } else if preview != nil {
-                    Label("Preview unavailable", systemImage: "photo.badge.exclamationmark")
-                        .font(.caption)
-                } else {
-                    ProgressView()
+                Group {
+                    if let image = preview?.image {
+                        Image(image, scale: 1, label: Text("Preview"))
+                            .resizable()
+                            .scaledToFit()
+                            .accessibilityIdentifier(isActive ? "preview-\(asset.name)" : "")
+                    } else {
+                        shape.fill(.quaternary)
+                            .overlay {
+                                if preview != nil {
+                                    Label("Preview unavailable", systemImage: "photo.badge.exclamationmark")
+                                        .font(.caption)
+                                } else {
+                                    ProgressView()
+                                }
+                            }
+                    }
+                }
+                .clipShape(shape)
+                .overlay {
+                    shape.strokeBorder(deletingAll ? .red : selected ? Color.accentColor : .clear, lineWidth: 2)
+                }
+                .overlay(alignment: .topTrailing) {
+                    if selected {
+                        Text("Selected")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.accentColor, in: .capsule)
+                            .padding(8)
+                    }
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-            .clipped()
+            .contentShape(shape)
             if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
         }
     }

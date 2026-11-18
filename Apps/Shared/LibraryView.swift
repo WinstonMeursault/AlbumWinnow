@@ -58,7 +58,7 @@ struct LibraryView: View {
             .navigationDestination(for: AssetID.self) { _ in
                 if group(withID: selectedGroup) != nil {
                     review
-                        .navigationTitle("Review Group")
+                        .navigationTitle(reviewTitle)
                         .toolbarTitleDisplayMode(.inline)
                 }
             }
@@ -103,9 +103,15 @@ struct LibraryView: View {
 
     private var review: some View {
         ReviewPager(groups: model.result?.groups ?? [], selectedID: $selectedGroup,
-                    model: model, finishReview: finishReview) {
-            confirmingCleanup = true
+                    model: model, finishReview: finishReview)
+    }
+
+    private var reviewTitle: Text {
+        if let groups = model.result?.groups,
+           let index = groups.firstIndex(where: { $0.id == selectedGroup }) {
+            return Text("Group \(index + 1) of \(groups.count)")
         }
+        return Text("Review Group")
     }
 
     private func finishReview() {
@@ -117,7 +123,7 @@ struct LibraryView: View {
     private var reviewPane: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Review Group").font(.headline)
+                reviewTitle.font(.headline)
                 Spacer()
                 Button("Close Review", systemImage: "xmark") { selectedGroup = nil }
                     .labelStyle(.iconOnly)
@@ -338,7 +344,12 @@ struct LibraryView: View {
                         }
                     }
                 } header: {
-                    Text("Keep \(group.keep.name) · \(model.sourceLabel(group.keep.id.source))")
+                    if let keep = group.keep {
+                        Text("Keep \(keep.name) · \(model.sourceLabel(keep.id.source))")
+                    } else {
+                        Label("Delete entire group · \(group.pairs.count) photos", systemImage: "trash")
+                            .foregroundStyle(.red)
+                    }
                 }
             }
             .navigationTitle("Confirm Cleanup")

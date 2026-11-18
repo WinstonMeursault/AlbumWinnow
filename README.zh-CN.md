@@ -21,7 +21,7 @@ AlbumWinnow 正在开发 v1.0。开发版面向 macOS 26、iOS 26、iPadOS 26 �
 - 将匹配项分组供用户并排对比，结合画质、分辨率及 Live Photo 配对视频、编辑前原件等关联数据推荐保留版本。
 - 复用未变化资源的扫描结果，在照片新增、编辑或删除后更新索引。
 
-扫描会读取本地可用的图库资源，并在 Scan Issues 列出仅存于 iCloud 的照片。点击 **Download Pending Photos from iCloud** 可授权下载并重试这些项目。重复项页面分别显示 iCloud 下载和扫描进度，并列出可用、失败和待处理数量。扫描结束后，重复项概览以瀑布流显示分组封面。点开一组即可在组内核对照片。在设置里打开 **Show Filenames in Review** 可显示文件名。详情页左滑进入下一组，右滑返回上一组。在 **Settings → Interaction → Group Transition** 中可选择平移、覆盖、淡化或无动画。可以逐组勾选不需要的副本，再回到重复项概览，通过 **Confirm Cleanup** 一次确认整批项目。清理历史会记录每项结果。在 iOS 和 iPadOS 上，中断的扫描会在回到前台后按已保存来源续扫，并复用缓存的指纹。连拍中不同帧等视觉相似照片的整理功能计划在 v1.1 加入。
+扫描会读取本地可用的图库资源，并在 Scan Issues 列出仅存于 iCloud 的照片。点击 **Download Pending Photos from iCloud** 可授权下载并重试这些项目。重复项页面分别显示 iCloud 下载和扫描进度，并列出可用、失败和待处理数量。扫描结束后，重复项概览以瀑布流显示分组封面。点开一组即可在组内核对照片。在设置里打开 **Show Filenames in Review** 可显示文件名。详情页左滑进入下一组，右滑返回上一组。在 **Settings → Interaction → Group Transition** 中可选择平移、覆盖、淡化或无动画。点击想保留的照片后确认当前组，也可以跳过当前组。**Delete All** 会以红框预览整组删除。在 **Settings → Interaction → Review Button Layout** 中可以选择左手或右手布局，把确认按钮放在顺手的一侧。核对完成后，回到重复项概览，通过 **Confirm Cleanup** 检查并确认整批清理。清理历史会记录每项结果。在 iOS 和 iPadOS 上，中断的扫描会在回到前台后按已保存来源续扫，并复用缓存的指纹。连拍中不同帧等视觉相似照片的整理功能计划在 v1.1 加入。
 
 ## 匹配与清理
 
