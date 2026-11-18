@@ -9,12 +9,17 @@ enum ReviewHand: String {
 }
 
 struct GroupReviewView: View {
+    private enum KeepDraft {
+        case unchanged
+        case changed(AssetID?)
+    }
+
     let group: DuplicateGroup
     let model: ReviewModel
     let isActive: Bool
     let advance: () -> Void
 
-    @State private var keepDraft: AssetID?
+    @State private var keepDraft = KeepDraft.unchanged
     @State private var deleteAllDraft: Bool?
     @State private var deleteAllUnavailable: String?
     @State private var checkedRemovability = false
@@ -24,7 +29,10 @@ struct GroupReviewView: View {
 
     private var assets: [PhotoAsset] { [group.preferred] + group.duplicates.map(\.asset) }
     private var selection: ReviewModel.GroupSelection { model.selection(for: group.id) }
-    private var keepID: AssetID? { keepDraft ?? selection.keepID }
+    private var keepID: AssetID? {
+        if case let .changed(id) = keepDraft { return id }
+        return selection.keepID
+    }
     private var deletingAll: Bool { deleteAllDraft ?? selection.deleteAll }
 
     var body: some View {
@@ -135,7 +143,7 @@ struct GroupReviewView: View {
     }
 
     private func resetDraft() {
-        keepDraft = nil
+        keepDraft = .unchanged
         deleteAllDraft = nil
     }
 
@@ -147,7 +155,7 @@ struct GroupReviewView: View {
     private func card(_ asset: PhotoAsset, number: Int) -> some View {
         let selected = !deletingAll && keepID == asset.id
         return Button {
-            keepDraft = asset.id
+            keepDraft = .changed(selected ? nil : asset.id)
             deleteAllDraft = false
         } label: {
             PreviewCard(asset: asset, selected: selected, deletingAll: deletingAll,
