@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C102AA0905194B0180000042 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C102AA0905194B0180000041 /* Assets.xcassets */; };
+		C102AA0905194B0180000043 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C102AA0905194B0180000041 /* Assets.xcassets */; };
 		004544D8146902FB7745C798 /* GroupReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */; };
 		0E7D913A238401877DDEBED9 /* FolderScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277E3A7EDDA92B1545F436A8 /* FolderScope.swift */; };
 		56C93C2E206CD9F463BB7975 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1989BC72973BF9A3C13774EA /* LibraryView.swift */; };
@@ -30,6 +32,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C102AA0905194B0180000041 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1989BC72973BF9A3C13774EA /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlbumWinnow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		277E3A7EDDA92B1545F436A8 /* FolderScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScope.swift; sourceTree = "<group>"; };
@@ -103,6 +106,7 @@
 				C102AA0905194B0180000021 /* GalleryThumbnails.swift */,
 				C102AA0905194B0180000011 /* DuplicateGallery.swift */,
 				C102AA0905194B0180000031 /* ReviewPager.swift */,
+				C102AA0905194B0180000041 /* Assets.xcassets */,
 			);
 			name = Shared;
 			path = Apps/Shared;
@@ -127,6 +131,7 @@
 			buildPhases = (
 				ED8FE53FAAECE7EB89CA3470 /* Sources */,
 				1FCFC39933DED34EA2BDB39F /* Frameworks */,
+				C102AA0905194B0180000044 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -146,6 +151,7 @@
 			buildPhases = (
 				50F51E1D0C4B9FCCD1D6E153 /* Sources */,
 				04FE9BCAD5BACFFBFBC65B7B /* Frameworks */,
+				C102AA0905194B0180000045 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -195,6 +201,25 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C102AA0905194B0180000044 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C102AA0905194B0180000042 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C102AA0905194B0180000045 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C102AA0905194B0180000043 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		50F51E1D0C4B9FCCD1D6E153 /* Sources */ = {
@@ -314,7 +339,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.8.4;
+				MARKETING_VERSION = 0.8.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.winstonmeursault.albumwinnow;
@@ -397,7 +422,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 0.8.4;
+				MARKETING_VERSION = 0.8.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
