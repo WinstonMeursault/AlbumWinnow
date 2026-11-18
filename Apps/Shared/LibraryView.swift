@@ -24,9 +24,9 @@ struct LibraryView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .safeAreaInset(edge: .bottom, spacing: 0) { scanControls }
                         .frame(width: group == nil ? nil : min(470, max(330, width * 0.36)))
-                    if let group {
+                    if group != nil {
                         Divider()
-                        reviewPane(group)
+                        reviewPane
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
@@ -56,8 +56,8 @@ struct LibraryView: View {
                 }
             }
             .navigationDestination(for: AssetID.self) { _ in
-                if let group = group(withID: selectedGroup) {
-                    review(group)
+                if group(withID: selectedGroup) != nil {
+                    review
                         .navigationTitle("Review Group")
                         .toolbarTitleDisplayMode(.inline)
                 }
@@ -101,27 +101,20 @@ struct LibraryView: View {
         return model.result?.groups.first { $0.id == id }
     }
 
-    private func review(_ group: DuplicateGroup) -> some View {
-        GroupReviewView(group: group, model: model, moveGroup: moveReview) {
+    private var review: some View {
+        ReviewPager(groups: model.result?.groups ?? [], selectedID: $selectedGroup,
+                    model: model, finishReview: finishReview) {
             confirmingCleanup = true
         }
-        .id(group.id)
     }
 
-    private func moveReview(forward: Bool) {
-        guard let groups = model.result?.groups,
-              let index = groups.firstIndex(where: { $0.id == selectedGroup }) else { return }
-        let next = index + (forward ? 1 : -1)
-        if groups.indices.contains(next) {
-            selectedGroup = groups[next].id
-        } else if forward {
-            galleryBottomRequest += 1
-            if reviewPath.isEmpty { selectedGroup = nil }
-            else { reviewPath.removeAll() }
-        }
+    private func finishReview() {
+        galleryBottomRequest += 1
+        if reviewPath.isEmpty { selectedGroup = nil }
+        else { reviewPath.removeAll() }
     }
 
-    private func reviewPane(_ group: DuplicateGroup) -> some View {
+    private var reviewPane: some View {
         VStack(spacing: 0) {
             HStack {
                 Text("Review Group").font(.headline)
@@ -133,7 +126,7 @@ struct LibraryView: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
             Divider()
-            review(group)
+            review
         }
     }
 

@@ -10,6 +10,7 @@ import UIKit
 struct ScanSourcesView: View {
     let model: ReviewModel
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showReviewFilenames = false
+    @AppStorage(ReviewAnimation.defaultsKey) private var reviewAnimation = ReviewAnimation.slide.rawValue
     #if os(iOS)
     @State private var importing = false
     #endif
@@ -68,6 +69,15 @@ struct ScanSourcesView: View {
             Section("Review") {
                 Toggle("Show Filenames in Review", isOn: $showReviewFilenames)
                     .accessibilityIdentifier("show-review-filenames")
+            }
+
+            Section("Interaction") {
+                Picker("Group Transition", selection: $reviewAnimation) {
+                    ForEach(ReviewAnimation.allCases) { animation in
+                        Text(animation.title).tag(animation.rawValue)
+                    }
+                }
+                .accessibilityIdentifier("review-animation")
             }
         }
         .formStyle(.grouped)

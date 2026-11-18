@@ -2,16 +2,11 @@ import AlbumWinnowCore
 import CoreImage
 import ImageIO
 import SwiftUI
-#if os(macOS)
-import AppKit
-#else
-import UIKit
-#endif
 
 struct GroupReviewView: View {
     let group: DuplicateGroup
     let model: ReviewModel
-    let moveGroup: (Bool) -> Void
+    let isActive: Bool
     let reviewCleanup: () -> Void
 
     @State private var compareID: AssetID?
@@ -48,19 +43,9 @@ struct GroupReviewView: View {
                 }
                 .padding(18)
             }
-            .accessibilityIdentifier("group-review")
-            #if os(macOS)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 24).onEnded { drag in
-                    moveHorizontally(drag.translation)
-                }
-            )
-            .background { ReviewTrackpadSwipe(onSwipe: moveHorizontally) }
-            #else
-            .gesture(ReviewSwipe(onSwipe: moveHorizontally))
-            #endif
-            .accessibilityAction(named: Text("Previous Group")) { moveGroup(false) }
-            .accessibilityAction(named: Text("Next Group")) { moveGroup(true) }
+            .accessibilityIdentifier(isActive ? "group-review" : "")
+            .accessibilityHidden(!isActive)
+
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             ViewThatFits(in: .horizontal) {
@@ -80,12 +65,6 @@ struct GroupReviewView: View {
         }
     }
 
-    private func moveHorizontally(_ translation: CGSize) {
-        let horizontal = translation.width
-        guard abs(horizontal) >= 55, abs(horizontal) > 1.5 * abs(translation.height) else { return }
-        moveGroup(horizontal < 0)
-    }
-
     private var selectionSummary: some View {
         Text(model.selectedCount == 0 ? "Select copies to move" : "\(model.selectedCount) selected across all groups")
             .foregroundStyle(.secondary)
@@ -94,14 +73,15 @@ struct GroupReviewView: View {
     private var reviewButton: some View {
         Button("Review Cleanup…", action: reviewCleanup)
             .buttonStyle(.borderedProminent)
-            .disabled(!model.canClean || model.selectedCount == 0)
-            .accessibilityIdentifier("review-cleanup")
+            .disabled(!isActive || !model.canClean || model.selectedCount == 0)
+            .accessibilityIdentifier(isActive ? "review-cleanup" : "")
     }
 
     private func previews(keep: PhotoAsset, comparison: PhotoAsset?, height: CGFloat) -> some View {
         let first = keepPreview?.asset == keep ? keepPreview : nil
         let second = comparisonPreview?.asset == comparison ? comparisonPreview : nil
-        let firstAspect = first?.aspectRatio ?? second?.aspectRatio ?? 1
+        let fallbackAspect = group.preferredDimensions.map { CGFloat($0.width) / CGFloat(max(1, $0.height)) } ?? 1
+        let firstAspect = first?.aspectRatio ?? second?.aspectRatio ?? fallbackAspect
         let secondAspect = second?.aspectRatio ?? firstAspect
         return ReviewPreviewLayout(height: height, aspects: comparison == nil ? [firstAspect] : [firstAspect, secondAspect]) {
             PreviewCard(asset: keep, label: "Copy to Keep", showFilename: showFilenames, preview: first)
@@ -182,90 +162,6 @@ struct GroupReviewView: View {
         asset.id != keep.id && asset.photoProperties?.hasAssociatedResources != true
     }
 }
-
-#if os(macOS)
-private struct ReviewTrackpadSwipe: NSViewRepresentable {
-    let onSwipe: (CGSize) -> Void
-
-    func makeNSView(context: Context) -> SwipeView { SwipeView() }
-
-    func updateNSView(_ view: SwipeView, context: Context) {
-        view.onSwipe = onSwipe
-    }
-
-    final class SwipeView: NSView {
-        var onSwipe: ((CGSize) -> Void)?
-        private var monitor: Any?
-        private var translation: CGSize?
-
-        override func viewWillMove(toWindow newWindow: NSWindow?) {
-            if let monitor { NSEvent.removeMonitor(monitor) }
-            monitor = nil
-            translation = nil
-            super.viewWillMove(toWindow: newWindow)
-        }
-
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            guard window != nil else { return }
-            monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
-                self?.track(event)
-                return event
-            }
-        }
-
-        private func track(_ event: NSEvent) {
-            guard event.window === window, event.hasPreciseScrollingDeltas, event.momentumPhase.isEmpty else { return }
-            if event.phase == .began {
-                translation = bounds.contains(convert(event.locationInWindow, from: nil)) ? .zero : nil
-            }
-            guard var distance = translation else { return }
-            // Keep the page direction tied to finger movement for either system scroll setting.
-            distance.width += event.scrollingDeltaX * (event.isDirectionInvertedFromDevice ? 1 : -1)
-            distance.height += event.scrollingDeltaY
-            if event.phase == .ended {
-                translation = nil
-                onSwipe?(distance)
-            } else {
-                translation = event.phase == .cancelled ? nil : distance
-            }
-        }
-    }
-}
-#else
-private struct ReviewSwipe: UIGestureRecognizerRepresentable {
-    let onSwipe: (CGSize) -> Void
-
-    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator { Coordinator() }
-
-    func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
-        let recognizer = UIPanGestureRecognizer()
-        recognizer.maximumNumberOfTouches = 1
-        recognizer.delegate = context.coordinator
-        return recognizer
-    }
-
-    func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
-        guard recognizer.state == .ended else { return }
-        let translation = recognizer.translation(in: nil)
-        onSwipe(CGSize(width: translation.x, height: translation.y))
-    }
-
-    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
-        func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-            guard let pan = gestureRecognizer as? UIPanGestureRecognizer else { return false }
-            let velocity = pan.velocity(in: nil)
-            let startX = pan.location(in: nil).x - pan.translation(in: nil).x
-            return startX > 24 && abs(velocity.x) > 1.5 * abs(velocity.y)
-        }
-
-        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
-                               shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-            otherGestureRecognizer.view is UIScrollView
-        }
-    }
-}
-#endif
 
 private struct ReviewPreviewLayout: Layout {
     let height: CGFloat
