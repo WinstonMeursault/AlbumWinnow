@@ -41,7 +41,7 @@ func damagedFingerprintIsRebuilt(column: String) async throws {
     #expect(result.issues.isEmpty)
 }
 
-@Test func cacheDropsInactiveSourcesAndOlderResultScopes() async throws {
+@Test func cacheDropsInactiveSourcesWithoutSavingResults() async throws {
     let directory = TestFiles.root.appending(path: UUID().uuidString)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: directory) }
@@ -60,9 +60,29 @@ func damagedFingerprintIsRebuilt(column: String) async throws {
     let database = try DatabaseQueue(path: cache.path)
     let counts = try await database.read { db in
         (try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM fingerprints"),
-         try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM scans"))
+         try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM sqlite_master WHERE name = 'scans'"))
     }
     #expect(counts.0 == 1)
-    #expect(counts.1 == 1)
-    #expect(try await engine.lastResult(sources: sources.map(\.id)) == nil)
+    #expect(counts.1 == 0)
+}
+
+@Test func legacyResultCacheIsRemovedWithoutLosingFingerprints() async throws {
+    let directory = TestFiles.root.appending(path: UUID().uuidString)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    try Data(contentsOf: TestFiles.fixtures.appending(path: "burst-a.png"))
+        .write(to: directory.appending(path: "image.png"))
+    let cache = directory.appending(path: "scan.sqlite")
+    let source = FileSystemSource(directory: directory)
+    _ = try await ScanEngine(cacheURL: cache).scan([source])
+    let database = try DatabaseQueue(path: cache.path)
+    try await database.write { db in
+        try db.execute(sql: "DELETE FROM grdb_migrations WHERE identifier = 'fingerprintsOnly'")
+        try db.execute(sql: "CREATE TABLE IF NOT EXISTS scans (scope BLOB PRIMARY KEY, version INTEGER, result BLOB)")
+        try db.execute(sql: "INSERT OR REPLACE INTO scans VALUES (X'00', 4, X'00')")
+    }
+    let result = try await ScanEngine(cacheURL: cache).scan([source])
+    #expect(result.scanned == 0)
+    #expect(result.reused == 1)
+    #expect(try await database.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM sqlite_master WHERE name = 'scans'") } == 0)
 }

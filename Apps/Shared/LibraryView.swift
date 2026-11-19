@@ -414,6 +414,7 @@ private struct CleanupGroupPreview: View {
     let width: CGFloat
     let heightBudget: CGFloat
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
+    @ScaledMetric(relativeTo: .caption) private var minimumPreviewWidth: CGFloat = 170
     @State private var enlarged: PhotoAsset?
 
     var body: some View {
@@ -436,10 +437,10 @@ private struct CleanupGroupPreview: View {
             }
             let assets = group.keep.map { [$0] } ?? []
             let photos = assets + group.pairs.map(\.remove)
-            let columns = max(width >= 280 ? 2 : 1, Int((width + 12) / 182))
+            let columns = CleanupPreviewLayout.columns(width: width, minimumColumnWidth: minimumPreviewWidth)
             LazyVStack(alignment: .leading, spacing: 12) {
                 ForEach(Array(stride(from: 0, to: photos.count, by: columns)), id: \.self) { start in
-                    CleanupPreviewLayout(heightBudget: heightBudget) {
+                    CleanupPreviewLayout(heightBudget: heightBudget, minimumColumnWidth: minimumPreviewWidth) {
                         ForEach(photos[start..<min(start + columns, photos.count)]) { asset in
                             CleanupPhotoPreview(model: model, asset: asset, removing: asset.id != group.keep?.id,
                                                 showFilename: showFilenames) {
@@ -461,9 +462,13 @@ private struct CleanupAspectRatioKey: LayoutValueKey {
     static let defaultValue: CGFloat = 1
 }
 
-private struct CleanupPreviewLayout: Layout {
+struct CleanupPreviewLayout: Layout {
     let heightBudget: CGFloat
-    private let spacing: CGFloat = 12
+    var minimumColumnWidth: CGFloat = 170
+
+    static func columns(width: CGFloat, minimumColumnWidth: CGFloat = 170) -> Int {
+        max(1, Int((width + 12) / (max(1, minimumColumnWidth) + 12)))
+    }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = proposal.replacingUnspecifiedDimensions().width
@@ -478,35 +483,45 @@ private struct CleanupPreviewLayout: Layout {
     }
 
     private func frames(width: CGFloat, subviews: Subviews) -> [CGRect] {
-        let columns = max(width >= 280 ? 2 : 1, Int((width + spacing) / 182))
+        Self.frames(width: width, heightBudget: heightBudget,
+                    aspects: subviews.map { $0[CleanupAspectRatioKey.self] }, minimumColumnWidth: minimumColumnWidth) { index, width in
+            subviews[index].sizeThatFits(.init(width: width, height: 0)).height
+        }
+    }
+
+    static func frames(width: CGFloat, heightBudget: CGFloat, aspects: [CGFloat],
+                       minimumColumnWidth: CGFloat = 170, captionHeight: (Int, CGFloat) -> CGFloat) -> [CGRect] {
+        let width = max(1, width)
+        let spacing: CGFloat = 12
+        let aspects = aspects.map { $0.isFinite && $0 > 0 ? $0 : 1 }
+        let columns = columns(width: width, minimumColumnWidth: minimumColumnWidth)
         var result: [CGRect] = []
         var y: CGFloat = 0
-        for start in stride(from: 0, to: subviews.count, by: columns) {
-            let row = subviews[start..<min(start + columns, subviews.count)]
+        for start in stride(from: 0, to: aspects.count, by: columns) {
+            let row = Array(aspects[start..<min(start + columns, aspects.count)])
             let count = CGFloat(row.count)
             let columnWidth = max(1, (width - spacing * (count - 1)) / count)
-            let aspects = row.map { max(0.01, $0[CleanupAspectRatioKey.self]) }
-            let captions = row.map { $0.sizeThatFits(.init(width: columnWidth, height: 0)).height }
+            let captions = row.indices.map { captionHeight(start + $0, columnWidth) }
             let imageHeight = max(1, heightBudget - (captions.max() ?? 0))
-            let rowImages = aspects.map { min(imageHeight, columnWidth / $0) }
-            let rowArea = zip(aspects, rowImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }
+            let rowImages = row.map { min(imageHeight, columnWidth / $0) }
+            let rowArea = zip(row, rowImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }
 
-            let fullCaptions = row.map { $0.sizeThatFits(.init(width: width, height: 0)).height }
-            let idealImages = aspects.map { width / $0 }
+            let fullCaptions = row.indices.map { captionHeight(start + $0, width) }
+            let idealImages = row.map { width / $0 }
             let available = max(1, heightBudget - fullCaptions.reduce(0, +) - spacing * (count - 1))
             let scale = min(1, available / max(1, idealImages.reduce(0, +)))
             let stackedImages = idealImages.map { $0 * scale }
-            let stackedArea = zip(aspects, stackedImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }
+            let stackedArea = zip(row, stackedImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }
 
             // Prefer a compact row unless stacking improves fitted image area by at least 15%.
             if row.count > 1 && stackedArea >= rowArea * 1.15 {
-                for index in aspects.indices {
+                for index in row.indices {
                     let height = fullCaptions[index] + stackedImages[index]
                     result.append(CGRect(x: 0, y: y, width: width, height: height))
                     y += height + spacing
                 }
             } else {
-                for index in aspects.indices {
+                for index in row.indices {
                     result.append(CGRect(x: CGFloat(index) * (columnWidth + spacing), y: y,
                                          width: columnWidth, height: captions[index] + rowImages[index]))
                 }

@@ -27,7 +27,6 @@ private let fixtures = TestFiles.fixtures
     #expect(first.groups.count == 1)
     #expect(first.groups.first?.preferred.name == "landscape.jpg")
     #expect(first.groups.first?.duplicates.map(\.match) == [.visualDuplicate])
-    #expect(try await engine.lastResult(sources: [source.id]) == first)
 
     let unchanged = try await engine.scan([source])
     #expect(unchanged.reused == 4)
@@ -86,14 +85,13 @@ private struct SlowSource: AssetSource {
         }
     }
     await #expect(throws: CancellationError.self) { try await scan.value }
-    #expect(try await engine.lastResult(sources: [source.id]) == nil)
     let resumed = try await ScanEngine(cacheURL: db).scan([SlowSource(contents: contents, pause: .zero)])
     #expect(resumed.reused >= 16)
     #expect(resumed.scanned + resumed.reused == 48)
     #expect(resumed.groups.first?.duplicates.count == 47)
 }
 
-@Test func acceptsResultsSavedBeforeGalleryDimensions() throws {
+@Test func decodesGroupsWithoutPreviewDimensions() throws {
     let json = """
     {"groups":[{"preferred":{"id":{"source":"fixture","item":"photo"},"name":"photo","revision":"1"},"duplicates":[]}],
      "issues":[],"scanned":1,"reused":0}

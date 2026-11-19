@@ -20,10 +20,12 @@ struct GroupReviewView: View {
     let isActive: Bool
     let advance: () -> Void
 
+    @ScaledMetric(relativeTo: .caption) private var minimumPreviewWidth: CGFloat = 120
     @State private var keepDraft = KeepDraft.unchanged
     @State private var deleteAllDraft: Bool?
     @State private var deleteAllUnavailable: String?
     @State private var checkedRemovability = false
+    @State private var confirmationTask: Task<Void, Never>?
     @State private var previews: [AssetID: LoadedPreview] = [:]
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
     @AppStorage(ReviewHand.defaultsKey) private var hand = ReviewHand.right.rawValue
@@ -41,7 +43,8 @@ struct GroupReviewView: View {
             ScrollView {
                 let copies = assets
                 if copies.count == 2 {
-                    ReviewPreviewLayout(height: viewport.size.height - 32, aspects: copies.map(aspect)) {
+                    ReviewPreviewLayout(height: viewport.size.height - 32, aspects: copies.map(aspect),
+                                        minimumColumnWidth: minimumPreviewWidth) {
                         ForEach(Array(copies.enumerated()), id: \.element.id) { index, asset in
                             card(asset, number: index + 1)
                         }
@@ -64,11 +67,17 @@ struct GroupReviewView: View {
         .task(id: isActive && model.canClean) {
             checkedRemovability = false
             guard isActive, model.canClean else { return }
-            deleteAllUnavailable = model.deleteAllUnavailableReason(for: assets)
+            let reason = await model.deleteAllUnavailableReason(for: assets)
+            guard !Task.isCancelled else { return }
+            deleteAllUnavailable = reason
             checkedRemovability = true
         }
+        .onDisappear { confirmationTask?.cancel() }
         .onChange(of: isActive) { _, active in
-            if !active { resetDraft() }
+            if !active {
+                confirmationTask?.cancel()
+                resetDraft()
+            }
         }
     }
 
@@ -97,7 +106,7 @@ struct GroupReviewView: View {
                     actionTitle("Skip")
                 }
                 .foregroundStyle(.primary)
-                .disabled(!isActive)
+                .disabled(!isActive || confirmationTask != nil)
                 .accessibilityIdentifier(isActive ? "review-skip" : "")
                 if hand == ReviewHand.left.rawValue { deleteAllButton } else { confirmButton }
             }
@@ -112,15 +121,19 @@ struct GroupReviewView: View {
 
     private var confirmButton: some View {
         Button {
-            guard model.confirmSelection(in: group, keepID: keepID, deleteAll: deletingAll) else { return }
-            resetDraft()
-            advance()
+            confirmationTask = Task {
+                defer { confirmationTask = nil }
+                guard await model.confirmSelection(in: group, keepID: keepID, deleteAll: deletingAll),
+                      !Task.isCancelled, isActive else { return }
+                resetDraft()
+                advance()
+            }
         } label: {
             actionTitle("Confirm")
         }
         .buttonStyle(.borderedProminent)
         .tint(deletingAll ? .red : .accentColor)
-        .disabled(!isActive || !model.canClean ||
+        .disabled(!isActive || confirmationTask != nil || !model.canClean ||
                   (deletingAll ? !checkedRemovability || deleteAllUnavailable != nil : keepID == nil))
         .accessibilityIdentifier(isActive ? "review-confirm" : "")
         .accessibilityHint(deletingAll ? Text("Adds the entire group to pending cleanup") :
@@ -135,7 +148,7 @@ struct GroupReviewView: View {
         }
         .foregroundStyle(.red)
         .tint(deletingAll ? .red : nil)
-        .disabled(!isActive || !checkedRemovability || !model.canClean || deleteAllUnavailable != nil)
+        .disabled(!isActive || confirmationTask != nil || !checkedRemovability || !model.canClean || deleteAllUnavailable != nil)
         .accessibilityIdentifier(isActive ? "review-delete-all" : "")
         .accessibilityValue(deletingAll ? Text("On") : Text("Off"))
         .accessibilityHint(Text("Previews removing every photo in this group"))
@@ -171,7 +184,7 @@ struct GroupReviewView: View {
                         showFilename: showFilenames, isActive: isActive, preview: previews[asset.id])
         }
         .buttonStyle(.plain)
-        .disabled(!isActive || !model.canClean)
+        .disabled(!isActive || confirmationTask != nil || !model.canClean)
         .accessibilityLabel(Text("\(accessibleTitle), \(previews[asset.id]?.details ?? String(localized: "Photo details unavailable"))"))
         .accessibilityValue(deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -195,10 +208,10 @@ struct GroupReviewView: View {
     }
 }
 
-private struct ReviewPreviewLayout: Layout {
+struct ReviewPreviewLayout: Layout {
     let height: CGFloat
     let aspects: [CGFloat]
-    private let spacing: CGFloat = 12
+    var minimumColumnWidth: CGFloat = 120
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = proposal.replacingUnspecifiedDimensions().width
@@ -215,7 +228,19 @@ private struct ReviewPreviewLayout: Layout {
     }
 
     private func frames(width: CGFloat, subviews: Subviews) -> [CGRect] {
-        let captions = subviews.map { $0.sizeThatFits(.init(width: width, height: 0)).height }
+        Self.frames(width: width, height: height, aspects: Array(aspects.prefix(subviews.count)),
+                    minimumColumnWidth: minimumColumnWidth) { index, width in
+            subviews[index].sizeThatFits(.init(width: width, height: 0)).height
+        }
+    }
+
+    static func frames(width: CGFloat, height: CGFloat, aspects: [CGFloat],
+                       minimumColumnWidth: CGFloat = 120, captionHeight: (Int, CGFloat) -> CGFloat) -> [CGRect] {
+        guard !aspects.isEmpty else { return [] }
+        let width = max(1, width)
+        let spacing: CGFloat = 12
+        let aspects = aspects.map { $0.isFinite && $0 > 0 ? $0 : 1 }
+        let captions = aspects.indices.map { captionHeight($0, width) }
         let idealHeights = aspects.map { width / $0 }
         let gap = aspects.count == 2 ? spacing : 0
         let availableHeight = max(100, height - captions.reduce(0, +) - gap)
@@ -225,17 +250,15 @@ private struct ReviewPreviewLayout: Layout {
 
         guard aspects.count == 2 else { return [first] }
         let second = CGRect(x: 0, y: first.maxY + gap, width: width, height: captions[1] + stackedImages[1])
-        guard width > spacing else { return [first, second] }
+        guard width >= spacing + 2 * minimumColumnWidth else { return [first, second] }
 
         // Compare the actual fitted image area after reserving room for each card's text.
         let rowWidth = width - spacing
-        let minimumColumnWidth = min(120, rowWidth / 2)
+        let minimumColumnWidth = min(minimumColumnWidth, rowWidth / 2)
         let proportionalWidth = rowWidth * aspects[0] / (aspects[0] + aspects[1])
         let firstWidth = min(rowWidth - minimumColumnWidth, max(minimumColumnWidth, proportionalWidth))
         let columnWidths = [firstWidth, rowWidth - firstWidth]
-        let rowCaptions = zip(subviews, columnWidths).map { view, width in
-            view.sizeThatFits(.init(width: width, height: 0)).height
-        }
+        let rowCaptions = columnWidths.indices.map { captionHeight($0, columnWidths[$0]) }
         let rowHeight = max(100, height - (rowCaptions.max() ?? 0))
         let rowImages = zip(columnWidths, aspects).map { min(rowHeight, $0 / $1) }
         let rowArea = zip(aspects, rowImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }

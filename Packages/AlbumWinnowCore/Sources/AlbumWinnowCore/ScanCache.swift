@@ -43,6 +43,9 @@ struct ScanCache: Sendable {
             try db.execute(sql: "DELETE FROM fingerprints")
             try db.execute(sql: "DELETE FROM scans")
         }
+        migrator.registerMigration("fingerprintsOnly") { db in
+            try db.drop(table: "scans")
+        }
         try migrator.migrate(database)
         return database
     }
@@ -120,10 +123,7 @@ struct ScanCache: Sendable {
         }
     }
 
-    func finish(_ result: ScanResult, assetIDs: Set<AssetID>, sources: [String]) throws {
-        let encode = JSONEncoder()
-        let encoded = try encode.encode(result)
-        let scope = try encode.encode(sources.sorted())
+    func finish(assetIDs: Set<AssetID>, sources: [String]) throws {
         try database.write { db in
             let placeholders = sources.map { _ in "?" }.joined(separator: ",")
             if sources.isEmpty {
@@ -132,7 +132,6 @@ struct ScanCache: Sendable {
                 try db.execute(sql: "DELETE FROM fingerprints WHERE source NOT IN (\(placeholders))",
                                arguments: StatementArguments(sources))
             }
-            try db.execute(sql: "DELETE FROM scans WHERE scope != ?", arguments: [scope])
             let delete = try db.cachedStatement(sql: "DELETE FROM fingerprints WHERE source = ? AND item = ?")
             for source in sources {
                 let cachedIDs = try String.fetchAll(db, sql: "SELECT item FROM fingerprints WHERE source = ?", arguments: [source])
@@ -140,19 +139,6 @@ struct ScanCache: Sendable {
                     try delete.execute(arguments: [source, item])
                 }
             }
-            try db.execute(sql: """
-                INSERT INTO scans (scope, version, result) VALUES (?, ?, ?)
-                ON CONFLICT (scope) DO UPDATE SET version = excluded.version, result = excluded.result
-                """, arguments: [scope, Self.fingerprintVersion, encoded])
-        }
-    }
-
-    func lastResult(sources: [String]) throws -> ScanResult? {
-        let scope = try JSONEncoder().encode(sources.sorted())
-        return try database.read { db in
-            let data = try Data.fetchOne(db, sql: "SELECT result FROM scans WHERE scope = ? AND version = ?",
-                                        arguments: [scope, Self.fingerprintVersion])
-            return data.flatMap { try? JSONDecoder().decode(ScanResult.self, from: $0) }
         }
     }
 }

@@ -21,10 +21,6 @@ public actor ScanEngine {
         self.parallelism = min(4, max(1, parallelism))
     }
 
-    public func lastResult(sources: [String]) throws -> ScanResult? {
-        try cache.lastResult(sources: sources)
-    }
-
     public func scan(
         _ sources: [any AssetSource],
         progress: @Sendable (ScanProgress) -> Void = { _ in }
@@ -95,7 +91,7 @@ public actor ScanEngine {
             scanned: indexed.count - reused, reused: reused
         )
         try Task.checkCancellation()
-        try cache.finish(result, assetIDs: allIDs, sources: sourceIDs)
+        try cache.finish(assetIDs: allIDs, sources: sourceIDs)
         return result
     }
 

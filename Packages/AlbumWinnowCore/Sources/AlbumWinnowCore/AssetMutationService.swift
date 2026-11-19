@@ -94,9 +94,21 @@ public actor AssetMutationService {
         }
     }
 
-    public nonisolated static func validateRemovals(_ assets: [PhotoAsset], sources: [any AssetSource]) throws {
-        let byID = Dictionary(sources.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        for asset in assets { try validateRemoval(asset, sources: byID) }
+    public nonisolated static func validateRemovals(_ assets: [PhotoAsset], sources: [any AssetSource]) async throws {
+        let task = Task.detached {
+            let byID = Dictionary(sources.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            for asset in assets {
+                try Task.checkCancellation()
+                try validateRemoval(asset, sources: byID)
+            }
+        }
+        try await withTaskCancellationHandler {
+            try Task.checkCancellation()
+            try await task.value
+            try Task.checkCancellation()
+        } onCancel: {
+            task.cancel()
+        }
     }
 
     private static func validateRemoval(_ asset: PhotoAsset, sources: [String: any AssetSource]) throws {

@@ -117,8 +117,8 @@ private let root = TestFiles.root
         Data(#"{"isLivePhoto":true,"hasEdits":false,"hasAlternatePhoto":false}"#.utf8))
     let protected = PhotoAsset(id: excluded.remove.id, name: excluded.remove.name,
                                revision: excluded.remove.revision, photoProperties: liveProperties)
-    #expect(throws: CleanupError.protectedResources) {
-        try AssetMutationService.validateRemovals([protected], sources: [source])
+    await #expect(throws: CleanupError.protectedResources) {
+        try await AssetMutationService.validateRemovals([protected], sources: [source])
     }
     await #expect(throws: CleanupError.invalidSelection) {
         try await service.apply(Array(original.prefix(1)), sources: [source])
@@ -139,4 +139,12 @@ private let root = TestFiles.root
         try files.moveItem(at: trash, to: original)
         #expect(try Data(contentsOf: original) == Data(contentsOf: fixture))
     }
+}
+
+@Test func removalPreflightHonorsCancellation() async throws {
+    let task = Task {
+        withUnsafeCurrentTask { $0?.cancel() }
+        try await AssetMutationService.validateRemovals([], sources: [])
+    }
+    await #expect(throws: CancellationError.self) { try await task.value }
 }

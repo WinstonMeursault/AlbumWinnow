@@ -24,6 +24,14 @@ swift test --package-path Packages/AlbumWinnowCore
 
 随包图片均为生成的测试图集。测试覆盖字节一致、高位深图片、跨格式及跨分辨率匹配、局部变化、方向、增量扫描、取消、缓存恢复和测试副本的可恢复清理。GitHub Actions 在 Apple Silicon 和 Intel macOS 环境运行测试，并构建 macOS、iOS/iPadOS 应用。
 
+应用回归测试覆盖核对与清理布局、大字体、后台删除校验、扫描恢复及当前核对交互。需要 XcodeGen 和已安装的 iOS 模拟器。请在专用模拟器运行，测试会自行生成文件夹素材：
+
+```sh
+Tests/run-app-tests.sh SIMULATOR_UDID
+```
+
+生成的测试工程放在 `.local`，预期版本号直接读取应用构建配置。测试不使用实机或 iCloud 账户。
+
 ## v1.0 范围
 
 - 扫描系统照片图库和用户选定文件夹中的可访问照片，支持跨来源匹配。
@@ -45,7 +53,7 @@ swift test --package-path Packages/AlbumWinnowCore
 
 ## 技术设计
 
-`AlbumWinnowCore` 以 Swift Package 形式供各平台的 SwiftUI 应用共享。PhotoKit 和 Foundation 分别用于访问系统图库和文件。BLAKE3 判断文件字节是否一致，文件夹资源采用流式读取。ImageIO 生成受限尺寸的缩略图，提供 pHash 和 dHash 候选，再通过多尺度像素核验区分同画面候选与存在局部差异的高度相似项。推荐算法保留原始分辨率并考虑位深。SQLite 和 GRDB 存储指纹及扫描状态，损坏缓存项会重新生成；下一次扫描完成后回收不再使用的来源缓存。Swift Concurrency 限制并行图片处理数量。
+`AlbumWinnowCore` 以 Swift Package 形式供各平台的 SwiftUI 应用共享。PhotoKit 和 Foundation 分别用于访问系统图库和文件。BLAKE3 判断文件字节是否一致，文件夹资源采用流式读取。ImageIO 生成受限尺寸的缩略图，提供 pHash 和 dHash 候选，再通过多尺度像素核验区分同画面候选与存在局部差异的高度相似项。推荐算法保留原始分辨率并考虑位深。SQLite 和 GRDB 存储增量指纹，损坏缓存项会重新生成；下一次扫描完成后回收不再使用的来源缓存。Swift Concurrency 限制并行图片处理数量。
 
 ## 开发路线
 

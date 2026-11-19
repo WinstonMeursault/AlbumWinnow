@@ -24,6 +24,14 @@ swift test --package-path Packages/AlbumWinnowCore
 
 The bundled images are generated test fixtures. Tests cover file identity, high-bit-depth images, cross-format and cross-resolution matches, localized changes, orientation, incremental scans, cancellation, cache recovery, and recoverable cleanup using temporary copies. GitHub Actions runs the suite on Apple Silicon and Intel macOS runners and builds the macOS and iOS/iPadOS targets.
 
+The app regression suite covers review and cleanup layouts, large text, background removal checks, scan recovery, and current review interactions. It requires XcodeGen and an installed iOS Simulator. Run it against a dedicated simulator; the suite creates its own folder fixtures:
+
+```sh
+Tests/run-app-tests.sh SIMULATOR_UDID
+```
+
+Generated test projects stay under `.local`. The expected version is read from the app build settings. These tests do not use physical devices or an iCloud account.
+
 ## v1.0 scope
 
 - Scan accessible photos in the system library and user-selected folders, including duplicates across both sources.
@@ -45,7 +53,7 @@ Matching and indexing run on device, and locally available photos can be scanned
 
 ## Technical design
 
-`AlbumWinnowCore` is a Swift package shared by the SwiftUI apps. PhotoKit and Foundation provide access to photos and files. BLAKE3 identifies matching file bytes, with streaming reads for folder resources. Bounded ImageIO thumbnails supply pHash and dHash candidates. Pixel checks at multiple resolutions distinguish possible same-image copies from candidates with local differences. Full source dimensions and bit depth are retained for recommendations. SQLite and GRDB store fingerprints and scan state, recover damaged cache entries, and discard inactive-source data after the next completed scan. Swift Concurrency limits parallel image preparation.
+`AlbumWinnowCore` is a Swift package shared by the SwiftUI apps. PhotoKit and Foundation provide access to photos and files. BLAKE3 identifies matching file bytes, with streaming reads for folder resources. Bounded ImageIO thumbnails supply pHash and dHash candidates. Pixel checks at multiple resolutions distinguish possible same-image copies from candidates with local differences. Full source dimensions and bit depth are retained for recommendations. SQLite and GRDB store incremental fingerprints, recover damaged cache entries, and discard inactive-source data after the next completed scan. Swift Concurrency limits parallel image preparation.
 
 ## Development roadmap
 

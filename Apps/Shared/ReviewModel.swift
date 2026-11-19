@@ -113,11 +113,13 @@ struct CloudDownloadProgress {
         selections[groupID] ?? GroupSelection()
     }
 
-    func confirmSelection(in group: DuplicateGroup, keepID: AssetID?, deleteAll: Bool) -> Bool {
-        guard canClean else { return false }
+    func confirmSelection(in group: DuplicateGroup, keepID: AssetID?, deleteAll: Bool) async -> Bool {
+        guard canClean, !Task.isCancelled else { return false }
         let assets = [group.preferred] + group.duplicates.map(\.asset)
         if deleteAll {
-            if let reason = deleteAllUnavailableReason(for: assets) {
+            let reason = await deleteAllUnavailableReason(for: assets)
+            guard !Task.isCancelled, canClean, result?.groups.contains(group) == true else { return false }
+            if let reason {
                 errorMessage = reason
                 return false
             }
@@ -130,9 +132,11 @@ struct CloudDownloadProgress {
         return true
     }
 
-    func deleteAllUnavailableReason(for assets: [PhotoAsset]) -> String? {
+    func deleteAllUnavailableReason(for assets: [PhotoAsset]) async -> String? {
         do {
-            try AssetMutationService.validateRemovals(assets, sources: sources)
+            try await AssetMutationService.validateRemovals(assets, sources: sources)
+            return nil
+        } catch is CancellationError {
             return nil
         } catch AssetAccessError.inaccessible {
             return "At least one photo cannot be moved from its source."
