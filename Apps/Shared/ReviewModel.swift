@@ -64,11 +64,10 @@ struct CloudDownloadProgress {
     private(set) var result: ScanResult?
     private(set) var progress: ScanProgress?
     private(set) var downloadProgress: CloudDownloadProgress?
-    private(set) var lastCleanup: CleanupRun?
+    private(set) var lastCleanup: [CleanupItem]?
     private(set) var running = false
     private(set) var cleaning = false
     private(set) var resultsStale = false
-    private(set) var history: [CleanupRun] = []
     private var selections: [AssetID: GroupSelection] = [:]
     var errorMessage: String?
     var sourceErrorMessage: String?
@@ -76,7 +75,7 @@ struct CloudDownloadProgress {
     private let photoSource = PhotoLibrarySource()
     private let galleryThumbnails = GalleryThumbnails()
     private let engine: ScanEngine?
-    private let cleanup: AssetMutationService?
+    private let cleanup = AssetMutationService()
     private var scanTask: Task<Void, Never>?
     private var libraryTask: Task<Void, Never>?
     #if os(iOS)
@@ -87,7 +86,7 @@ struct CloudDownloadProgress {
     var hasScanSources: Bool { !folders.isEmpty || (photosEnabled && allowsPhotos) }
     var canEditSources: Bool { !running && !cleaning }
     var canScan: Bool { canEditSources && hasScanSources && engine != nil }
-    var canClean: Bool { !running && !cleaning && !resultsStale && result != nil && cleanup != nil }
+    var canClean: Bool { !running && !cleaning && !resultsStale && result != nil }
     var pendingDownloadCount: Int { pendingDownloadIDs.count }
     var selectedCount: Int { selections.values.reduce(0) { $0 + $1.selected.count } }
     var cleanupGroups: [CleanupGroup] {
@@ -152,9 +151,13 @@ struct CloudDownloadProgress {
             errorMessage = error.localizedDescription
         }
         do {
-            cleanup = try AssetMutationService(journalURL: data.appending(path: "cleanup.sqlite"))
+            for name in ["cleanup.sqlite", "cleanup.sqlite-wal", "cleanup.sqlite-shm"] {
+                let legacyHistory = data.appending(path: name)
+                if FileManager.default.fileExists(atPath: legacyHistory.path) {
+                    try FileManager.default.removeItem(at: legacyHistory)
+                }
+            }
         } catch {
-            cleanup = nil
             errorMessage = error.localizedDescription
         }
         let defaults = UserDefaults.standard
@@ -317,23 +320,14 @@ struct CloudDownloadProgress {
     #endif
 
     func applyCleanup(_ pairs: [CleanupPair]) async {
-        guard canClean, let cleanup, !pairs.isEmpty, pairs == cleanupGroups.flatMap(\.pairs) else { return }
+        guard canClean, !pairs.isEmpty, pairs == cleanupGroups.flatMap(\.pairs) else { return }
         cleaning = true
         defer { cleaning = false }
         do {
             lastCleanup = try await cleanup.apply(pairs, sources: sources)
             invalidateResults()
-            history = try await cleanup.recentRuns()
         } catch {
             invalidateResults()
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    func loadHistory() async {
-        do {
-            history = try await cleanup?.recentRuns() ?? []
-        } catch {
             errorMessage = error.localizedDescription
         }
     }

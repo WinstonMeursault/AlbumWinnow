@@ -9,7 +9,6 @@ struct LibraryView: View {
     #if os(iOS)
     @State private var showingSettings = false
     #endif
-    @State private var showingHistory = false
     @State private var showingIssues = false
     @State private var confirmingCleanup = false
 
@@ -45,11 +44,6 @@ struct LibraryView: View {
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
-                    Button("Cleanup History", systemImage: "clock.arrow.circlepath") {
-                        showingHistory = true
-                    }
-                    .labelStyle(.iconOnly)
-                    .help("Cleanup History")
                     settingsButton("Settings", systemImage: "gearshape")
                         .labelStyle(.iconOnly)
                         .help("Settings")
@@ -68,9 +62,6 @@ struct LibraryView: View {
                 selectedGroup = nil
                 reviewPath.removeAll()
             }
-        }
-        .sheet(isPresented: $showingHistory) {
-            history.task { await model.loadHistory() }
         }
         .sheet(isPresented: $showingIssues) { issues }
         .sheet(isPresented: $confirmingCleanup) { cleanupConfirmation }
@@ -198,11 +189,9 @@ struct LibraryView: View {
                 scanResults(result, wide: wide, narrowed: narrowed)
             } else if let cleanup = model.lastCleanup {
                 ContentUnavailableView {
-                    Label("Cleanup Finished", systemImage: "clock.arrow.circlepath")
+                    Label("Cleanup Finished", systemImage: "checkmark.circle")
                 } description: {
                     Text(cleanupSummary(cleanup))
-                } actions: {
-                    Button("View Cleanup History") { showingHistory = true }
                 }
             } else if !model.hasScanSources {
                 ContentUnavailableView {
@@ -329,12 +318,10 @@ struct LibraryView: View {
         .font(.subheadline)
     }
 
-    private func cleanupSummary(_ run: CleanupRun) -> String {
-        let counts = Dictionary(grouping: run.items, by: \.status).mapValues(\.count)
+    private func cleanupSummary(_ items: [CleanupItem]) -> String {
+        let counts = Dictionary(grouping: items, by: \.status).mapValues(\.count)
         let moved = counts[.movedToTrash, default: 0] + counts[.movedToRecentlyDeleted, default: 0]
-        let summary = "\(moved) moved · \(counts[.skipped, default: 0]) skipped · \(counts[.failed, default: 0]) failed"
-        let pending = counts[.pending, default: 0]
-        return pending == 0 ? summary : summary + " · \(pending) interrupted"
+        return "\(moved) moved · \(counts[.skipped, default: 0]) skipped · \(counts[.failed, default: 0]) failed"
     }
 
     private var cleanupConfirmation: some View {
@@ -373,35 +360,6 @@ struct LibraryView: View {
         #endif
     }
 
-    private var history: some View {
-        NavigationStack {
-            Group {
-                if model.history.isEmpty {
-                    ContentUnavailableView("No Cleanup History", systemImage: "clock")
-                } else {
-                    List(model.history) { run in
-                        Section(run.startedAt.formatted()) {
-                            Text(cleanupSummary(run)).font(.subheadline)
-                            ForEach(run.items) { item in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(item.pair.remove.name)
-                                    Text(item.status.label).foregroundStyle(.secondary)
-                                    if let detail = item.detail { Text(detail).font(.caption).foregroundStyle(.secondary) }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Cleanup History")
-            .toolbarTitleDisplayMode(.inline)
-            .toolbar { Button("Done") { showingHistory = false } }
-        }
-        #if os(macOS)
-        .frame(minWidth: 480, minHeight: 380)
-        #endif
-    }
-
     private var issues: some View {
         NavigationStack {
             List {
@@ -433,18 +391,6 @@ struct LibraryView: View {
         #if os(macOS)
         .frame(minWidth: 480, minHeight: 380)
         #endif
-    }
-}
-
-private extension CleanupStatus {
-    var label: String {
-        switch self {
-        case .pending: "Interrupted before a result was recorded"
-        case .movedToTrash: "Moved to Trash"
-        case .movedToRecentlyDeleted: "Moved to Recently Deleted"
-        case .skipped: "Skipped"
-        case .failed: "Failed"
-        }
     }
 }
 

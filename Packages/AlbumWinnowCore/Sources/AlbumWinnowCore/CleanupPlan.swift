@@ -1,6 +1,6 @@
 import Foundation
 
-public struct CleanupPair: Codable, Equatable, Sendable, Identifiable {
+public struct CleanupPair: Equatable, Sendable, Identifiable {
     public let keep: PhotoAsset?
     public let remove: PhotoAsset
     public let wholeGroupID: AssetID?
@@ -20,26 +20,19 @@ public struct CleanupPair: Codable, Equatable, Sendable, Identifiable {
     }
 }
 
-public enum CleanupStatus: String, Codable, Sendable {
-    case pending
+public enum CleanupStatus: Sendable {
     case movedToTrash
     case movedToRecentlyDeleted
     case skipped
     case failed
 }
 
-public struct CleanupItem: Codable, Equatable, Sendable, Identifiable {
+public struct CleanupItem: Equatable, Sendable, Identifiable {
     public let pair: CleanupPair
     public let status: CleanupStatus
     public let detail: String?
 
     public var id: AssetID { pair.id }
-}
-
-public struct CleanupRun: Codable, Equatable, Sendable, Identifiable {
-    public let id: UUID
-    public let startedAt: Date
-    public let items: [CleanupItem]
 }
 
 public enum CleanupError: LocalizedError, Equatable, Sendable {

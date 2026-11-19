@@ -3,18 +3,11 @@ import os
 import Photos
 
 public actor AssetMutationService {
-    private let journal: CleanupJournal
     private var applying = false
 
-    public init(journalURL: URL) throws {
-        journal = try CleanupJournal(url: journalURL)
-    }
+    public init() {}
 
-    public func recentRuns(limit: Int = 20) throws -> [CleanupRun] {
-        try journal.recentRuns(limit: max(0, limit))
-    }
-
-    public func apply(_ pairs: [CleanupPair], sources: [any AssetSource]) async throws -> CleanupRun {
+    public func apply(_ pairs: [CleanupPair], sources: [any AssetSource]) async throws -> [CleanupItem] {
         guard !applying else { throw CleanupError.operationInProgress }
         let removals = Set(pairs.map(\.remove.id))
         let wholeGroups = Dictionary(grouping: pairs.filter { $0.wholeGroupID != nil }, by: \.wholeGroupID)
@@ -29,10 +22,7 @@ public actor AssetMutationService {
         defer { applying = false }
 
         let byID = Dictionary(uniqueKeysWithValues: sources.map { ($0.id, $0) })
-        let run = UUID()
-        let start = Date()
-        try journal.begin(pairs, id: run, at: start)
-        var items = pairs.map { CleanupItem(pair: $0, status: .pending, detail: nil) }
+        var items = [CleanupItem?](repeating: nil, count: pairs.count)
         var queuedPhotos: [(Int, CleanupPair)] = []
         var rejectedGroups: [AssetID: any Error] = [:]
         for (id, group) in wholeGroups {
@@ -65,7 +55,6 @@ public actor AssetMutationService {
             } catch {
                 items[position] = Self.item(for: pair, error: error)
             }
-            try journal.record([(position, items[position])], run: run)
         }
 
         if !queuedPhotos.isEmpty {
@@ -77,18 +66,16 @@ public actor AssetMutationService {
             } catch {
                 outcome = .failure(error)
             }
-            let updates = queuedPhotos.map { position, pair in
+            for (position, pair) in queuedPhotos {
                 switch outcome {
                 case .success:
                     items[position] = CleanupItem(pair: pair, status: .movedToRecentlyDeleted, detail: nil)
                 case .failure(let error):
                     items[position] = Self.item(for: pair, error: error)
                 }
-                return (position, items[position])
             }
-            try journal.record(updates, run: run)
         }
-        return CleanupRun(id: run, startedAt: start, items: items)
+        return items.compactMap { $0 }
     }
 
     private static func verify(_ pair: CleanupPair, sources: [String: any AssetSource]) async throws {
