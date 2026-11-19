@@ -1,7 +1,9 @@
 import Foundation
+import ImageIO
 
 public enum DuplicateMatch: String, Codable, Sendable {
     case exactDuplicate
+    case similarPhoto
     case visualDuplicate
     case distinct
 }
@@ -18,23 +20,40 @@ public struct DuplicateDetector: Sendable {
     }
 
     public func compare(_ first: AssetImage, _ second: AssetImage) throws -> DuplicateMatch {
-        let left = try PreparedImage(data: first.data, orientation: first.orientation)
-        if first.data == second.data, first.orientation == second.orientation { return .exactDuplicate }
-        let right = try PreparedImage(data: second.data, orientation: second.orientation)
-        return Self.compare(left, right)
+        try Self.compare(.bytes(first), .bytes(second))
     }
 
-    static func compare(_ left: PreparedImage, _ right: PreparedImage) -> DuplicateMatch {
-        let a = left.fingerprint
-        let b = right.fingerprint
-        if a.width == b.width, a.height == b.height, a.pixelHash == b.pixelHash {
-            return .exactDuplicate
+    static func compare(_ first: ImageInput, _ second: ImageInput) throws -> DuplicateMatch {
+        try autoreleasepool {
+            let firstSource = try first.source()
+            let firstMetadata = try first.metadata(for: firstSource)
+            let secondSource = try second.source()
+            let secondMetadata = try second.metadata(for: secondSource)
+            let firstHash = try first.fileHash(orientationOverride: firstMetadata.orientationOverride)
+            let secondHash = try second.fileHash(orientationOverride: secondMetadata.orientationOverride)
+            if firstHash == secondHash { return .exactDuplicate }
+            let left = try PreparedImage(source: firstSource, metadata: firstMetadata, fileHash: firstHash)
+            let right = try PreparedImage(source: secondSource, metadata: secondMetadata, fileHash: secondHash)
+            guard isVisualCandidate(left.fingerprint, right.fingerprint),
+                  verifyPixels(left.comparisonPixels, right.comparisonPixels) else { return .distinct }
+
+            // Local changes that survive only at higher resolution remain explicitly similar.
+            let shortestSide = min(firstMetadata.width, firstMetadata.height, secondMetadata.width, secondMetadata.height)
+            let size = max(8, min(1_024, shortestSide) / 8 * 8)
+            let firstPixels = try PreparedImage.verificationPixels(source: firstSource, metadata: firstMetadata, size: size)
+            let secondPixels = try PreparedImage.verificationPixels(source: secondSource, metadata: secondMetadata, size: size)
+            return verifyPixels(firstPixels, secondPixels, size: size) ? .visualDuplicate : .similarPhoto
         }
-        guard isVisualCandidate(a, b),
-              verifyPixels(left.comparisonPixels, right.comparisonPixels) else {
-            return .distinct
-        }
-        return .visualDuplicate
+    }
+
+    static func compare(_ first: PhotoAsset, source firstSource: any AssetSource,
+                        _ second: PhotoAsset, source secondSource: any AssetSource) async throws -> DuplicateMatch {
+        let firstInput = try await firstSource.imageInput(for: first)
+        let secondInput = try await secondSource.imageInput(for: second)
+        let match = try compare(firstInput, secondInput)
+        try firstSource.validateImage(for: first)
+        try secondSource.validateImage(for: second)
+        return match
     }
 
     static func isVisualCandidate(_ a: ImageFingerprint, _ b: ImageFingerprint) -> Bool {
@@ -44,8 +63,9 @@ public struct DuplicateDetector: Sendable {
             && zip(a.meanRGBA, b.meanRGBA).allSatisfy { abs(Int($0) - Int($1)) <= 5 }
     }
 
-    static func verifyPixels(_ a: [UInt8], _ b: [UInt8]) -> Bool {
-        let size = PreparedImage.comparisonSize
+    static func verifyPixels(_ a: [UInt8], _ b: [UInt8], size: Int = PreparedImage.comparisonSize) -> Bool {
+        guard size > 0, size.isMultiple(of: 8),
+              a.count == size * size * 4, b.count == a.count else { return false }
         let blockSize = 8
         let blockPixels = Double(blockSize * blockSize)
         var totalError = 0.0

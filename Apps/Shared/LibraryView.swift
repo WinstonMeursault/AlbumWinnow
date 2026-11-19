@@ -425,6 +425,15 @@ private struct CleanupGroupPreview: View {
                     .font(.headline)
                     .foregroundStyle(.red)
             }
+            if group.match == .similarPhoto {
+                Text("Similar photos · Check differences before confirming.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if group.match == .visualDuplicate {
+                Text("Possible same image · Check differences before confirming.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             let assets = group.keep.map { [$0] } ?? []
             let photos = assets + group.pairs.map(\.remove)
             let columns = max(width >= 280 ? 2 : 1, Int((width + 12) / 182))

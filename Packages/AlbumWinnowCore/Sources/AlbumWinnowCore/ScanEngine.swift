@@ -87,7 +87,8 @@ public actor ScanEngine {
         }
 
         try Task.checkCancellation()
-        let groups = try findGroups(indexed, progress: progress)
+        let (groups, comparisonIssues) = try await findGroups(indexed, sources: sources, progress: progress)
+        issues.append(contentsOf: comparisonIssues)
         let result = ScanResult(
             groups: groups,
             issues: issues.sorted { Self.precedes($0.id, $1.id) },
@@ -120,9 +121,11 @@ public actor ScanEngine {
     private static func prepare(_ asset: PhotoAsset, using source: any AssetSource) async -> Preparation {
         do {
             try Task.checkCancellation()
-            let image = try await source.image(for: asset)
+            let input = try await source.imageInput(for: asset)
             try Task.checkCancellation()
-            return try .ready(asset, PreparedImage(data: image.data, orientation: image.orientation))
+            let image = try autoreleasepool { try PreparedImage(input: input) }
+            try source.validateImage(for: asset)
+            return .ready(asset, image)
         } catch is CancellationError {
             return Task.isCancelled ? .cancelled : .failed(AssetIssue(id: asset.id, reason: .inaccessible))
         } catch AssetAccessError.changedDuringScan {
@@ -140,7 +143,11 @@ public actor ScanEngine {
         }
     }
 
-    private func findGroups(_ assets: [IndexedAsset], progress: (ScanProgress) -> Void) throws -> [DuplicateGroup] {
+    private func findGroups(
+        _ assets: [IndexedAsset], sources: [any AssetSource], progress: (ScanProgress) -> Void
+    ) async throws -> ([DuplicateGroup], [AssetIssue]) {
+        let byID = Dictionary(uniqueKeysWithValues: sources.map { ($0.id, $0) })
+        var issues = [AssetIssue]()
         let ordered = assets.sorted { lhs, rhs in
             let leftProtected = lhs.asset.photoProperties?.hasAssociatedResources == true
             let rightProtected = rhs.asset.photoProperties?.hasAssociatedResources == true
@@ -148,6 +155,12 @@ public actor ScanEngine {
             let leftArea = lhs.fingerprint.width * lhs.fingerprint.height
             let rightArea = rhs.fingerprint.width * rhs.fingerprint.height
             if leftArea != rightArea { return leftArea > rightArea }
+            if lhs.fingerprint.bitDepth != rhs.fingerprint.bitDepth {
+                return lhs.fingerprint.bitDepth > rhs.fingerprint.bitDepth
+            }
+            if lhs.fingerprint.hasWideColor != rhs.fingerprint.hasWideColor {
+                return lhs.fingerprint.hasWideColor
+            }
             if lhs.fingerprint.edgeDetail != rhs.fingerprint.edgeDetail {
                 return lhs.fingerprint.edgeDetail > rhs.fingerprint.edgeDetail
             }
@@ -171,7 +184,7 @@ public actor ScanEngine {
                 let match: DuplicateMatch
                 let a = representative.fingerprint
                 let b = other.fingerprint
-                if a.fileHash == b.fileHash || CandidateIndex.PixelKey(a) == CandidateIndex.PixelKey(b) {
+                if a.fileHash == b.fileHash {
                     match = .exactDuplicate
                 } else {
                     guard DuplicateDetector.isVisualCandidate(a, b) else { continue }
@@ -179,7 +192,23 @@ public actor ScanEngine {
                     sample = left
                     let right = try cache.sample(for: other.asset)
                     guard DuplicateDetector.verifyPixels(left, right) else { continue }
-                    match = .visualDuplicate
+                    guard let firstSource = byID[representative.asset.id.source],
+                          let secondSource = byID[other.asset.id.source] else { throw ScanError.invalidSourceSnapshot }
+                    do {
+                        match = try await DuplicateDetector.compare(
+                            representative.asset, source: firstSource, other.asset, source: secondSource
+                        )
+                        guard match != .distinct else { continue }
+                    } catch is CancellationError {
+                        throw CancellationError()
+                    } catch {
+                        if case AssetAccessError.changedDuringScan = error {
+                            issues.append(AssetIssue(id: other.asset.id, reason: .changedDuringScan))
+                        } else {
+                            issues.append(AssetIssue(id: other.asset.id, reason: .inaccessible))
+                        }
+                        continue
+                    }
                 }
                 assigned.insert(candidate)
                 duplicates.append(DuplicateMember(asset: other.asset, match: match))
@@ -192,7 +221,7 @@ public actor ScanEngine {
             }
         }
         progress(.comparing(completed: ordered.count, total: ordered.count))
-        return groups
+        return (groups, issues)
     }
 
     private static func precedes(_ lhs: AssetID, _ rhs: AssetID) -> Bool {

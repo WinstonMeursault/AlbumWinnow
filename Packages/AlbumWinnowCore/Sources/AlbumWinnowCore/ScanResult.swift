@@ -18,6 +18,12 @@ public struct DuplicateGroup: Codable, Equatable, Sendable, Identifiable {
     public let preferredDimensions: ImageDimensions?
 
     public var id: AssetID { preferred.id }
+
+    public var match: DuplicateMatch {
+        if duplicates.contains(where: { $0.match == .similarPhoto }) { return .similarPhoto }
+        if duplicates.contains(where: { $0.match == .visualDuplicate }) { return .visualDuplicate }
+        return .exactDuplicate
+    }
 }
 
 public struct ScanResult: Codable, Equatable, Sendable {

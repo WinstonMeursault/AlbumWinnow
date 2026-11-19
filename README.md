@@ -14,6 +14,16 @@ Open `AlbumWinnow.xcodeproj` in Xcode. Select **AlbumWinnow** for macOS or **Alb
 
 The shared Swift package can also be built independently with `swift build --package-path Packages/AlbumWinnowCore`.
 
+## Tests
+
+Run the core regression suite on macOS 26 or later with Xcode 26 or later selected.
+
+```sh
+swift test --package-path Packages/AlbumWinnowCore
+```
+
+The bundled images are generated test fixtures. Tests cover file identity, high-bit-depth images, cross-format and cross-resolution matches, localized changes, orientation, incremental scans, cancellation, cache recovery, and recoverable cleanup using temporary copies. GitHub Actions runs the suite on Apple Silicon and Intel macOS runners and builds the macOS and iOS/iPadOS targets.
+
 ## v1.0 scope
 
 - Scan accessible photos in the system library and user-selected folders, including duplicates across both sources.
@@ -21,21 +31,21 @@ The shared Swift package can also be built independently with `swift build --pac
 - Group matches for side-by-side review and recommend a copy to keep based on image quality, resolution, and associated data such as a Live Photo video or the original version of an edited photo.
 - Reuse scan results for unchanged assets and update the index when photos are added, edited, or removed.
 
-Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. The Duplicates screen shows iCloud transfer progress separately from scan progress, with counts of available, failed, and pending photos. After a scan, Duplicates shows a photo gallery with one cover per group. Select a cover to inspect its copies in the group. **Show Filenames in Review** in Settings displays filenames on the review screen. Swipe left to review the next group or right to return to the previous one. Choose Slide, Cover, Fade, or None under **Settings → Interaction → Group Transition**. Tap the photo you want to keep and confirm the group, or skip it. **Delete All** previews removal of the entire group. Under **Settings → Interaction → Review Button Layout**, choose the left- or right-hand layout to put Confirm within reach. Once the groups are reviewed, choose **Confirm Cleanup** on the Duplicates screen to review and confirm the whole batch. On iOS and iPadOS, an interrupted scan resumes in the foreground using the saved sources and cached fingerprints. Grouping visually similar shots, such as distinct frames in a burst, is planned for v1.1.
+Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. The Duplicates screen shows iCloud transfer progress separately from scan progress, with counts of available, failed, and pending photos. After a scan, Duplicates shows a photo gallery with one cover per group. Select a cover to inspect its copies in the group. **Show Filenames in Review** in Settings displays filenames on the review screen. Swipe left to review the next group or right to return to the previous one. Choose Slide, Cover, Fade, or None under **Settings → Interaction → Group Transition**. Tap the photo you want to keep and confirm the group, or skip it. **Delete All** previews removal of the entire group. Under **Settings → Interaction → Review Button Layout**, choose the left- or right-hand layout to put Confirm within reach. Once the groups are reviewed, choose **Confirm Cleanup** on the Duplicates screen to review and confirm the whole batch. On iOS and iPadOS, an interrupted scan resumes in the foreground using the saved sources and cached fingerprints. Broader grouping of similar shots, such as distinct frames in a burst, is planned for v1.1.
 
 ## Matching and cleanup
 
 | Category | Criteria | Cleanup behavior |
 | --- | --- | --- |
-| Exact duplicate | Identical file bytes or verified pixel equality. | Eligible for cleanup after review. |
-| Possible same image | Pixel comparison suggests the same image across differences in resolution, compression, or encoding. | Compare the details before selecting copies to move. |
-| Similar photo | A separate shot with a change in expression, motion, or composition. | Organization suggestions only. Planned for v1.1. |
+| Exact duplicate | Identical file bytes with the same effective orientation. | Shown without an additional similarity label. Cleanup requires confirmation. |
+| Possible same image | Candidate hashes and multi-scale pixel checks agree across differences in resolution, compression, or encoding. | Marked for review before selecting copies to move. |
+| Highly similar candidate | The coarse comparison agrees, while higher-resolution checks find local differences. | Marked **Similar photos**. Users may inspect and confirm cleanup. |
 
-Matching and indexing run on device, and locally available photos can be scanned offline. Every cleanup operation requires explicit confirmation. Confirmed items move to Photos’ Recently Deleted album or to the filesystem Trash when available. If a file provider has no Trash, the app keeps the file and records the failure.
+Matching and indexing run on device, and locally available photos can be scanned offline. Every cleanup operation requires explicit confirmation. Confirmed items move to Photos’ Recently Deleted album or to the filesystem Trash when available. If a file provider has no Trash, the app keeps the file and reports the failure in the current operation result.
 
 ## Technical design
 
-`AlbumWinnowCore` is planned as a Swift package shared by the SwiftUI apps. PhotoKit and Foundation provide access to photos and files. BLAKE3 screens for identical files, and pHash and dHash retrieve visual candidates for a separate verification step using Vision feature prints and pixel comparisons. SQLite and GRDB persist fingerprints and scan state, while Swift Concurrency limits the number of images decoded at once.
+`AlbumWinnowCore` is a Swift package shared by the SwiftUI apps. PhotoKit and Foundation provide access to photos and files. BLAKE3 identifies matching file bytes, with streaming reads for folder resources. Bounded ImageIO thumbnails supply pHash and dHash candidates. Pixel checks at multiple resolutions distinguish possible same-image copies from candidates with local differences. Full source dimensions and bit depth are retained for recommendations. SQLite and GRDB store fingerprints and scan state, recover damaged cache entries, and discard inactive-source data after the next completed scan. Swift Concurrency limits parallel image preparation.
 
 ## Development roadmap
 

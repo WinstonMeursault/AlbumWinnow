@@ -78,7 +78,12 @@ struct GroupReviewView: View {
                 Text("Delete All unavailable: \(deleteAllUnavailable)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-            } else if group.duplicates.contains(where: { $0.match == .visualDuplicate }) {
+            }
+            if group.match == .similarPhoto {
+                Text("Similar photos · Check differences before confirming.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if group.match == .visualDuplicate {
                 Text("Possible matches · Compare details before confirming.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

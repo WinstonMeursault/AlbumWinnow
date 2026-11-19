@@ -1,27 +1,13 @@
 import Foundation
 
 struct CandidateIndex {
-    struct PixelKey: Hashable {
-        let width: Int
-        let height: Int
-        let hash: Data
-
-        init(_ fingerprint: ImageFingerprint) {
-            width = fingerprint.width
-            height = fingerprint.height
-            hash = fingerprint.pixelHash
-        }
-    }
-
     private var files: [Data: [Int]] = [:]
-    private var pixels: [PixelKey: [Int]] = [:]
     private let perceptual: HammingBuckets
     private let difference: HammingBuckets
 
     init(_ fingerprints: [ImageFingerprint]) {
         for (index, value) in fingerprints.enumerated() {
             files[value.fileHash, default: []].append(index)
-            pixels[PixelKey(value), default: []].append(index)
         }
         perceptual = HammingBuckets(hashes: fingerprints.map(\.perceptualHash), radius: DuplicateDetector.perceptualRadius)
         difference = HammingBuckets(hashes: fingerprints.map(\.differenceHash), radius: DuplicateDetector.differenceRadius)
@@ -30,7 +16,6 @@ struct CandidateIndex {
     func candidates(for fingerprint: ImageFingerprint, after index: Int) -> [Int] {
         var matches = Set<Int>()
         matches.formUnion((files[fingerprint.fileHash] ?? []).lazy.filter { $0 > index })
-        matches.formUnion((pixels[PixelKey(fingerprint)] ?? []).lazy.filter { $0 > index })
         perceptual.collect(fingerprint.perceptualHash, after: index, into: &matches)
         difference.collect(fingerprint.differenceHash, after: index, into: &matches)
         return matches.sorted()

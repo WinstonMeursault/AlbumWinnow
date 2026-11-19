@@ -17,5 +17,10 @@ let package = Package(
                 .product(name: "GRDB", package: "GRDB.swift"),
             ]
         ),
+        .testTarget(
+            name: "AlbumWinnowCoreTests",
+            dependencies: ["AlbumWinnowCore", .product(name: "GRDB", package: "GRDB.swift")],
+            resources: [.copy("Fixtures")]
+        ),
     ]
 )

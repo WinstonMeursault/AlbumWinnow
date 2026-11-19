@@ -193,7 +193,11 @@ private struct GalleryCard: View {
     @State private var loadedKey: GalleryThumbnailKey?
     @State private var failed = false
 
-    private var hasVisualMatch: Bool { group.duplicates.contains { $0.match == .visualDuplicate } }
+    private var hasVisualMatch: Bool { group.match != .exactDuplicate }
+
+    private var matchDescription: Text {
+        group.match == .similarPhoto ? Text("Similar photos") : Text("Possible same image")
+    }
 
     var body: some View {
         let selection = model.selection(for: group.id)
@@ -230,7 +234,7 @@ private struct GalleryCard: View {
                         VStack(alignment: .leading, spacing: 2) { counts(total: count, selected: selected) }
                     }
                     if hasVisualMatch {
-                        Text("Possible same image").foregroundStyle(.secondary)
+                        matchDescription.foregroundStyle(.secondary)
                     }
                 }
                 .font(.caption)
@@ -280,12 +284,12 @@ private struct GalleryCard: View {
 
     private func accessibilityStatus(selected: Int) -> Text {
         if failed && selected > 0 {
-            return Text(hasVisualMatch ? "\(selected) selected, possible same image, preview unavailable" : "\(selected) selected, preview unavailable")
+            return hasVisualMatch ? Text("\(selected) selected, \(matchDescription), preview unavailable") : Text("\(selected) selected, preview unavailable")
         }
-        if failed { return Text(hasVisualMatch ? "Possible same image, preview unavailable" : "Preview unavailable") }
+        if failed { return hasVisualMatch ? Text("\(matchDescription), preview unavailable") : Text("Preview unavailable") }
         if selected > 0 {
-            return Text(hasVisualMatch ? "\(selected) selected, possible same image" : "\(selected) selected")
+            return hasVisualMatch ? Text("\(selected) selected, \(matchDescription)") : Text("\(selected) selected")
         }
-        return hasVisualMatch ? Text("Possible same image") : Text("")
+        return hasVisualMatch ? matchDescription : Text("")
     }
 }

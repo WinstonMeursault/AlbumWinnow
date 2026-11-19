@@ -52,6 +52,7 @@ struct CloudDownloadProgress {
         let id: AssetID
         let keep: PhotoAsset?
         let pairs: [CleanupPair]
+        let match: DuplicateMatch
     }
 
     private static let folderKey = "AlbumWinnow.folderBookmarks"
@@ -96,7 +97,7 @@ struct CloudDownloadProgress {
             let assets = [group.preferred] + group.duplicates.map(\.asset)
             if selection.deleteAll {
                 let pairs = assets.map { CleanupPair(remove: $0, fromWholeGroup: group.id) }
-                return CleanupGroup(id: group.id, keep: nil, pairs: pairs)
+                return CleanupGroup(id: group.id, keep: nil, pairs: pairs, match: group.match)
             }
             let keep = assets.first(where: { $0.id == selection.keepID }) ?? group.preferred
             let pairs = assets.compactMap { asset -> CleanupPair? in
@@ -104,7 +105,7 @@ struct CloudDownloadProgress {
                       asset.photoProperties?.hasAssociatedResources != true else { return nil }
                 return CleanupPair(keep: keep, remove: asset)
             }
-            return pairs.isEmpty ? nil : CleanupGroup(id: group.id, keep: keep, pairs: pairs)
+            return pairs.isEmpty ? nil : CleanupGroup(id: group.id, keep: keep, pairs: pairs, match: group.match)
         }
     }
 

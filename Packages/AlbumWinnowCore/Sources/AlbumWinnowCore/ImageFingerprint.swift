@@ -1,4 +1,3 @@
-import BLAKE3
 import CoreGraphics
 import CoreImage
 import Foundation
@@ -12,9 +11,10 @@ public enum ImageReadError: Error, Equatable, Sendable {
 
 struct ImageFingerprint: Codable, Sendable {
     let fileHash: Data
-    let pixelHash: Data
     let width: Int
     let height: Int
+    let bitDepth: Int
+    let hasWideColor: Bool
     let perceptualHash: UInt64
     let differenceHash: UInt64
     let meanRGBA: [UInt8]
@@ -32,33 +32,26 @@ struct PreparedImage: Sendable {
     let comparisonPixels: [UInt8]
 
     init(data: Data, orientation: CGImagePropertyOrientation? = nil) throws {
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-              CGImageSourceGetStatus(source) == .statusComplete,
-              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
-              let width = properties[kCGImagePropertyPixelWidth] as? Int,
-              let height = properties[kCGImagePropertyPixelHeight] as? Int else {
-            throw ImageReadError.unreadableImage
-        }
-        guard CGImageSourceGetCount(source) == 1 else { throw ImageReadError.multipleImages }
-        guard width > 0, height > 0, width <= 150_000_000 / height else {
-            throw ImageReadError.unsupportedDimensions
-        }
+        try self.init(input: .bytes(AssetImage(data: data, orientation: orientation)))
+    }
 
-        let embedded = properties[kCGImagePropertyOrientation] as? UInt32 ?? CGImagePropertyOrientation.up.rawValue
-        let override = orientation.flatMap { $0.rawValue == embedded ? nil : $0 }
-        let image = try Self.orientedImage(source, longestSide: max(width, height), override: override)
-        let pixelHasher = BLAKE3()
-        try Self.render(image, width: image.width, height: image.height).withUnsafeBytes {
-            pixelHasher.update(bytes: $0)
-        }
+    init(input: ImageInput) throws {
+        let source = try input.source()
+        let metadata = try input.metadata(for: source)
+        try self.init(source: source, metadata: metadata,
+                      fileHash: input.fileHash(orientationOverride: metadata.orientationOverride))
+    }
+
+    init(source: CGImageSource, metadata: ImageMetadata, fileHash: Data) throws {
+        let image = try Self.orientedImage(source, longestSide: 256, override: metadata.orientationOverride)
         let sample = try Self.render(image, width: Self.comparisonSize, height: Self.comparisonSize)
         let luminance = Self.luminanceGrid(sample, columns: 32, rows: 32)
-
         fingerprint = ImageFingerprint(
-            fileHash: Self.hash(data, orientationOverride: override),
-            pixelHash: pixelHasher.finalizeData(),
-            width: image.width,
-            height: image.height,
+            fileHash: fileHash,
+            width: metadata.width,
+            height: metadata.height,
+            bitDepth: metadata.bitDepth,
+            hasWideColor: image.colorSpace?.isWideGamutRGB == true,
             perceptualHash: Self.pHash(luminance),
             differenceHash: Self.dHash(Self.luminanceGrid(sample, columns: 9, rows: 8)),
             meanRGBA: Self.meanRGBA(sample),
@@ -67,44 +60,31 @@ struct PreparedImage: Sendable {
         comparisonPixels = sample
     }
 
+    static func verificationPixels(source: CGImageSource, metadata: ImageMetadata, size: Int) throws -> [UInt8] {
+        let aspect = Double(metadata.width) / Double(metadata.height)
+        let longestSide = min(2_048, max(size, Int(ceil(Double(size) * max(aspect, 1 / aspect)))))
+        let image = try orientedImage(source, longestSide: longestSide, override: metadata.orientationOverride)
+        return try render(image, width: size, height: size)
+    }
+
     private static func orientedImage(
         _ source: CGImageSource, longestSide: Int, override: CGImagePropertyOrientation?
     ) throws -> CGImage {
-        if let override {
-            guard let sourceImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
-                throw ImageReadError.unreadableImage
-            }
-            if override == .up { return sourceImage }
-            let rotated = CIImage(cgImage: sourceImage).oriented(override)
-            guard let rendered = orientationContext.createCGImage(rotated, from: rotated.extent) else {
-                throw ImageReadError.unreadableImage
-            }
-            return rendered
-        }
-
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceCreateThumbnailWithTransform: override == nil,
+            kCGImageSourceShouldCacheImmediately: true,
             kCGImageSourceThumbnailMaxPixelSize: longestSide,
         ]
         guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
             throw ImageReadError.unreadableImage
         }
-        return image
-    }
-
-    private static func hash(_ bytes: Data, orientationOverride: CGImagePropertyOrientation?) -> Data {
-        let hasher = BLAKE3()
-        hasher.update(data: bytes)
-        if let orientationOverride {
-            // Preserve a distinct identity when a photo source applies an orientation outside the file.
-            let contentHash = hasher.finalizeData()
-            let orientedHasher = BLAKE3()
-            orientedHasher.update(buffer: [UInt8(orientationOverride.rawValue)])
-            orientedHasher.update(data: contentHash)
-            return orientedHasher.finalizeData()
+        guard let override, override != .up else { return image }
+        let rotated = CIImage(cgImage: image).oriented(override)
+        guard let rendered = orientationContext.createCGImage(rotated, from: rotated.extent) else {
+            throw ImageReadError.unreadableImage
         }
-        return hasher.finalizeData()
+        return rendered
     }
 
     private static func meanRGBA(_ sample: [UInt8]) -> [UInt8] {

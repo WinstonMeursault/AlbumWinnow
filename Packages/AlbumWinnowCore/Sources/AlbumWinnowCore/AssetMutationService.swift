@@ -89,9 +89,9 @@ public actor AssetMutationService {
             throw CleanupError.sameFile
         }
         try validate(retained, sources: sources)
-        let first = try await keep.image(for: retained)
-        let second = try await remove.image(for: pair.remove)
-        guard try DuplicateDetector().compare(first, second) != .distinct else { throw CleanupError.noLongerDuplicate }
+        guard try await DuplicateDetector.compare(retained, source: keep, pair.remove, source: remove) != .distinct else {
+            throw CleanupError.noLongerDuplicate
+        }
     }
 
     public nonisolated static func validateRemovals(_ assets: [PhotoAsset], sources: [any AssetSource]) throws {

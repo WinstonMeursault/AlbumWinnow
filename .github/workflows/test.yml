@@ -1,0 +1,46 @@
+name: Test and Build
+
+on:
+  push:
+    branches: [main, dev, 'feature/**', 'fix/**', 'perf/**']
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-tests:
+    name: Core tests (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-26, macos-26-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+      - name: Run core regression tests
+        run: |
+          mkdir -p "$HOME/.Trash"
+          swift test --package-path Packages/AlbumWinnowCore -c release
+
+  app-builds:
+    name: Apple app builds
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build macOS app
+        run: xcodebuild -project AlbumWinnow.xcodeproj -scheme AlbumWinnow -configuration Release CODE_SIGNING_ALLOWED=NO build
+      - name: Build iOS and iPadOS app for Simulator
+        run: xcodebuild -project AlbumWinnow.xcodeproj -scheme AlbumWinnowMobile -configuration Release -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
