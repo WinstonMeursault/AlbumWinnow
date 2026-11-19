@@ -12,6 +12,7 @@ struct ScanSourcesView: View {
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showReviewFilenames = false
     @AppStorage(ReviewAnimation.defaultsKey) private var reviewAnimation = ReviewAnimation.slide.rawValue
     @AppStorage(ReviewHand.defaultsKey) private var reviewHand = ReviewHand.right.rawValue
+    @State private var showingAbout = false
     #if os(iOS)
     @State private var importing = false
     #endif
@@ -90,9 +91,20 @@ struct ScanSourcesView: View {
                 }
                 .accessibilityIdentifier("review-animation")
             }
+
+            Section("About") {
+                Button("About & Open Source", systemImage: "info.circle") {
+                    showingAbout = true
+                }
+                .accessibilityIdentifier("about-open-source")
+                Link("Privacy Policy", destination: AboutView.privacyURL)
+            }
         }
         .formStyle(.grouped)
         .navigationTitle("Settings")
+        .sheet(isPresented: $showingAbout) {
+            AboutView()
+        }
         #if os(iOS)
         .toolbarTitleDisplayMode(.inline)
         .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in

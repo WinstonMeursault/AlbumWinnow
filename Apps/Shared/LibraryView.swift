@@ -195,9 +195,6 @@ struct LibraryView: View {
                     description: Text("Duplicates will be ready to review when the scan finishes.")
                 )
             } else if let result = model.result {
-                scanSummary(result)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
                 scanResults(result, wide: wide, narrowed: narrowed)
             } else if let cleanup = model.lastCleanup {
                 ContentUnavailableView {
@@ -228,11 +225,16 @@ struct LibraryView: View {
     private func scanResults(_ result: ScanResult, wide: Bool, narrowed: Bool) -> some View {
         Group {
             if result.groups.isEmpty {
-                ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
+                VStack(spacing: 0) {
+                    scanSummaryCard(result)
+                    ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
+                }
             } else {
                 DuplicateGallery(groups: result.groups, model: model, selectedGroup: selectedGroup,
                                  narrowed: narrowed, isActive: reviewPath.isEmpty,
-                                 bottomRequest: galleryBottomRequest) { group in
+                                 bottomRequest: galleryBottomRequest, header: {
+                    scanSummaryCard(result)
+                }) { group in
                     selectedGroup = group.id
                     if !wide { reviewPath = [group.id] }
                 }
@@ -248,6 +250,12 @@ struct LibraryView: View {
                 .background(.bar)
             }
         }
+    }
+
+    private func scanSummaryCard(_ result: ScanResult) -> some View {
+        scanSummary(result)
+            .padding(.horizontal)
+            .padding(.top, 8)
     }
 
     private func scanSummary(_ result: ScanResult) -> some View {

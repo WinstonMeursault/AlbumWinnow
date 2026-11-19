@@ -58,13 +58,14 @@ struct DuplicateMasonry {
     }
 }
 
-struct DuplicateGallery: View {
+struct DuplicateGallery<Header: View>: View {
     let groups: [DuplicateGroup]
     let model: ReviewModel
     let selectedGroup: AssetID?
     let narrowed: Bool
     let isActive: Bool
     let bottomRequest: Int
+    let header: () -> Header
     let open: (DuplicateGroup) -> Void
 
     @Environment(\.displayScale) private var displayScale
@@ -117,6 +118,8 @@ struct DuplicateGallery: View {
                 .frame(width: width, height: masonry.height, alignment: .topLeading)
             }
             .accessibilityIdentifier("duplicate-gallery")
+            .scrollClipDisabled()
+            .safeAreaInset(edge: .top, spacing: 0, content: header)
             .scrollPosition($position)
             .onScrollGeometryChange(for: CGRect.self, of: \.visibleRect) { _, rect in
                 if isActive { viewport = rect }
@@ -146,6 +149,7 @@ struct DuplicateGallery: View {
                 pendingBottomScroll = false
             }
         }
+        .clipped()
     }
 
     private func columnCount(at width: CGFloat) -> Int {

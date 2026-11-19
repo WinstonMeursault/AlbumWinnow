@@ -50,4 +50,6 @@ The design target is 100,000 photos per scan. Performance validation is planned 
 
 ## License
 
-GNU Affero General Public License, version 3. See [LICENSE](LICENSE).
+The public source code is available under the GNU Affero General Public License, version 3. See [LICENSE](LICENSE) and the [third-party notices](THIRD-PARTY-NOTICES.txt).
+
+The [privacy policy](PRIVACY.md) describes photo access, iCloud downloads, and the data the app stores on the device.

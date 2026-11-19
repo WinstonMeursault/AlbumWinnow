@@ -50,4 +50,6 @@ AlbumWinnow 正在开发 v1.0。开发版面向 macOS 26、iOS 26、iPadOS 26 �
 
 ## 许可证
 
-GNU Affero General Public License 第 3 版。详见 [LICENSE](LICENSE)。
+公开源码采用 GNU Affero General Public License 第 3 版。详见 [许可证](LICENSE)与[第三方许可声明](THIRD-PARTY-NOTICES.txt)。
+
+[隐私政策](PRIVACY.md)说明图库访问、iCloud 下载与设备上的数据保存方式。
