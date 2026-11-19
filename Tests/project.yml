@@ -22,6 +22,9 @@ targets:
         buildPhase: resources
       - path: ${ALBUMWINNOW_ROOT}/THIRD-PARTY-NOTICES.txt
         buildPhase: resources
+      - path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowCore/Tests/AlbumWinnowCoreTests/Fixtures
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: AlbumWinnowCore
     settings:
@@ -34,9 +37,6 @@ targets:
     platform: iOS
     sources:
       - ${ALBUMWINNOW_ROOT}/Tests/AppTests
-      - path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowCore/Tests/AlbumWinnowCoreTests/Fixtures
-        type: folder
-        buildPhase: resources
     dependencies:
       - target: AlbumWinnowAcceptance
       - package: AlbumWinnowCore

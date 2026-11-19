@@ -221,12 +221,12 @@ final class PhotoFirstReviewTests: XCTestCase {
         XCTAssertTrue(keepChoice.waitForExistence(timeout: 8))
         keepChoice.tap()
         app.buttons["review-confirm"].tap()
-        let close = app.buttons["Close Review"]
-        if close.exists { close.tap() }
-        else {
-            app.navigationBars.matching(NSPredicate(format: "identifier BEGINSWITH %@", "Group ")).firstMatch.buttons.firstMatch.tap()
-        }
-        app.buttons["review-batch-cleanup"].tap()
+        // The panorama is the last fixture group. Confirm returns to the overview.
+        let batch = app.buttons["review-batch-cleanup"]
+        let readyForCleanup = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND enabled == true"), object: batch)
+        XCTAssertEqual(XCTWaiter.wait(for: [readyForCleanup], timeout: 8), .completed)
+        batch.tap()
         let keep = app.buttons["cleanup-keep-gallery-wide-a.png"]
         let remove = app.buttons["cleanup-remove-gallery-wide-b.png"]
         let ready = NSPredicate(format: "label CONTAINS %@", "1000 × 240")
