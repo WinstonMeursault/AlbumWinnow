@@ -308,24 +308,32 @@ private struct PreviewCard: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
             .contentShape(shape)
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 0) {
-                    metadataSummary
-                    Text(" · ")
-                    metadataDimensions
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    metadataSummary
-                    metadataDimensions
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityIdentifier(isActive ? "metadata-\(asset.name)" : "")
+            PhotoMetadataView(preview: preview)
             if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
         }
     }
+}
+
+struct PhotoMetadataView: View {
+    let preview: LoadedPreview?
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 0) {
+                metadataSummary
+                Text(" · ")
+                metadataDimensions
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                metadataSummary
+                metadataDimensions
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
     private var metadataSummary: some View {
         HStack(spacing: 0) {
             Text(preview?.format ?? String(localized: "Unknown format"))
@@ -341,7 +349,7 @@ private struct PreviewCard: View {
     }
 }
 
-private struct LoadedPreview {
+struct LoadedPreview {
     let asset: PhotoAsset
     let image: CGImage?
     let format: String?

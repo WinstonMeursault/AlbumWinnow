@@ -341,24 +341,13 @@ struct LibraryView: View {
         let groups = model.cleanupGroups
         let pairs = groups.flatMap(\.pairs)
         return NavigationStack {
-            List(groups) { group in
-                Section {
-                    ForEach(group.pairs) { pair in
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(pair.remove.name)
-                            let destination = pair.remove.id.source == "photos-library" ? "Recently Deleted" : "Trash"
-                            Text("\(model.sourceLabel(pair.remove.id.source)) → \(destination)")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                } header: {
-                    if let keep = group.keep {
-                        Text("Keep \(keep.name) · \(model.sourceLabel(keep.id.source))")
-                    } else {
-                        Label("Delete entire group · \(group.pairs.count) photos", systemImage: "trash")
-                            .foregroundStyle(.red)
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 24) {
+                    ForEach(groups) { group in
+                        CleanupGroupPreview(model: model, group: group)
                     }
                 }
+                .padding()
             }
             .navigationTitle("Confirm Cleanup")
             .toolbarTitleDisplayMode(.inline)
@@ -377,7 +366,7 @@ struct LibraryView: View {
             }
         }
         #if os(macOS)
-        .frame(minWidth: 480, minHeight: 340)
+        .frame(minWidth: 480, idealWidth: 720, minHeight: 340, idealHeight: 640)
         #endif
     }
 
@@ -466,5 +455,143 @@ private extension AssetIssueReason {
         case .cloudDownloadRequired: "iCloud download required"
         case .cloudDownloadFailed: "iCloud download failed"
         }
+    }
+}
+
+
+private struct CleanupGroupPreview: View {
+    let model: ReviewModel
+    let group: ReviewModel.CleanupGroup
+    @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
+    @State private var enlarged: PhotoAsset?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let keep = group.keep {
+                Text("Keep").font(.headline)
+                CleanupPhotoPreview(model: model, asset: keep, removing: false, showFilename: showFilenames) {
+                    enlarged = keep
+                }
+                .frame(maxWidth: 180)
+                Text("Will Remove (\(group.pairs.count))").font(.headline)
+            } else {
+                Label("Delete entire group · \(group.pairs.count) photos", systemImage: "trash")
+                    .font(.headline)
+                    .foregroundStyle(.red)
+            }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12, alignment: .top)],
+                      alignment: .leading, spacing: 16) {
+                ForEach(group.pairs) { pair in
+                    CleanupPhotoPreview(model: model, asset: pair.remove, removing: true,
+                                        showFilename: showFilenames) {
+                        enlarged = pair.remove
+                    }
+                }
+            }
+            Divider()
+        }
+        .sheet(item: $enlarged) { asset in
+            CleanupPhotoDetail(model: model, asset: asset)
+        }
+    }
+}
+
+private struct CleanupPhotoPreview: View {
+    let model: ReviewModel
+    let asset: PhotoAsset
+    let removing: Bool
+    let showFilename: Bool
+    let open: () -> Void
+    @State private var preview: LoadedPreview?
+
+    var body: some View {
+        Button(action: open) {
+            VStack(alignment: .leading, spacing: 6) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12).fill(.quaternary)
+                    if let image = preview?.image {
+                        Image(image, scale: 1, label: Text("Preview"))
+                            .resizable()
+                            .scaledToFit()
+                            .padding(2)
+                    } else if preview != nil {
+                        Image(systemName: "photo.badge.exclamationmark")
+                            .accessibilityLabel("Preview unavailable")
+                    } else {
+                        ProgressView()
+                    }
+                }
+                .frame(height: 160)
+                .clipShape(.rect(cornerRadius: 12))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(removing ? Color.red : Color.secondary.opacity(0.35), lineWidth: 2)
+                }
+                PhotoMetadataView(preview: preview)
+                if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
+                let source = model.sourceLabel(asset.id.source)
+                let destination = asset.id.source == "photos-library" ? "Recently Deleted" : "Trash"
+                Text(removing ? "\(source) → \(destination)" : source)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("\(removing ? String(localized: "Will Remove") : String(localized: "Keep")), \(preview?.details ?? String(localized: "Photo details unavailable"))"))
+        .accessibilityIdentifier("cleanup-\(removing ? "remove" : "keep")-\(asset.name)")
+        .task(id: asset) {
+            if let input = try? await model.image(for: asset) {
+                let loaded = await LoadedPreview.load(asset: asset, input: input)
+                guard !Task.isCancelled else { return }
+                preview = loaded
+            } else if !Task.isCancelled {
+                preview = LoadedPreview(asset: asset, image: nil, format: nil, byteCount: nil, dimensions: nil)
+            }
+        }
+        .onDisappear { preview = nil }
+    }
+}
+
+private struct CleanupPhotoDetail: View {
+    let model: ReviewModel
+    let asset: PhotoAsset
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilename = false
+    @State private var image: CGImage?
+    @State private var finished = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 12) {
+                if let image {
+                    Image(image, scale: 1, label: Text("Preview"))
+                        .resizable()
+                        .scaledToFit()
+                } else if finished {
+                    ContentUnavailableView("Preview unavailable", systemImage: "photo.badge.exclamationmark")
+                } else {
+                    ProgressView()
+                }
+                if showFilename { Text(asset.name).font(.caption).textSelection(.enabled) }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .navigationTitle("Photo")
+            .toolbarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .task(id: asset) {
+            image = try? await model.thumbnail(for: asset, pixelSize: 2560)
+            finished = true
+        }
+        #if os(macOS)
+        .frame(minWidth: 480, idealWidth: 800, minHeight: 340, idealHeight: 640)
+        #endif
     }
 }
