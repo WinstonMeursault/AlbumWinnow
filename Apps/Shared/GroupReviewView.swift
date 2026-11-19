@@ -2,6 +2,7 @@ import AlbumWinnowCore
 import CoreImage
 import ImageIO
 import SwiftUI
+import UniformTypeIdentifiers
 
 enum ReviewHand: String {
     static let defaultsKey = "AlbumWinnow.reviewHand"
@@ -156,6 +157,7 @@ struct GroupReviewView: View {
         let recommended = !deletingAll && asset.id == group.preferred.id
         let selected = !deletingAll && keepID == asset.id
         let title = showFilenames ? Text(asset.name) : Text("Photo \(number)")
+        let accessibleTitle = recommended ? Text("\(title), recommended to keep") : title
         return Button {
             keepDraft = .changed(selected ? nil : asset.id)
             deleteAllDraft = false
@@ -165,20 +167,20 @@ struct GroupReviewView: View {
         }
         .buttonStyle(.plain)
         .disabled(!isActive || !model.canClean)
-        .accessibilityLabel(recommended ? Text("\(title), recommended to keep") : title)
+        .accessibilityLabel(Text("\(accessibleTitle), \(previews[asset.id]?.details ?? String(localized: "Photo details unavailable"))"))
         .accessibilityValue(deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier(isActive ? "review-photo-\(asset.name)" : "")
         .task(id: asset) {
             guard previews[asset.id]?.asset != asset else { return }
-            let image: CGImage?
+            let preview: LoadedPreview
             if let input = try? await model.image(for: asset) {
-                image = await LoadedPreview.thumbnail(input)
+                preview = await LoadedPreview.load(asset: asset, input: input)
             } else {
-                image = nil
+                preview = LoadedPreview(asset: asset, image: nil, format: nil, byteCount: nil, dimensions: nil)
             }
             guard !Task.isCancelled else { return }
-            previews[asset.id] = LoadedPreview(asset: asset, image: image)
+            previews[asset.id] = preview
         }
         .onDisappear {
             if group.duplicates.count > 1 {
@@ -306,17 +308,79 @@ private struct PreviewCard: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
             .contentShape(shape)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 0) {
+                    metadataSummary
+                    Text(" · ")
+                    metadataDimensions
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    metadataSummary
+                    metadataDimensions
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier(isActive ? "metadata-\(asset.name)" : "")
             if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
         }
+    }
+    private var metadataSummary: some View {
+        HStack(spacing: 0) {
+            Text(preview?.format ?? String(localized: "Unknown format"))
+            Text(" · ")
+            Text(preview?.byteCount.map {
+                ByteCountFormatter.string(fromByteCount: Int64($0), countStyle: .file)
+            } ?? String(localized: "Size unknown"))
+        }
+    }
+
+    private var metadataDimensions: some View {
+        Text(preview?.dimensions ?? String(localized: "Resolution unknown"))
     }
 }
 
 private struct LoadedPreview {
     let asset: PhotoAsset
     let image: CGImage?
+    let format: String?
+    let byteCount: Int?
+    let dimensions: String?
+
+    var details: String {
+        let size = byteCount.map { ByteCountFormatter.string(fromByteCount: Int64($0), countStyle: .file) }
+        return [format ?? String(localized: "Unknown format"),
+                size ?? String(localized: "Size unknown"),
+                dimensions ?? String(localized: "Resolution unknown")].joined(separator: " · ")
+    }
 
     var aspectRatio: CGFloat? {
         image.map { CGFloat($0.width) / CGFloat($0.height) }
+    }
+
+    nonisolated static func load(asset: PhotoAsset, input: AssetImage) async -> LoadedPreview {
+        guard let source = CGImageSourceCreateWithData(input.data as CFData, nil) else {
+            return LoadedPreview(asset: asset, image: nil, format: nil,
+                                 byteCount: input.data.count, dimensions: nil)
+        }
+        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        let embedded = properties?[kCGImagePropertyOrientation] as? UInt32 ?? CGImagePropertyOrientation.up.rawValue
+        let orientation = input.orientation?.rawValue ?? embedded
+        let width = properties?[kCGImagePropertyPixelWidth] as? Int
+        let height = properties?[kCGImagePropertyPixelHeight] as? Int
+        let dimensions: String?
+        if let width, let height {
+            dimensions = orientation >= 5 ? "\(height) × \(width)" : "\(width) × \(height)"
+        } else {
+            dimensions = nil
+        }
+        let format = CGImageSourceGetType(source).flatMap {
+            UTType($0 as String)?.preferredFilenameExtension?.uppercased()
+        }
+        let image = await thumbnail(input)
+        return LoadedPreview(asset: asset, image: image, format: format,
+                             byteCount: input.data.count, dimensions: dimensions)
     }
 
     nonisolated static func thumbnail(_ input: AssetImage) async -> CGImage? {
