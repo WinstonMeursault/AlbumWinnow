@@ -341,13 +341,16 @@ struct LibraryView: View {
         let groups = model.cleanupGroups
         let pairs = groups.flatMap(\.pairs)
         return NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 24) {
-                    ForEach(groups) { group in
-                        CleanupGroupPreview(model: model, group: group)
+            GeometryReader { geometry in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 24) {
+                        ForEach(groups) { group in
+                            CleanupGroupPreview(model: model, group: group, width: max(1, geometry.size.width - 32),
+                                                heightBudget: min(420, max(240, geometry.size.height * 0.55)))
+                        }
                     }
+                    .padding()
                 }
-                .padding()
             }
             .navigationTitle("Confirm Cleanup")
             .toolbarTitleDisplayMode(.inline)
@@ -462,29 +465,32 @@ private extension AssetIssueReason {
 private struct CleanupGroupPreview: View {
     let model: ReviewModel
     let group: ReviewModel.CleanupGroup
+    let width: CGFloat
+    let heightBudget: CGFloat
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
     @State private var enlarged: PhotoAsset?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let keep = group.keep {
-                Text("Keep").font(.headline)
-                CleanupPhotoPreview(model: model, asset: keep, removing: false, showFilename: showFilenames) {
-                    enlarged = keep
-                }
-                .frame(maxWidth: 180)
+            if group.keep != nil {
                 Text("Will Remove (\(group.pairs.count))").font(.headline)
             } else {
                 Label("Delete entire group · \(group.pairs.count) photos", systemImage: "trash")
                     .font(.headline)
                     .foregroundStyle(.red)
             }
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12, alignment: .top)],
-                      alignment: .leading, spacing: 16) {
-                ForEach(group.pairs) { pair in
-                    CleanupPhotoPreview(model: model, asset: pair.remove, removing: true,
-                                        showFilename: showFilenames) {
-                        enlarged = pair.remove
+            let assets = group.keep.map { [$0] } ?? []
+            let photos = assets + group.pairs.map(\.remove)
+            let columns = max(width >= 280 ? 2 : 1, Int((width + 12) / 182))
+            LazyVStack(alignment: .leading, spacing: 12) {
+                ForEach(Array(stride(from: 0, to: photos.count, by: columns)), id: \.self) { start in
+                    CleanupPreviewLayout(heightBudget: heightBudget) {
+                        ForEach(photos[start..<min(start + columns, photos.count)]) { asset in
+                            CleanupPhotoPreview(model: model, asset: asset, removing: asset.id != group.keep?.id,
+                                                showFilename: showFilenames) {
+                                enlarged = asset
+                            }
+                        }
                     }
                 }
             }
@@ -496,6 +502,67 @@ private struct CleanupGroupPreview: View {
     }
 }
 
+private struct CleanupAspectRatioKey: LayoutValueKey {
+    static let defaultValue: CGFloat = 1
+}
+
+private struct CleanupPreviewLayout: Layout {
+    let heightBudget: CGFloat
+    private let spacing: CGFloat = 12
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.replacingUnspecifiedDimensions().width
+        return CGSize(width: width, height: frames(width: width, subviews: subviews).map(\.maxY).max() ?? 0)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for (subview, frame) in zip(subviews, frames(width: bounds.width, subviews: subviews)) {
+            subview.place(at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
+                          anchor: .topLeading, proposal: ProposedViewSize(frame.size))
+        }
+    }
+
+    private func frames(width: CGFloat, subviews: Subviews) -> [CGRect] {
+        let columns = max(width >= 280 ? 2 : 1, Int((width + spacing) / 182))
+        var result: [CGRect] = []
+        var y: CGFloat = 0
+        for start in stride(from: 0, to: subviews.count, by: columns) {
+            let row = subviews[start..<min(start + columns, subviews.count)]
+            let count = CGFloat(row.count)
+            let columnWidth = max(1, (width - spacing * (count - 1)) / count)
+            let aspects = row.map { max(0.01, $0[CleanupAspectRatioKey.self]) }
+            let captions = row.map { $0.sizeThatFits(.init(width: columnWidth, height: 0)).height }
+            let imageHeight = max(1, heightBudget - (captions.max() ?? 0))
+            let rowImages = aspects.map { min(imageHeight, columnWidth / $0) }
+            let rowArea = zip(aspects, rowImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }
+
+            let fullCaptions = row.map { $0.sizeThatFits(.init(width: width, height: 0)).height }
+            let idealImages = aspects.map { width / $0 }
+            let available = max(1, heightBudget - fullCaptions.reduce(0, +) - spacing * (count - 1))
+            let scale = min(1, available / max(1, idealImages.reduce(0, +)))
+            let stackedImages = idealImages.map { $0 * scale }
+            let stackedArea = zip(aspects, stackedImages).reduce(CGFloat.zero) { $0 + $1.0 * $1.1 * $1.1 }
+
+            // Prefer a compact row unless stacking improves fitted image area by at least 15%.
+            if row.count > 1 && stackedArea >= rowArea * 1.15 {
+                for index in aspects.indices {
+                    let height = fullCaptions[index] + stackedImages[index]
+                    result.append(CGRect(x: 0, y: y, width: width, height: height))
+                    y += height + spacing
+                }
+            } else {
+                for index in aspects.indices {
+                    result.append(CGRect(x: CGFloat(index) * (columnWidth + spacing), y: y,
+                                         width: columnWidth, height: captions[index] + rowImages[index]))
+                }
+                y += zip(captions, rowImages).map(+).max() ?? 0
+                y += spacing
+            }
+        }
+        return result
+    }
+}
+
 private struct CleanupPhotoPreview: View {
     let model: ReviewModel
     let asset: PhotoAsset
@@ -503,10 +570,14 @@ private struct CleanupPhotoPreview: View {
     let showFilename: Bool
     let open: () -> Void
     @State private var preview: LoadedPreview?
+    @State private var aspectRatio: CGFloat = 1
 
     var body: some View {
         Button(action: open) {
             VStack(alignment: .leading, spacing: 6) {
+                Text(removing ? "Will Remove" : "Keep")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(removing ? Color.red : Color.primary)
                 ZStack {
                     RoundedRectangle(cornerRadius: 12).fill(.quaternary)
                     if let image = preview?.image {
@@ -521,7 +592,7 @@ private struct CleanupPhotoPreview: View {
                         ProgressView()
                     }
                 }
-                .frame(height: 160)
+                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
                 .clipShape(.rect(cornerRadius: 12))
                 .overlay {
                     RoundedRectangle(cornerRadius: 12)
@@ -546,11 +617,18 @@ private struct CleanupPhotoPreview: View {
                 let loaded = await LoadedPreview.load(asset: asset, input: input)
                 guard !Task.isCancelled else { return }
                 preview = loaded
+                aspectRatio = loaded.aspectRatio ?? 1
             } else if !Task.isCancelled {
                 preview = LoadedPreview(asset: asset, image: nil, format: nil, byteCount: nil, dimensions: nil)
             }
         }
-        .onDisappear { preview = nil }
+        .layoutValue(key: CleanupAspectRatioKey.self, value: aspectRatio)
+        .onDisappear {
+            if let loaded = preview {
+                preview = LoadedPreview(asset: asset, image: nil, format: loaded.format,
+                                        byteCount: loaded.byteCount, dimensions: loaded.dimensions)
+            }
+        }
     }
 }
 
