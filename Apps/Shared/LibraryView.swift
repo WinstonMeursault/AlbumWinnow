@@ -251,8 +251,8 @@ struct LibraryView: View {
         let shape = RoundedRectangle(cornerRadius: 18)
         return HStack(spacing: 12) {
             ZStack {
-                Circle().fill(.blue)
-                Image(systemName: "checkmark")
+                Circle().fill(model.resultsStale ? Color.orange : Color.blue)
+                Image(systemName: model.resultsStale ? "arrow.clockwise" : "checkmark")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
             }
@@ -260,11 +260,13 @@ struct LibraryView: View {
             .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Scan Complete")
+                Text(model.resultsStale ? "Scan Again" : "Scan Complete")
                     .font(.headline)
                     .foregroundStyle(.primary)
                     .accessibilityAddTraits(.isHeader)
-                if result.groups.isEmpty {
+                if model.resultsStale {
+                    Text("The photo library changed. Scan again before cleanup.")
+                } else if result.groups.isEmpty {
                     Text("\(result.scanned + result.reused) photos checked")
                 } else {
                     Text(result.groups.count == 1 ? "1 duplicate group to review" : "\(result.groups.count) duplicate groups to review")
@@ -306,9 +308,13 @@ struct LibraryView: View {
                     Text("\(percent)%").monospacedDigit()
                 }
                 .accessibilityIdentifier("icloud-download-progress")
+            } else if download.cancelled {
+                Label("iCloud Download Cancelled", systemImage: "icloud")
+            } else if download.needsRetry {
+                Label("iCloud Download Incomplete", systemImage: "exclamationmark.icloud")
+                    .foregroundStyle(.orange)
             } else {
-                Label(download.cancelled ? "iCloud Download Cancelled" : "iCloud Download Finished",
-                      systemImage: "icloud")
+                Label("iCloud Download Finished", systemImage: "icloud")
             }
             Text("\(download.available) available · \(download.failed) failed · \(download.remaining) pending")
                 .font(.caption)
@@ -381,6 +387,9 @@ struct LibraryView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(issue.id.source.hasPrefix("folder:") ? URL(fileURLWithPath: issue.id.item).lastPathComponent : "Photos")
                         Text(issue.reason.label).font(.caption).foregroundStyle(.secondary)
+                        if let detail = issue.detail {
+                            Text(detail).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                        }
                     }
                 }
             }

@@ -31,3 +31,36 @@ private struct CloudFixture: AssetSource {
     #expect(available.scanned == 1)
     #expect(available.reused == 0)
 }
+
+private actor RequestedImages: AssetSource {
+    nonisolated let id = "refresh-fixture"
+    private(set) var reads: [AssetID] = []
+    let bytes: Data
+    init(bytes: Data) { self.bytes = bytes }
+    func snapshot() async throws -> AssetSnapshot {
+        AssetSnapshot(assets: ["one", "two"].map {
+            PhotoAsset(id: AssetID(source: id, item: $0), name: $0, revision: "unchanged")
+        })
+    }
+    func imageData(for asset: PhotoAsset) async throws -> Data {
+        reads.append(asset.id)
+        return bytes
+    }
+}
+
+@Test func explicitDownloadRetryReadsSelectedAssetsEvenWhenFingerprintsAreCached() async throws {
+    let scratch = root.appending(path: "scratch/\(UUID())")
+    defer { try? FileManager.default.removeItem(at: scratch) }
+    let engine = try ScanEngine(cacheURL: scratch.appending(path: "scan.sqlite"))
+    let source = RequestedImages(bytes: try Data(contentsOf: TestFiles.fixtures.appending(path: "burst-a.png")))
+    _ = try await engine.scan([source])
+    let selected = AssetID(source: source.id, item: "one")
+    let retry = try await engine.scan([source], refreshing: [selected])
+    #expect(retry.scanned == 1)
+    #expect(retry.reused == 1)
+    #expect(retry.issues.isEmpty)
+    #expect(retry.groups.count == 1)
+    let reads = await source.reads
+    #expect(reads.count == 3)
+    #expect(reads.last == selected)
+}

@@ -2,7 +2,7 @@
 
 English · [简体中文](README.zh-CN.md)
 
-AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It is designed to find duplicates across the system photo library and user-selected folders, recommend which copies to keep, and let users review each group before cleanup.
+AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds duplicates across the system photo library and user-selected folders, recommends which copies to keep, and lets users review each group before cleanup.
 
 ## Project status
 
@@ -37,9 +37,9 @@ Generated test projects stay under `.local`. The expected version is read from t
 - Scan accessible photos in the system library and user-selected folders, including duplicates across both sources.
 - Detect exact duplicates and copies of the same image at different resolutions, compression levels, or in different formats such as HEIC, JPEG, and PNG.
 - Group matches for side-by-side review and recommend a copy to keep based on image quality, resolution, and associated data such as a Live Photo video or the original version of an edited photo.
-- Reuse scan results for unchanged assets and update the index when photos are added, edited, or removed.
+- Reuse fingerprints for unchanged assets and rebuild groups on each scan; detect changes before allowing cleanup.
 
-Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. The Duplicates screen shows iCloud transfer progress separately from scan progress, with counts of available, failed, and pending photos. After a scan, Duplicates shows a photo gallery with one cover per group. Select a cover to inspect its copies in the group. **Show Filenames in Review** in Settings displays filenames on the review screen. Swipe left to review the next group or right to return to the previous one. Choose Slide, Cover, Fade, or None under **Settings → Interaction → Group Transition**. Tap the photo you want to keep and confirm the group, or skip it. **Delete All** previews removal of the entire group. Under **Settings → Interaction → Review Button Layout**, choose the left- or right-hand layout to put Confirm within reach. Once the groups are reviewed, choose **Confirm Cleanup** on the Duplicates screen to review and confirm the whole batch. On iOS and iPadOS, an interrupted scan resumes in the foreground using the saved sources and cached fingerprints. Broader grouping of similar shots, such as distinct frames in a burst, is planned for v1.1.
+Scans read locally available Photos assets and report cloud-only items under Scan Issues. Use **Download Pending Photos from iCloud** to authorize a download and retry those items. A download retry rereads the selected resources even when their fingerprints are cached. The Duplicates screen shows iCloud transfer progress separately from scan progress, with counts of available, failed, and pending photos. Partial downloads show **iCloud Download Incomplete** and prompt you to review Scan Issues. After a scan, Duplicates shows a photo gallery with one cover per group. Select a cover to inspect its copies in the group. **Show Filenames in Review** in Settings displays filenames on the review screen. Swipe left to review the next group or right to return to the previous one. Choose Slide, Cover, Fade, or None under **Settings → Interaction → Group Transition**. Tap the photo you want to keep and confirm the group, or skip it. **Delete All** previews removal of the entire group. Under **Settings → Interaction → Review Button Layout**, choose the left- or right-hand layout to put Confirm within reach. Once the groups are reviewed, choose **Confirm Cleanup** on the Duplicates screen to review and confirm the whole batch. On iOS and iPadOS, a scan interrupted by background suspension resumes in the foreground using saved sources, cached fingerprints, and the previously authorized set of pending downloads. User cancellation stops automatic resumption. Scan Issues retains the system error description, domain, and code when PhotoKit supplies them. Library changes during a scan require a fresh scan before cleanup. Broader grouping of similar shots, such as distinct frames in a burst, is planned for v1.1.
 
 ## Matching and cleanup
 
@@ -49,22 +49,28 @@ Scans read locally available Photos assets and report cloud-only items under Sca
 | Possible same image | Candidate hashes and multi-scale pixel checks agree across differences in resolution, compression, or encoding. | Marked for review before selecting copies to move. |
 | Highly similar candidate | The coarse comparison agrees, while higher-resolution checks find local differences. | Marked **Similar photos**. Users may inspect and confirm cleanup. |
 
-Matching and indexing run on device, and locally available photos can be scanned offline. Every cleanup operation requires explicit confirmation. Confirmed items move to Photos’ Recently Deleted album or to the filesystem Trash when available. If a file provider has no Trash, the app keeps the file and reports the failure in the current operation result.
+Matching and indexing run on device, and locally available photos can be scanned offline. Every cleanup operation requires explicit confirmation. Confirmed items move to Photos’ Recently Deleted album or to the filesystem Trash when available. If a file provider has no Trash, the app keeps the file and reports the failure in the current operation result. Photos assets with Live Photo video, edits, or alternate-photo resources are protected from cleanup in the current version.
 
 ## Technical design
 
 `AlbumWinnowCore` is a Swift package shared by the SwiftUI apps. PhotoKit and Foundation provide access to photos and files. BLAKE3 identifies matching file bytes, with streaming reads for folder resources. Bounded ImageIO thumbnails supply pHash and dHash candidates. Pixel checks at multiple resolutions distinguish possible same-image copies from candidates with local differences. Full source dimensions and bit depth are retained for recommendations. SQLite and GRDB store incremental fingerprints, recover damaged cache entries, and discard inactive-source data after the next completed scan. Swift Concurrency limits parallel image preparation.
 
-## Development roadmap
+## Implementation and validation
 
-1. Build a duplicate detection prototype and test it with labeled image pairs. The first acceptance test pairs a 4032 × 3024 image with a 1280 × 960 copy in a different format and checks that both are grouped as the same image. Distinct frames from a burst must stay out of duplicate cleanup results.
-2. Build the macOS folder scanner, candidate index, and incremental cache.
-3. Integrate PhotoKit, track library changes, and handle Live Photos and iCloud assets.
-4. Build the macOS review and cleanup workflow in SwiftUI.
-5. Adapt the app to iOS and iPadOS permissions, background execution limits, and layouts.
-6. Measure scan time, peak memory use, and matching accuracy with 10,000, 50,000, and 100,000 photos. Verify cleanup on both sources before release.
+The detection core, folder scanning, incremental cache, PhotoKit integration, SwiftUI review, recoverable cleanup, and iOS/iPadOS layouts are implemented. Candidate retrieval uses a multi-index of Hamming-distance hash bands. The current matcher uses perceptual hashes and multi-scale pixel checks; it does not use Vision feature prints.
 
-The design target is 100,000 photos per scan. Performance validation is planned for the final milestone.
+`Tests/Performance` contains a deterministic full-resolution JPEG generator and an executable that calls the production scan engine. It checks cold scans, unchanged scans, changes to 1% of assets, and cache reuse after cancellation, including the exact membership of known duplicate pairs. Generate data in a fresh local directory:
+
+```sh
+python3 -m venv .local/performance-venv
+.local/performance-venv/bin/pip install Pillow
+.local/performance-venv/bin/python Tests/Performance/generate_photos.py --root .local/benchmark-10000 --count 10000
+swift run --package-path Tests/Performance -c release ScanBenchmark .local/benchmark-10000 10000 .local/benchmark-10000/results.json
+```
+
+Use 50000 or 100000 for the larger runs, with a fresh directory and sufficient disk space. Each image is 4032 × 3072; 100,000 images and two fingerprint caches require approximately 50 GB. Reported RSS is the process lifetime peak. A cold scan starts with an empty application cache; filesystem caches are not flushed. These synthetic images validate scale and known exact pairs, not recognition accuracy on natural photos or end-to-end PhotoKit throughput.
+
+Before v1.0, real iCloud transfers still require account-specific verification, including network failures and foreground/background transitions. Automated tests exercise request callbacks, cancellation races, error propagation, and library-change handling without an iCloud account. Broader natural-photo accuracy and device-specific performance remain separate validation work.
 
 ## License
 

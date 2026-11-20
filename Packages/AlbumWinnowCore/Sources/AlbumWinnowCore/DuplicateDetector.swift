@@ -48,12 +48,22 @@ public struct DuplicateDetector: Sendable {
 
     static func compare(_ first: PhotoAsset, source firstSource: any AssetSource,
                         _ second: PhotoAsset, source secondSource: any AssetSource) async throws -> DuplicateMatch {
-        let firstInput = try await firstSource.imageInput(for: first)
-        let secondInput = try await secondSource.imageInput(for: second)
+        let firstInput = try await comparisonInput(first, source: firstSource)
+        let secondInput = try await comparisonInput(second, source: secondSource)
         let match = try compare(firstInput, secondInput)
         try firstSource.validateImage(for: first)
         try secondSource.validateImage(for: second)
         return match
+    }
+
+    private static func comparisonInput(_ asset: PhotoAsset, source: any AssetSource) async throws -> ImageInput {
+        do {
+            return try await source.imageInput(for: asset)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw ComparisonReadError(assetID: asset.id, underlying: error)
+        }
     }
 
     static func isVisualCandidate(_ a: ImageFingerprint, _ b: ImageFingerprint) -> Bool {
@@ -122,4 +132,10 @@ public struct DuplicateDetector: Sendable {
         let value = 77 * Int(pixels[offset]) + 150 * Int(pixels[offset + 1]) + 29 * Int(pixels[offset + 2])
         return Double(value) / (256 * 255)
     }
+}
+
+struct ComparisonReadError: LocalizedError {
+    let assetID: AssetID
+    let underlying: any Error
+    var errorDescription: String? { underlying.localizedDescription }
 }

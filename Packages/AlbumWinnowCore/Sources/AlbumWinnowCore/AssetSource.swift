@@ -55,10 +55,12 @@ public enum AssetIssueReason: String, Codable, Sendable {
 public struct AssetIssue: Codable, Equatable, Sendable {
     public let id: AssetID
     public let reason: AssetIssueReason
+    public let detail: String?
 
-    public init(id: AssetID, reason: AssetIssueReason) {
+    public init(id: AssetID, reason: AssetIssueReason, detail: String? = nil) {
         self.id = id
         self.reason = reason
+        self.detail = detail
     }
 }
 

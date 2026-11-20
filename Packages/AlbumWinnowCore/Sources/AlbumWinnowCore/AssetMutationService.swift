@@ -188,7 +188,8 @@ public actor AssetMutationService {
     }
 
     private static func item(for pair: CleanupPair, error: any Error) -> CleanupItem {
-        switch error {
+        let error = (error as? ComparisonReadError)?.underlying ?? error
+        return switch error {
         case is CancellationError:
             CleanupItem(pair: pair, status: .skipped, detail: "Cleanup was cancelled.")
         case AssetAccessError.changedDuringScan:

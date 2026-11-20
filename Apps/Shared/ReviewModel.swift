@@ -16,6 +16,7 @@ struct CloudDownloadProgress {
     init(total: Int) { self.total = total }
 
     var remaining: Int { total - available - failed }
+    var needsRetry: Bool { failed > 0 || remaining > 0 }
     var processed: Double { Double(available + failed) + active.values.reduce(0, +) }
 
     mutating func update(_ update: PhotoLibrarySource.DownloadUpdate) {
@@ -58,6 +59,7 @@ struct CloudDownloadProgress {
     private static let folderKey = "AlbumWinnow.folderBookmarks"
     private static let photosKey = "AlbumWinnow.photosEnabled"
     private static let interruptedScanKey = "AlbumWinnow.interruptedScan"
+    private static let interruptedDownloadsKey = "AlbumWinnow.interruptedDownloads"
 
     private(set) var folders: [FolderScope] = []
     private(set) var photosEnabled = false
@@ -78,6 +80,7 @@ struct CloudDownloadProgress {
     private let engine: ScanEngine?
     private let cleanup = AssetMutationService()
     private var scanTask: Task<Void, Never>?
+    private var libraryChangedDuringScan = false
     private var libraryTask: Task<Void, Never>?
     #if os(iOS)
     private var inForeground = false
@@ -255,7 +258,7 @@ struct CloudDownloadProgress {
         }.map(\.id))
     }
 
-    private func startScan(downloads: Set<AssetID>) {
+    func startScan(downloads: Set<AssetID>) {
         guard canScan, let engine else { return }
         let (downloadUpdates, downloadContinuation) = AsyncStream.makeStream(of: PhotoLibrarySource.DownloadUpdate.self)
         let selectedSources = sources.map { source -> any AssetSource in
@@ -264,8 +267,10 @@ struct CloudDownloadProgress {
         }
         #if os(iOS)
         UserDefaults.standard.set(true, forKey: Self.interruptedScanKey)
+        UserDefaults.standard.set(downloads.map(\.item).sorted(), forKey: Self.interruptedDownloadsKey)
         #endif
         running = true
+        libraryChangedDuringScan = false
         selections.removeAll()
         resultsStale = false
         lastCleanup = nil
@@ -277,7 +282,15 @@ struct CloudDownloadProgress {
                 for await update in updates { progress = update }
             }
             let downloadObserver = Task {
-                for await update in downloadUpdates { downloadProgress?.update(update) }
+                for await update in downloadUpdates {
+                    downloadProgress?.update(update)
+                    #if os(iOS)
+                    if case let .finished(id, true) = update {
+                        let remaining = UserDefaults.standard.stringArray(forKey: Self.interruptedDownloadsKey) ?? []
+                        UserDefaults.standard.set(remaining.filter { $0 != id.item }, forKey: Self.interruptedDownloadsKey)
+                    }
+                    #endif
+                }
             }
             defer {
                 continuation.finish()
@@ -290,19 +303,28 @@ struct CloudDownloadProgress {
                 #endif
             }
             do {
-                let next = try await engine.scan(selectedSources) { continuation.yield($0) }
+                let next = try await engine.scan(selectedSources, refreshing: downloads) { continuation.yield($0) }
                 try Task.checkCancellation()
                 result = next
+                resultsStale = libraryChangedDuringScan
+                if resultsStale { errorMessage = "The photo library changed during the scan. Scan again before cleanup." }
                 clearInterruptedScan()
             } catch is CancellationError {
                 // A user cancellation keeps the previous scan issues available for retry.
             } catch {
                 clearInterruptedScan()
+                resultsStale = result != nil
                 errorMessage = error.localizedDescription
             }
             downloadContinuation.finish()
             await downloadObserver.value
             downloadProgress?.end(cancelled: Task.isCancelled)
+            let unavailable = result?.issues.contains {
+                downloads.contains($0.id) && ($0.reason == .cloudDownloadRequired || $0.reason == .cloudDownloadFailed)
+            } == true
+            if let download = downloadProgress, !download.cancelled, download.needsRetry || unavailable, errorMessage == nil {
+                errorMessage = "Some iCloud photos are still unavailable for this scan. Open Scan Issues to review the results and retry."
+            }
         }
     }
 
@@ -314,13 +336,16 @@ struct CloudDownloadProgress {
     private func clearInterruptedScan() {
         #if os(iOS)
         UserDefaults.standard.removeObject(forKey: Self.interruptedScanKey)
+        UserDefaults.standard.removeObject(forKey: Self.interruptedDownloadsKey)
         #endif
     }
 
     #if os(iOS)
     private func resumeInterruptedScan() {
         guard inForeground, canScan, UserDefaults.standard.bool(forKey: Self.interruptedScanKey) else { return }
-        scan()
+        let items = UserDefaults.standard.stringArray(forKey: Self.interruptedDownloadsKey) ?? []
+        let downloads = photosEnabled && allowsPhotos ? Set(items.map { AssetID(source: photoSource.id, item: $0) }) : []
+        startScan(downloads: downloads)
     }
     #endif
 
@@ -381,13 +406,22 @@ struct CloudDownloadProgress {
         scanTask?.cancel()
     }
 
+    func libraryDidChange() {
+        if running {
+            libraryChangedDuringScan = true
+            resultsStale = true
+        } else {
+            invalidateResults()
+        }
+    }
+
     private func watchLibrary() {
         libraryTask?.cancel()
         guard photosEnabled && allowsPhotos else { return }
         libraryTask = Task { [weak self, photoSource] in
             for await _ in photoSource.changes() {
                 guard let self, !Task.isCancelled else { return }
-                invalidateResults()
+                libraryDidChange()
             }
         }
     }

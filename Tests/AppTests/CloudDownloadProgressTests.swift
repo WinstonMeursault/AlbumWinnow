@@ -22,6 +22,7 @@ final class CloudDownloadProgressTests: XCTestCase {
         progress.end(cancelled: false)
         XCTAssertEqual(progress.remaining, 1)
         XCTAssertTrue(progress.ended)
+        XCTAssertTrue(progress.needsRetry)
     }
 
     func testCancelledTransferAndRetry() {
@@ -39,5 +40,6 @@ final class CloudDownloadProgressTests: XCTestCase {
         retry.end(cancelled: false)
         XCTAssertEqual(retry.available, 1)
         XCTAssertEqual(retry.remaining, 0)
+        XCTAssertFalse(retry.needsRetry)
     }
 }

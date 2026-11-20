@@ -23,6 +23,7 @@ public actor ScanEngine {
 
     public func scan(
         _ sources: [any AssetSource],
+        refreshing: Set<AssetID> = [],
         progress: @Sendable (ScanProgress) -> Void = { _ in }
     ) async throws -> ScanResult {
         guard !scanning else { throw ScanError.scanInProgress }
@@ -47,7 +48,7 @@ public actor ScanEngine {
                     throw ScanError.invalidSourceSnapshot
                 }
                 if source is FileSystemSource, !indexedPaths.insert(asset.id.item).inserted { continue }
-                if let entry = previouslyIndexed[asset.id.item], asset.revision == entry.revision {
+                if !refreshing.contains(asset.id), let entry = previouslyIndexed[asset.id.item], asset.revision == entry.revision {
                     indexed.append(IndexedAsset(asset: asset, fingerprint: entry.signature))
                 } else {
                     pending.append((source, asset))
@@ -128,6 +129,8 @@ public actor ScanEngine {
             return .failed(AssetIssue(id: asset.id, reason: .changedDuringScan))
         } catch AssetAccessError.cloudDownloadRequired {
             return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadRequired))
+        } catch let error as PhotoLibraryDownloadError {
+            return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadFailed, detail: error.localizedDescription))
         } catch AssetAccessError.cloudDownloadFailed {
             return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadFailed))
         } catch ImageReadError.unreadableImage {
@@ -198,10 +201,19 @@ public actor ScanEngine {
                     } catch is CancellationError {
                         throw CancellationError()
                     } catch {
-                        if case AssetAccessError.changedDuringScan = error {
-                            issues.append(AssetIssue(id: other.asset.id, reason: .changedDuringScan))
+                        let context = error as? ComparisonReadError
+                        let failedID = context?.assetID ?? other.asset.id
+                        let error = context?.underlying ?? error
+                        if let error = error as? PhotoLibraryDownloadError {
+                            issues.append(AssetIssue(id: failedID, reason: .cloudDownloadFailed, detail: error.localizedDescription))
+                        } else if case AssetAccessError.cloudDownloadRequired = error {
+                            issues.append(AssetIssue(id: failedID, reason: .cloudDownloadRequired))
+                        } else if case AssetAccessError.cloudDownloadFailed = error {
+                            issues.append(AssetIssue(id: failedID, reason: .cloudDownloadFailed))
+                        } else if case AssetAccessError.changedDuringScan = error {
+                            issues.append(AssetIssue(id: failedID, reason: .changedDuringScan))
                         } else {
-                            issues.append(AssetIssue(id: other.asset.id, reason: .inaccessible))
+                            issues.append(AssetIssue(id: failedID, reason: .inaccessible))
                         }
                         continue
                     }
