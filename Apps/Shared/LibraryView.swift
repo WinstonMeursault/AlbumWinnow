@@ -3,6 +3,9 @@ import SwiftUI
 
 struct LibraryView: View {
     let model: ReviewModel
+    @State private var showKept = false
+    @State private var reviewQueue: [DuplicateGroup] = []
+    @State private var batchSummary: String?
     @State private var selectedGroup: AssetID?
     @State private var reviewPath: [AssetID] = []
     @State private var galleryBottomRequest = 0
@@ -57,7 +60,11 @@ struct LibraryView: View {
                 }
             }
         }
+        .onChange(of: selectedGroup) {
+            if let group = group(withID: selectedGroup) { model.rememberPosition(group) }
+        }
         .onChange(of: model.result) {
+            reviewQueue.removeAll()
             if group(withID: selectedGroup) == nil {
                 selectedGroup = nil
                 reviewPath.removeAll()
@@ -93,7 +100,7 @@ struct LibraryView: View {
     }
 
     private var review: some View {
-        ReviewPager(groups: model.result?.groups ?? [], selectedID: $selectedGroup,
+        ReviewPager(groups: reviewQueue.isEmpty ? model.result?.groups ?? [] : reviewQueue, selectedID: $selectedGroup,
                     model: model, finishReview: finishReview)
     }
 
@@ -106,6 +113,11 @@ struct LibraryView: View {
     }
 
     private func finishReview() {
+        if !reviewQueue.isEmpty {
+            let completed = reviewQueue.filter { model.status(for: $0) == .confirmed || model.status(for: $0) == .kept }.count
+            batchSummary = "\(completed) of \(reviewQueue.count) groups decided."
+        }
+        reviewQueue.removeAll()
         galleryBottomRequest += 1
         if reviewPath.isEmpty { selectedGroup = nil }
         else { reviewPath.removeAll() }
@@ -138,6 +150,15 @@ struct LibraryView: View {
     private var scanControls: some View {
         VStack(alignment: .leading, spacing: 10) {
             if let download = model.downloadProgress { downloadStatus(download) }
+            if model.running || model.scanCancelled {
+                if let counts = model.scanAccounting {
+                    Text("\(counts.processed) processed · \(counts.skipped) skipped · \(counts.failed) failed · \(counts.unfinished) unfinished")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else if model.scanCancelled {
+                    Text("Scan cancelled before enumeration finished. Remaining count unknown.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
             if let progress = model.progress {
                 progressView(progress)
             } else if model.running && model.downloadProgress == nil {
@@ -185,10 +206,10 @@ struct LibraryView: View {
                     systemImage: "magnifyingglass",
                     description: Text("Duplicates will be ready to review when the scan finishes.")
                 )
-            } else if let result = model.result {
-                scanResults(result, wide: wide, narrowed: narrowed)
             } else if let cleanup = model.lastCleanup {
                 CleanupOutcomeView(items: cleanup, model: model)
+            } else if let result = model.result {
+                scanResults(result, wide: wide, narrowed: narrowed)
             } else if !model.hasScanSources {
                 ContentUnavailableView {
                     Label("Choose Scan Sources", systemImage: "photo.stack")
@@ -215,11 +236,12 @@ struct LibraryView: View {
                     ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
                 }
             } else {
-                DuplicateGallery(groups: result.groups, model: model, selectedGroup: selectedGroup,
+                DuplicateGallery(groups: result.groups.filter { showKept ? model.status(for: $0) == .kept : model.status(for: $0) != .kept }, model: model, selectedGroup: selectedGroup,
                                  narrowed: narrowed, isActive: reviewPath.isEmpty,
                                  bottomRequest: galleryBottomRequest, header: {
                     scanSummaryCard(result)
                 }) { group in
+                    reviewQueue = result.groups.filter { showKept ? model.status(for: $0) == .kept : model.status(for: $0) != .kept }
                     selectedGroup = group.id
                     if !wide { reviewPath = [group.id] }
                 }
@@ -238,9 +260,34 @@ struct LibraryView: View {
     }
 
     private func scanSummaryCard(_ result: ScanResult) -> some View {
-        scanSummary(result)
-            .padding(.horizontal)
-            .padding(.top, 8)
+        VStack(alignment: .leading, spacing: 8) {
+            scanSummary(result)
+            if !model.protectionAvailable {
+                Label("Protection unavailable · Cleanup disabled", systemImage: "lock.trianglebadge.exclamationmark")
+            }
+            if let notice = model.reviewNotice { Text(notice).font(.caption).foregroundStyle(.secondary) }
+            if let batchSummary { Text(batchSummary).font(.caption) }
+            HStack {
+                Button("Continue Review") { openSession(result, limit: nil) }
+                    .disabled(model.resumeGroup == nil || !model.canClean)
+                Menu("Review Options", systemImage: "ellipsis.circle") {
+                    Button("Review Ten Groups") { openSession(result, limit: 10) }
+                    Toggle("Show Kept Groups", isOn: $showKept)
+                }
+                .disabled(!model.canClean)
+            }
+            .font(.subheadline)
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+
+    private func openSession(_ result: ScanResult, limit: Int?) {
+        let pending = result.groups.filter { model.status(for: $0) == .pending || model.status(for: $0) == .deferred }
+        reviewQueue = limit.map { Array(pending.prefix($0)) } ?? result.groups.filter { model.status(for: $0) != .kept }
+        selectedGroup = limit == nil ? model.resumeGroup?.id : reviewQueue.first?.id
+        if let selectedGroup { reviewPath = [selectedGroup] }
+        batchSummary = nil
     }
 
     private func scanSummary(_ result: ScanResult) -> some View {
@@ -260,6 +307,8 @@ struct LibraryView: View {
                     .font(.headline)
                     .foregroundStyle(.primary)
                     .accessibilityAddTraits(.isHeader)
+                Text("\(result.scanned + result.reused) processed · \(result.issues.filter { $0.reason == .cloudSkipped }.count) skipped · \(result.issues.filter { $0.reason != .cloudSkipped }.count) failed · 0 unfinished")
+                    .font(.caption)
                 if model.resultsStale {
                     Text("The photo library changed. Scan again before cleanup.")
                 } else if result.groups.isEmpty {
@@ -373,7 +422,12 @@ struct LibraryView: View {
                     }
                     .disabled(!model.canScan)
                 }
-                ForEach(Array((model.result?.issues ?? []).enumerated()), id: \.offset) { _, issue in
+                Section("Skipped Photos") {
+                    ForEach((model.result?.issues ?? []).filter { $0.reason == .cloudSkipped }, id: \.id) { _ in
+                        Label("iCloud photo skipped by policy", systemImage: "icloud.slash")
+                    }
+                }
+                ForEach(Array((model.result?.issues ?? []).filter { $0.reason != .cloudSkipped }.enumerated()), id: \.offset) { _, issue in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(issue.id.source.hasPrefix("folder:") ? URL(fileURLWithPath: issue.id.item).lastPathComponent : "Photos")
                         Text(issue.reason.label).font(.caption).foregroundStyle(.secondary)
@@ -400,6 +454,7 @@ private extension AssetIssueReason {
         case .changedDuringScan: "Changed during scan"
         case .unreadableImage: "Unreadable image"
         case .unsupportedImage: "Unsupported image"
+        case .cloudSkipped: "Skipped by iCloud policy"
         case .cloudDownloadRequired: "iCloud download required"
         case .cloudDownloadFailed: "iCloud download failed"
         }
@@ -434,14 +489,14 @@ private struct CleanupGroupPreview: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            let assets = group.keep.map { [$0] } ?? []
+            let assets = group.retained
             let photos = assets + group.pairs.map(\.remove)
             let columns = CleanupPreviewLayout.columns(width: width, minimumColumnWidth: minimumPreviewWidth)
             LazyVStack(alignment: .leading, spacing: 12) {
                 ForEach(Array(stride(from: 0, to: photos.count, by: columns)), id: \.self) { start in
                     CleanupPreviewLayout(heightBudget: heightBudget, minimumColumnWidth: minimumPreviewWidth) {
                         ForEach(photos[start..<min(start + columns, photos.count)]) { asset in
-                            CleanupPhotoPreview(model: model, asset: asset, removing: asset.id != group.keep?.id,
+                            CleanupPhotoPreview(model: model, asset: asset, removing: group.pairs.contains { $0.remove.id == asset.id },
                                                 showFilename: showFilenames) {
                                 enlarged = asset
                             }

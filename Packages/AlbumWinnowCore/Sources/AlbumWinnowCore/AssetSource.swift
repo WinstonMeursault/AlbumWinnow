@@ -48,6 +48,7 @@ public enum AssetIssueReason: String, Codable, Sendable {
     case changedDuringScan
     case unreadableImage
     case unsupportedImage
+    case cloudSkipped
     case cloudDownloadRequired
     case cloudDownloadFailed
 }
@@ -83,12 +84,17 @@ public struct AssetSnapshot: Sendable {
 
 public protocol AssetSource: Sendable {
     var id: String { get }
+    func skipsCloudAsset(_ id: AssetID) -> Bool
+    func validateCachedAvailability(for asset: PhotoAsset) async throws
     func snapshot() async throws -> AssetSnapshot
     func imageData(for asset: PhotoAsset) async throws -> Data
     func image(for asset: PhotoAsset) async throws -> AssetImage
 }
 
 public extension AssetSource {
+    func skipsCloudAsset(_ id: AssetID) -> Bool { false }
+    func validateCachedAvailability(for asset: PhotoAsset) async throws {}
+
     func image(for asset: PhotoAsset) async throws -> AssetImage {
         try await AssetImage(data: imageData(for: asset))
     }

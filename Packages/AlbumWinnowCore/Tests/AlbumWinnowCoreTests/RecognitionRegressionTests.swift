@@ -118,7 +118,7 @@ import Testing
     let original = try Data(contentsOf: URL(fileURLWithPath: member.asset.id.item))
     let items = try await AssetMutationService().apply([
         CleanupPair(keep: group.preferred, remove: member.asset)
-    ], sources: [source])
+    ], sources: [source], protection: CleanupProtection())
     #expect(items.first?.status == .movedToTrash)
     let moved = URL(fileURLWithPath: try #require(items.first?.detail))
     try FileManager.default.moveItem(at: moved, to: URL(fileURLWithPath: member.asset.id.item))

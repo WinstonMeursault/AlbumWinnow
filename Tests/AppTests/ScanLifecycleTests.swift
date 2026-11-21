@@ -4,6 +4,12 @@ import XCTest
 @testable import AlbumWinnowAcceptance
 
 final class ScanLifecycleTests: XCTestCase {
+    private let dataDirectory = URL.documentsDirectory.appending(path: UUID().uuidString)
+
+    override func tearDownWithError() throws {
+        try? FileManager.default.removeItem(at: dataDirectory)
+    }
+
     @MainActor
     func testRelaunchResumesFolderScanFromPersistedSelection() async throws {
         let defaults = UserDefaults.standard
@@ -28,7 +34,7 @@ final class ScanLifecycleTests: XCTestCase {
             "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNIaFiAFTEMLQkAcvNgAZRk9dYAAAAASUVORK5CYII="))
         for i in 0..<48 { try png.write(to: base.appending(path: "sample-\(i).png")) }
 
-        let initial = ReviewModel()
+        let initial = ReviewModel(dataDirectory: dataDirectory)
         initial.addFolder(base)
         XCTAssertTrue(initial.canScan)
         initial.sceneChanged(.active)
@@ -39,7 +45,7 @@ final class ScanLifecycleTests: XCTestCase {
         XCTAssertNil(initial.result)
         XCTAssertTrue(defaults.bool(forKey: scanKey))
 
-        let reopened = ReviewModel()
+        let reopened = ReviewModel(dataDirectory: dataDirectory)
         XCTAssertEqual(reopened.folders.map(\.name), [base.lastPathComponent])
         reopened.sceneChanged(.active)
         await waitUntil { reopened.result != nil }
@@ -66,7 +72,7 @@ final class ScanLifecycleTests: XCTestCase {
         let png = try XCTUnwrap(Data(base64Encoded:
             "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNIaFiAFTEMLQkAcvNgAZRk9dYAAAAASUVORK5CYII="))
         for i in 0..<48 { try png.write(to: base.appending(path: "sample-\(i).png")) }
-        let model = ReviewModel()
+        let model = ReviewModel(dataDirectory: dataDirectory)
         model.addFolder(base)
         model.scan()
         model.libraryDidChange()
@@ -97,7 +103,7 @@ final class ScanLifecycleTests: XCTestCase {
             for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
             try? FileManager.default.removeItem(at: base)
         }
-        let model = ReviewModel()
+        let model = ReviewModel(dataDirectory: dataDirectory)
         model.addFolder(base)
         model.sceneChanged(.active)
         // Exercise saved consent without requiring a Photos account or making network requests.
@@ -129,7 +135,7 @@ final class ScanLifecycleTests: XCTestCase {
         let fixtures = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures")
         let bytes = try Data(contentsOf: fixtures.appending(path: "burst-a.png"))
         for name in ["a.png", "b.png"] { try bytes.write(to: folder.appending(path: name)) }
-        let model = ReviewModel()
+        let model = ReviewModel(dataDirectory: dataDirectory)
         model.addFolder(folder)
         model.scan()
         await waitUntil { !model.running }
@@ -168,7 +174,7 @@ final class ScanLifecycleTests: XCTestCase {
         let bytes = try Data(contentsOf: fixture)
         let photo = folder.appending(path: "photo.png")
         try bytes.write(to: photo)
-        let model = ReviewModel()
+        let model = ReviewModel(dataDirectory: dataDirectory)
         model.addFolder(folder)
         model.scan()
         await waitUntil { !model.running }
@@ -206,7 +212,7 @@ final class ScanLifecycleTests: XCTestCase {
         XCTAssertEqual(group.preferred.name, "a-keep.png")
         let service = AssetMutationService()
         let pair = CleanupPair(keep: group.preferred, remove: try XCTUnwrap(group.duplicates.first).asset)
-        let run = try await service.apply([pair], sources: [source])
+        let run = try await service.apply([pair], sources: [source], protection: CleanupProtection())
         if run.first?.status == .movedToTrash {
             let path = try XCTUnwrap(run.first?.detail)
             let trash = URL(fileURLWithPath: path)
@@ -236,13 +242,13 @@ final class ScanLifecycleTests: XCTestCase {
     }
     @MainActor
     func testLegacyCleanupHistoryIsRemovedOnLaunch() throws {
-        let folder = URL.applicationSupportDirectory.appending(path: "AlbumWinnow", directoryHint: .isDirectory)
+        let folder = dataDirectory
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let legacyFiles = ["cleanup.sqlite", "cleanup.sqlite-wal", "cleanup.sqlite-shm"].map {
             folder.appending(path: $0)
         }
         for url in legacyFiles { try Data("legacy history".utf8).write(to: url) }
-        let model = ReviewModel()
+        let model = ReviewModel(dataDirectory: dataDirectory)
         for url in legacyFiles { XCTAssertFalse(FileManager.default.fileExists(atPath: url.path)) }
         XCTAssertNil(model.lastCleanup)
         XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appending(path: "scan.sqlite").path))

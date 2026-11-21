@@ -31,7 +31,7 @@ private let root = TestFiles.root
         CleanupPair(keep: keep, remove: changed),
         CleanupPair(keep: keep, remove: unrelated),
         CleanupPair(keep: keep, remove: copy),
-    ], sources: [source])
+    ], sources: [source], protection: CleanupProtection())
 
     #expect(run.map(\.status) == [.skipped, .skipped, .movedToTrash])
     #expect(!files.fileExists(atPath: db.path))
@@ -60,10 +60,10 @@ private let root = TestFiles.root
     let copy = try #require(snapshot.assets.first { $0.name == "copy.png" })
     let service = AssetMutationService()
     await #expect(throws: CleanupError.invalidSelection) {
-        try await service.apply([CleanupPair(keep: copy, remove: copy)], sources: [source])
+        try await service.apply([CleanupPair(keep: copy, remove: copy)], sources: [source], protection: CleanupProtection())
     }
     try files.removeItem(at: folder.appending(path: keep.name))
-    let run = try await service.apply([CleanupPair(keep: keep, remove: copy)], sources: [source])
+    let run = try await service.apply([CleanupPair(keep: keep, remove: copy)], sources: [source], protection: CleanupProtection())
     #expect(run.map(\.status) == [.failed])
     #expect(files.fileExists(atPath: copy.id.item))
 }
@@ -85,7 +85,7 @@ private let root = TestFiles.root
     #expect(scan.scanned == 1)
     #expect(scan.groups.isEmpty)
     let service = AssetMutationService()
-    let run = try await service.apply([CleanupPair(keep: kept, remove: candidate)], sources: [outer, inner])
+    let run = try await service.apply([CleanupPair(keep: kept, remove: candidate)], sources: [outer, inner], protection: CleanupProtection())
     #expect(run.map(\.status) == [.skipped])
     #expect(files.fileExists(atPath: file.path))
 }
@@ -121,16 +121,16 @@ private let root = TestFiles.root
         try await AssetMutationService.validateRemovals([protected], sources: [source])
     }
     await #expect(throws: CleanupError.invalidSelection) {
-        try await service.apply(Array(original.prefix(1)), sources: [source])
+        try await service.apply(Array(original.prefix(1)), sources: [source], protection: CleanupProtection())
     }
     try Data(contentsOf: TestFiles.fixtures.appending(path: "burst-b.png")).write(to: fileB, options: .atomic)
-    let rejected = try await service.apply(original, sources: [source])
+    let rejected = try await service.apply(original, sources: [source], protection: CleanupProtection())
     #expect(rejected.map(\.status) == [.skipped, .skipped])
     #expect(files.fileExists(atPath: fileA.path) && files.fileExists(atPath: fileB.path))
 
     try Data(contentsOf: fixture).write(to: fileB, options: .atomic)
     let refreshed = try await plan()
-    let applied = try await service.apply(refreshed, sources: [source])
+    let applied = try await service.apply(refreshed, sources: [source], protection: CleanupProtection())
     #expect(applied.map(\.status) == [.movedToTrash, .movedToTrash])
     #expect(!files.fileExists(atPath: fileA.path) && !files.fileExists(atPath: fileB.path))
     for item in applied where item.status == .movedToTrash {

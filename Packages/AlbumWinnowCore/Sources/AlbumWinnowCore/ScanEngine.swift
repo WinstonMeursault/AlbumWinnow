@@ -29,7 +29,8 @@ public actor ScanEngine {
     public func scan(
         _ sources: [any AssetSource],
         refreshing: Set<AssetID> = [],
-        progress: @Sendable (ScanProgress) -> Void = { _ in }
+        progress: @Sendable (ScanProgress) -> Void = { _ in },
+        accounting: @Sendable (ScanAccounting) -> Void = { _ in }
     ) async throws -> ScanResult {
         guard !scanning else { throw ScanError.scanInProgress }
         let sourceIDs = sources.map(\.id)
@@ -39,6 +40,7 @@ public actor ScanEngine {
 
         var allIDs = Set<AssetID>()
         var indexedPaths = Set<String>()
+        var ignoredCount = 0
         var issues = [AssetIssue]()
         var indexed = [IndexedAsset]()
         var pending: [(source: any AssetSource, asset: PhotoAsset)] = []
@@ -52,16 +54,32 @@ public actor ScanEngine {
                 guard asset.id.source == source.id, allIDs.insert(asset.id).inserted else {
                     throw ScanError.invalidSourceSnapshot
                 }
-                if source is FileSystemSource, !indexedPaths.insert(asset.id.item).inserted { continue }
+                if source is FileSystemSource, !indexedPaths.insert(asset.id.item).inserted {
+                    ignoredCount += 1
+                    continue
+                }
                 if !refreshing.contains(asset.id), let entry = previouslyIndexed[asset.id.item], asset.revision == entry.revision {
-                    indexed.append(IndexedAsset(asset: asset, fingerprint: entry.signature))
+                    do {
+                        try await source.validateCachedAvailability(for: asset)
+                        indexed.append(IndexedAsset(asset: asset, fingerprint: entry.signature))
+                    } catch is CancellationError {
+                        throw CancellationError()
+                    } catch {
+                        issues.append(Self.issue(for: asset.id, error: error, source: source))
+                    }
                 } else {
                     pending.append((source, asset))
                 }
             }
         }
 
+        let reusedIDs = Set(indexed.map { $0.asset.id })
         let reused = indexed.count
+        let expected = allIDs.count - ignoredCount + Set(issues.map(\.id)).subtracting(allIDs).count
+        var skippedIDs = Set(issues.filter { $0.reason == .cloudSkipped }.map(\.id))
+        var failedIDs = Set(issues.filter { $0.reason != .cloudSkipped }.map(\.id))
+        accounting(ScanAccounting(processed: indexed.count, skipped: skippedIDs.count, failed: failedIDs.count,
+                                  unfinished: max(0, expected - indexed.count - skippedIDs.count - failedIDs.count)))
         var completed = reused
         let total = reused + pending.count
         progress(.fingerprinting(completed: completed, total: total))
@@ -79,22 +97,31 @@ public actor ScanEngine {
                     completed += 1
                 case let .failed(issue):
                     issues.append(issue)
+                    if issue.reason == .cloudSkipped { skippedIDs.insert(issue.id) } else { failedIDs.insert(issue.id) }
                     completed += 1
                 case .cancelled:
                     break
                 }
             }
             try cache.store(prepared)
+            accounting(ScanAccounting(processed: indexed.count, skipped: skippedIDs.count, failed: failedIDs.count,
+                                      unfinished: max(0, expected - indexed.count - skippedIDs.count - failedIDs.count)))
             progress(.fingerprinting(completed: completed, total: total))
         }
 
         try Task.checkCancellation()
         let (groups, comparisonIssues) = try await findGroups(indexed, sources: sources, progress: progress)
         issues.append(contentsOf: comparisonIssues)
+        skippedIDs = Set(issues.filter { $0.reason == .cloudSkipped }.map(\.id))
+        failedIDs = Set(issues.filter { $0.reason != .cloudSkipped }.map(\.id)).subtracting(skippedIDs)
+        let successfulIDs = Set(indexed.map { $0.asset.id }).subtracting(skippedIDs).subtracting(failedIDs)
+        accounting(ScanAccounting(processed: successfulIDs.count, skipped: skippedIDs.count, failed: failedIDs.count, unfinished: 0))
+        let successfulReused = successfulIDs.intersection(reusedIDs).count
         let result = ScanResult(
             groups: groups,
-            issues: issues.sorted { Self.precedes($0.id, $1.id) },
-            scanned: indexed.count - reused, reused: reused
+            issues: Dictionary(issues.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
+                .values.sorted { Self.precedes($0.id, $1.id) },
+            scanned: successfulIDs.count - successfulReused, reused: successfulReused
         )
         try Task.checkCancellation()
         try cache.finish(assetIDs: allIDs, sources: sourceIDs)
@@ -130,21 +157,22 @@ public actor ScanEngine {
             return .ready(asset, image)
         } catch is CancellationError {
             return Task.isCancelled ? .cancelled : .failed(AssetIssue(id: asset.id, reason: .inaccessible))
-        } catch AssetAccessError.changedDuringScan {
-            return .failed(AssetIssue(id: asset.id, reason: .changedDuringScan))
-        } catch AssetAccessError.cloudDownloadRequired {
-            return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadRequired))
-        } catch let error as PhotoLibraryDownloadError {
-            return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadFailed, detail: error.localizedDescription))
-        } catch AssetAccessError.cloudDownloadFailed {
-            return .failed(AssetIssue(id: asset.id, reason: .cloudDownloadFailed))
-        } catch ImageReadError.unreadableImage {
-            return .failed(AssetIssue(id: asset.id, reason: .unreadableImage))
-        } catch is ImageReadError {
-            return .failed(AssetIssue(id: asset.id, reason: .unsupportedImage))
         } catch {
-            return .failed(AssetIssue(id: asset.id, reason: .inaccessible))
+            return .failed(issue(for: asset.id, error: error, source: source))
         }
+    }
+
+    private static func issue(for id: AssetID, error: any Error, source: any AssetSource) -> AssetIssue {
+        let reason: AssetIssueReason
+        switch error {
+        case AssetAccessError.changedDuringScan: reason = .changedDuringScan
+        case AssetAccessError.cloudDownloadRequired: reason = source.skipsCloudAsset(id) ? .cloudSkipped : .cloudDownloadRequired
+        case is PhotoLibraryDownloadError, AssetAccessError.cloudDownloadFailed: reason = .cloudDownloadFailed
+        case ImageReadError.unreadableImage: reason = .unreadableImage
+        case is ImageReadError: reason = .unsupportedImage
+        default: reason = .inaccessible
+        }
+        return AssetIssue(id: id, reason: reason, detail: (error as? PhotoLibraryDownloadError)?.localizedDescription)
     }
 
     private func findGroups(
@@ -212,7 +240,7 @@ public actor ScanEngine {
                         if let error = error as? PhotoLibraryDownloadError {
                             issues.append(AssetIssue(id: failedID, reason: .cloudDownloadFailed, detail: error.localizedDescription))
                         } else if case AssetAccessError.cloudDownloadRequired = error {
-                            issues.append(AssetIssue(id: failedID, reason: .cloudDownloadRequired))
+                            issues.append(AssetIssue(id: failedID, reason: byID[failedID.source]?.skipsCloudAsset(failedID) == true ? .cloudSkipped : .cloudDownloadRequired))
                         } else if case AssetAccessError.cloudDownloadFailed = error {
                             issues.append(AssetIssue(id: failedID, reason: .cloudDownloadFailed))
                         } else if case AssetAccessError.changedDuringScan = error {

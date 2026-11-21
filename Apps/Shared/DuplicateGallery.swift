@@ -73,6 +73,7 @@ struct DuplicateGallery<Header: View>: View {
     @ScaledMetric(relativeTo: .caption) private var captionHeight: CGFloat = 52
     @State private var masonry = DuplicateMasonry()
     @State private var viewport = CGRect.zero
+    @State private var headerHeight: CGFloat = 0
     @State private var position = ScrollPosition(edge: .top)
     @State private var overviewAnchor: Anchor?
     @State private var pendingBottomScroll = false
@@ -96,30 +97,33 @@ struct DuplicateGallery<Header: View>: View {
             let configuration = Configuration(width: width, columns: columnCount(at: width),
                                               captionHeight: captionHeight, narrowed: narrowed,
                                               bottomRequest: bottomRequest)
-            let top = max(0, viewport.minY)
+            let top = max(0, viewport.minY - headerHeight)
             let bottom = top + max(viewport.height, geometry.size.height)
             let loadedRange = max(0, top - 220)..<(bottom + 220)
             ScrollView {
-                ZStack(alignment: .topLeading) {
-                    ForEach(masonry.visible(in: loadedRange)) { tile in
-                        if groups.indices.contains(tile.id), tile.frame.maxY >= loadedRange.lowerBound {
-                            let group = groups[tile.id]
-                            GalleryCard(group: group, model: model, isOpen: group.id == selectedGroup,
-                                        imageHeight: tile.frame.height - configuration.captionHeight,
-                                        captionHeight: configuration.captionHeight,
-                                        pixelSize: pixelSize(for: tile.frame, captionHeight: configuration.captionHeight),
-                                        isActive: isActive) { open(group) }
-                                .frame(width: tile.frame.width, height: tile.frame.height)
-                                .position(x: tile.frame.midX, y: tile.frame.midY)
-                                .accessibilitySortPriority(-Double(tile.id))
+                VStack(spacing: 0) {
+                    header()
+                        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { headerHeight = $0 }
+                    ZStack(alignment: .topLeading) {
+                        ForEach(masonry.visible(in: loadedRange)) { tile in
+                            if groups.indices.contains(tile.id), tile.frame.maxY >= loadedRange.lowerBound {
+                                let group = groups[tile.id]
+                                GalleryCard(group: group, model: model, isOpen: group.id == selectedGroup,
+                                            imageHeight: tile.frame.height - configuration.captionHeight,
+                                            captionHeight: configuration.captionHeight,
+                                            pixelSize: pixelSize(for: tile.frame, captionHeight: configuration.captionHeight),
+                                            isActive: isActive) { open(group) }
+                                    .frame(width: tile.frame.width, height: tile.frame.height)
+                                    .position(x: tile.frame.midX, y: tile.frame.midY)
+                                    .accessibilitySortPriority(-Double(tile.id))
+                            }
                         }
                     }
+                    .frame(width: width, height: masonry.height, alignment: .topLeading)
                 }
-                .frame(width: width, height: masonry.height, alignment: .topLeading)
             }
             .accessibilityIdentifier("duplicate-gallery")
             .scrollClipDisabled()
-            .safeAreaInset(edge: .top, spacing: 0, content: header)
             .scrollPosition($position)
             .onScrollGeometryChange(for: CGRect.self, of: \.visibleRect) { _, rect in
                 if isActive { viewport = rect }
@@ -174,7 +178,7 @@ struct DuplicateGallery<Header: View>: View {
             position.scrollTo(edge: .top)
             return
         }
-        let y = max(0, masonry.tiles[anchor.tile].frame.minY + anchor.offset)
+        let y = max(0, headerHeight + masonry.tiles[anchor.tile].frame.minY + anchor.offset)
         position.scrollTo(y: y)
     }
 }
@@ -233,7 +237,9 @@ private struct GalleryCard: View {
                             .fixedSize(horizontal: true, vertical: false)
                         VStack(alignment: .leading, spacing: 2) { counts(total: count, selected: selected) }
                     }
-                    if hasVisualMatch {
+                    if model.status(for: group) != .pending {
+                        Text(model.status(for: group).title).foregroundStyle(.secondary)
+                    } else if hasVisualMatch {
                         matchDescription.foregroundStyle(.secondary)
                     }
                 }

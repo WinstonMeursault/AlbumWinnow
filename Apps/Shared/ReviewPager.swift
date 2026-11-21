@@ -43,7 +43,10 @@ struct ReviewPager: View {
         GeometryReader { geometry in
             if let index = groups.firstIndex(where: { $0.id == selectedID }) {
                 let width = max(1, geometry.size.width)
-                let neighbors = groups[max(0, index - 1)..<min(groups.count, index + 2)]
+                // Stacked invisible pages can leave safe-area controls above the active page on iPad.
+                let activeOnly = style == .none || (style == .fade && !settling && translation == 0)
+                let neighbors = activeOnly ? groups[index...index] :
+                    groups[max(0, index - 1)..<min(groups.count, index + 2)]
                 let previousID = index > 0 ? groups[index - 1].id : nil
                 ZStack {
                     background

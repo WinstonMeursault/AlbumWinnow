@@ -14,15 +14,19 @@ public enum PhotoLibraryReadError: Error, Sendable {
 
 public struct PhotoLibrarySource: AssetSource {
     public enum DownloadUpdate: Sendable {
+        case enumerated([AssetID])
         case transferring(AssetID, fraction: Double)
         case finished(AssetID, available: Bool)
     }
 
     public let id = "photos-library"
+    private let allowsDownloads: Bool
+    public func skipsCloudAsset(_ id: AssetID) -> Bool { !permitsDownload(for: id) }
     private let downloads: Set<AssetID>
     private let downloadUpdate: @Sendable (DownloadUpdate) -> Void
 
-    public init(downloads: Set<AssetID> = [], downloadUpdate: @escaping @Sendable (DownloadUpdate) -> Void = { _ in }) {
+    public init(downloads: Set<AssetID> = [], allowsDownloads: Bool = false, downloadUpdate: @escaping @Sendable (DownloadUpdate) -> Void = { _ in }) {
+        self.allowsDownloads = allowsDownloads
         self.downloads = downloads
         self.downloadUpdate = downloadUpdate
     }
@@ -45,6 +49,7 @@ public struct PhotoLibrarySource: AssetSource {
             assets.append(Self.describe(fetch.object(at: index)))
         }
         try checkAuthorization()
+        downloadUpdate(.enumerated(assets.filter { permitsDownload(for: $0.id) }.map(\.id)))
         return AssetSnapshot(assets: assets)
     }
 
@@ -160,7 +165,11 @@ public struct PhotoLibrarySource: AssetSource {
     }
     #endif
 
-    func permitsDownload(for id: AssetID) -> Bool { downloads.contains(id) }
+    func permitsDownload(for id: AssetID) -> Bool { allowsDownloads || downloads.contains(id) }
+
+    public func validateCachedAvailability(for asset: PhotoAsset) async throws {
+        _ = try await image(for: asset)
+    }
 
     public func changes() -> AsyncStream<Void> {
         let (stream, continuation) = AsyncStream.makeStream(of: Void.self, bufferingPolicy: .bufferingNewest(1))

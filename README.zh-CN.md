@@ -6,9 +6,9 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。应�
 
 ## 项目状态
 
-AlbumWinnow v1.0.0 是首个正式版本，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow v1.1.0 新增持久核对决定、照片锁定与明确的 iCloud 扫描策略，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
 
-可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
+上一个 GitHub 正式版本 v1.0.0 可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
 
 ## 构建与运行
 
@@ -34,6 +34,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 
 生成的测试工程放在 `.local`，预期版本号直接读取应用构建配置。测试不使用实机或 iCloud 账户。
 
+## v1.1 核对进度与云端策略
+
+已确认计划、保留整组、稍后处理、照片锁定与核对位置独立于扫描缓存保存。重新启动会先重建扫描结果，再恢复有效决定，不会自动删除照片。未经 Confirm 的临时点选不保存为删除计划。**Skip** 只推迟处理，不撤销已有计划；**Group Actions** 可保留整组或撤销本组决定。长按或右键照片可锁定；锁定照片与选定保留照片一并留下，有任意受保护成员时不能 Delete All。实际执行清理也检查同一保护上下文，防止重叠目录或硬链接绕过保护。
+
+概览提供 **Continue Review** 与 **Review Ten Groups**；保留整组默认隐藏，可通过 Review Options 查看。成员、资源版本或匹配证据变化会使旧删除决定失效。**Reset Review Progress** 重置决定但保留锁定；清除扫描缓存不删除核对状态。无法加载保护数据库或保存决定时，清理会被禁用。
+
+**Skip Photos Stored Only in iCloud** 默认开启，关闭后允许扫描下载缺失资源。**Download Pending Photos from iCloud** 仅授权本次指定照片的下载，并与本地照片一起重新比较。缓存命中仍检查当前资源可读性。成功处理、主动跳过、失败与未完成分别统计，取消不会把未完成算作失败。预览不隐式申请联网。云端自动化使用受控回调，不代表真实账户验证。
+
 ## v1.0 范围
 
 - 扫描系统照片图库和用户选定文件夹中的可访问照片，支持跨来源匹配。
@@ -41,7 +49,7 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 - 将匹配项分组供用户并排对比，结合画质、分辨率及 Live Photo 配对视频、编辑前原件等关联数据推荐保留版本。
 - 复用未变化资源的指纹，每次扫描重建分组，并在允许清理前检查资源变化。
 
-扫描会读取本地可用的图库资源，并在 Scan Issues 列出仅存于 iCloud 的照片。点击 **Download Pending Photos from iCloud** 可授权下载并重试这些项目。下载重试会重新读取所选资源，不因命中指纹缓存而跳过下载。重复项页面分别显示 iCloud 下载和扫描进度，并列出可用、失败和待处理数量。下载未全部完成时显示 **iCloud Download Incomplete**，并提示检查 Scan Issues。扫描结束后，重复项概览以瀑布流显示分组封面。点开一组即可在组内核对照片。在设置里打开 **Show Filenames in Review** 可显示文件名。详情页左滑进入下一组，右滑返回上一组。在 **Settings → Interaction → Group Transition** 中可选择平移、覆盖、淡化或无动画。点击想保留的照片后确认当前组，也可以跳过当前组。**Delete All** 会以红框预览整组删除。在 **Settings → Interaction → Review Button Layout** 中可以选择左手或右手布局，把确认按钮放在顺手的一侧。核对完成后，回到重复项概览，通过 **Confirm Cleanup** 检查并确认整批清理。在 iOS 和 iPadOS 上，因进入后台而中断的扫描会在回到前台后按已保存来源续扫，复用缓存指纹，并恢复此前已授权的待下载集合。主动取消会停止自动恢复。PhotoKit 提供具体错误时，Scan Issues 会保留系统错误说明、错误域和代码。扫描期间发生图库内容变化时，必须重新扫描后才能清理。更广泛的连拍分组等视觉相似照片整理功能计划在 v1.1 加入。
+扫描会读取本地可用的图库资源，并在 Scan Issues 列出仅存于 iCloud 的照片。点击 **Download Pending Photos from iCloud** 可授权下载并重试这些项目。下载重试会重新读取所选资源，不因命中指纹缓存而跳过下载。重复项页面分别显示 iCloud 下载和扫描进度，并列出可用、失败和待处理数量。下载未全部完成时显示 **iCloud Download Incomplete**，并提示检查 Scan Issues。扫描结束后，重复项概览以瀑布流显示分组封面。点开一组即可在组内核对照片。在设置里打开 **Show Filenames in Review** 可显示文件名。详情页左滑进入下一组，右滑返回上一组。在 **Settings → Interaction → Group Transition** 中可选择平移、覆盖、淡化或无动画。点击想保留的照片后确认当前组，也可以跳过当前组。**Delete All** 会以红框预览整组删除。在 **Settings → Interaction → Review Button Layout** 中可以选择左手或右手布局，把确认按钮放在顺手的一侧。核对完成后，回到重复项概览，通过 **Confirm Cleanup** 检查并确认整批清理。在 iOS 和 iPadOS 上，因进入后台而中断的扫描会在回到前台后按已保存来源续扫，复用缓存指纹，并恢复此前已授权的待下载集合。主动取消会停止自动恢复。PhotoKit 提供具体错误时，Scan Issues 会保留系统错误说明、错误域和代码。扫描期间发生图库内容变化时，必须重新扫描后才能清理。更广泛的连拍分组等视觉相似照片整理功能计划在 v1.4 加入。
 
 ## 匹配与清理
 

@@ -39,6 +39,8 @@ public enum CleanupError: LocalizedError, Equatable, Sendable {
     case invalidSelection
     case operationInProgress
     case unavailableSource
+    case userProtected
+    case unavailableProtection
     case protectedResources
     case changedAsset
     case noLongerDuplicate
@@ -50,6 +52,8 @@ public enum CleanupError: LocalizedError, Equatable, Sendable {
         case .invalidSelection: "Every item must appear once and have a copy to keep."
         case .operationInProgress: "A cleanup operation is already in progress."
         case .unavailableSource: "The original source is no longer available."
+        case .userProtected: "This photo is locked and must be kept."
+        case .unavailableProtection: "Protection could not be loaded. Cleanup is disabled."
         case .protectedResources: "This item has an associated video, an edit or an alternate original."
         case .changedAsset: "The photo or the copy to keep has changed. Scan again before cleanup."
         case .noLongerDuplicate: "The photo no longer matches the selected copy to keep."

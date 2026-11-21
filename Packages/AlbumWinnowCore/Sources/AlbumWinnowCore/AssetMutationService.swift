@@ -7,7 +7,7 @@ public actor AssetMutationService {
 
     public init() {}
 
-    public func apply(_ pairs: [CleanupPair], sources: [any AssetSource]) async throws -> [CleanupItem] {
+    public func apply(_ pairs: [CleanupPair], sources: [any AssetSource], protection: CleanupProtection) async throws -> [CleanupItem] {
         guard !applying else { throw CleanupError.operationInProgress }
         let removals = Set(pairs.map(\.remove.id))
         let wholeGroups = Dictionary(grouping: pairs.filter { $0.wholeGroupID != nil }, by: \.wholeGroupID)
@@ -30,6 +30,7 @@ public actor AssetMutationService {
             do {
                 for pair in group {
                     try Task.checkCancellation()
+                    try protection.validate(pair.remove)
                     try Self.validateRemoval(pair.remove, sources: byID)
                 }
             } catch {
@@ -41,10 +42,11 @@ public actor AssetMutationService {
             do {
                 try Task.checkCancellation()
                 if let id = pair.wholeGroupID, let error = rejectedGroups[id] { throw error }
+                try protection.validate(pair.remove)
                 try await Self.verify(pair, sources: byID)
                 try Task.checkCancellation()
                 if let folder = byID[pair.remove.id.source] as? FileSystemSource {
-                    let path = try Self.moveToTrash(pair, folder: folder, sources: byID)
+                    let path = try Self.moveToTrash(pair, folder: folder, sources: byID, protection: protection)
                     items[position] = CleanupItem(pair: pair, status: .movedToTrash, detail: path)
                 } else if byID[pair.remove.id.source] is PhotoLibrarySource {
                     queuedPhotos.append((position, pair))
@@ -61,7 +63,7 @@ public actor AssetMutationService {
             let outcome: Result<Void, any Error>
             do {
                 try Task.checkCancellation()
-                try await Self.moveToRecentlyDeleted(queuedPhotos.map(\.1), sources: byID)
+                try await Self.moveToRecentlyDeleted(queuedPhotos.map(\.1), sources: byID, protection: protection)
                 outcome = .success(())
             } catch {
                 outcome = .failure(error)
@@ -94,11 +96,12 @@ public actor AssetMutationService {
         }
     }
 
-    public nonisolated static func validateRemovals(_ assets: [PhotoAsset], sources: [any AssetSource]) async throws {
+    public nonisolated static func validateRemovals(_ assets: [PhotoAsset], sources: [any AssetSource], protection: CleanupProtection = CleanupProtection()) async throws {
         let task = Task.detached {
             let byID = Dictionary(sources.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
             for asset in assets {
                 try Task.checkCancellation()
+                try protection.validate(asset)
                 try validateRemoval(asset, sources: byID)
             }
         }
@@ -140,13 +143,14 @@ public actor AssetMutationService {
     }
 
     private static func moveToTrash(
-        _ pair: CleanupPair, folder: FileSystemSource, sources: [String: any AssetSource]
+        _ pair: CleanupPair, folder: FileSystemSource, sources: [String: any AssetSource], protection: CleanupProtection
     ) throws -> String? {
         let url = try folder.currentURL(for: pair.remove)
         var coordinationError: NSError?
         var result: Result<String?, any Error>?
         NSFileCoordinator().coordinate(writingItemAt: url, options: .forDeleting, error: &coordinationError) { coordinatedURL in
             result = Result {
+                try protection.validate(pair.remove)
                 guard try folder.removableURL(for: pair.remove).path == coordinatedURL.standardizedFileURL.path else {
                     throw CleanupError.changedAsset
                 }
@@ -167,11 +171,12 @@ public actor AssetMutationService {
         return try result.get()
     }
 
-    private static func moveToRecentlyDeleted(_ pairs: [CleanupPair], sources: [String: any AssetSource]) async throws {
+    private static func moveToRecentlyDeleted(_ pairs: [CleanupPair], sources: [String: any AssetSource], protection: CleanupProtection) async throws {
         let validation = OSAllocatedUnfairLock<Result<Void, any Error>>(initialState: .failure(CleanupError.changedAsset))
         try await PHPhotoLibrary.shared().performChanges {
             do {
                 let assets = try pairs.map { pair in
+                    try protection.validate(pair.remove)
                     if let retained = pair.keep { try validate(retained, sources: sources) }
                     guard let library = sources[pair.remove.id.source] as? PhotoLibrarySource else {
                         throw CleanupError.unavailableSource
@@ -196,7 +201,7 @@ public actor AssetMutationService {
             CleanupItem(pair: pair, status: .failed, detail: "This photo is no longer accessible from its source.")
         case AssetAccessError.changedDuringScan:
             CleanupItem(pair: pair, status: .skipped, detail: CleanupError.changedAsset.localizedDescription)
-        case CleanupError.protectedResources, CleanupError.noLongerDuplicate, CleanupError.changedAsset, CleanupError.sameFile:
+        case CleanupError.userProtected, CleanupError.unavailableProtection, CleanupError.protectedResources, CleanupError.noLongerDuplicate, CleanupError.changedAsset, CleanupError.sameFile:
             CleanupItem(pair: pair, status: .skipped, detail: error.localizedDescription)
         default:
             CleanupItem(pair: pair, status: .failed, detail: error.localizedDescription)

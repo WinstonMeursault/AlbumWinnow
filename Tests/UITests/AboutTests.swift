@@ -5,7 +5,7 @@ final class AboutTests: XCTestCase {
     func testSettingsProvidesVersionAndOfflineLicenseTexts() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO"]
+        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         app.buttons["Settings"].tap()
 

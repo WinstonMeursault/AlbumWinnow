@@ -63,6 +63,23 @@ struct GroupReviewView: View {
             }
             .accessibilityIdentifier(isActive ? "group-review" : "")
         }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            HStack {
+                Text(model.status(for: group).title).font(.caption)
+                if selection.keepID != nil || selection.deleteAll {
+                    Text("\(assets.count - selection.selected.count) kept · \(selection.selected.count) pending cleanup")
+                        .font(.caption)
+                }
+                Spacer()
+                Menu("Group Actions", systemImage: "ellipsis.circle") {
+                    Button("Keep Entire Group") { model.setStatus(.kept, for: group); advance() }
+                    Button("Undo Group Decision") { model.setStatus(.pending, for: group); resetDraft() }
+                }
+                .labelStyle(.iconOnly)
+                .disabled(!model.canClean)
+            }
+            .padding(.horizontal).padding(.vertical, 6).background(.bar)
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) { controls }
         .task(id: isActive && model.canClean) {
             checkedRemovability = false
@@ -71,6 +88,16 @@ struct GroupReviewView: View {
             guard !Task.isCancelled else { return }
             deleteAllUnavailable = reason
             checkedRemovability = true
+        }
+        .onChange(of: model.reviewState.locked) {
+            checkedRemovability = false
+            deleteAllDraft = false
+            confirmationTask?.cancel()
+            confirmationTask = nil
+            Task {
+                deleteAllUnavailable = await model.deleteAllUnavailableReason(for: assets)
+                checkedRemovability = true
+            }
         }
         .onDisappear { confirmationTask?.cancel() }
         .onChange(of: isActive) { _, active in
@@ -100,6 +127,7 @@ struct GroupReviewView: View {
             HStack(spacing: 8) {
                 if hand == ReviewHand.left.rawValue { confirmButton } else { deleteAllButton }
                 Button {
+                    model.setStatus(.deferred, for: group)
                     resetDraft()
                     advance()
                 } label: {
@@ -183,10 +211,23 @@ struct GroupReviewView: View {
             PreviewCard(asset: asset, recommended: recommended, selected: selected, deletingAll: deletingAll,
                         showFilename: showFilenames, isActive: isActive, preview: previews[asset.id])
         }
+        .overlay(alignment: .topLeading) {
+            if model.isLocked(asset) {
+                Label("Locked", systemImage: "lock.fill")
+                    .font(.caption).padding(8).background(.regularMaterial, in: .capsule).padding(8)
+                    .allowsHitTesting(false)
+            }
+        }
+        .contextMenu {
+            Button(model.isLocked(asset) ? "Unlock Photo" : "Lock Photo", systemImage: model.isLocked(asset) ? "lock.open" : "lock") {
+                model.setLocked(asset, locked: !model.isLocked(asset))
+            }
+            .disabled(!model.canEditSources)
+        }
         .buttonStyle(.plain)
         .disabled(!isActive || confirmationTask != nil || !model.canClean)
         .accessibilityLabel(Text("\(accessibleTitle), \(previews[asset.id]?.details ?? String(localized: "Photo details unavailable"))"))
-        .accessibilityValue(deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
+        .accessibilityValue(model.isLocked(asset) ? Text("Locked, must be kept") : deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier(isActive ? "review-photo-\(asset.name)" : "")
         .task(id: asset) {

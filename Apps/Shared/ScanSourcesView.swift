@@ -12,6 +12,7 @@ struct ScanSourcesView: View {
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showReviewFilenames = false
     @AppStorage(ReviewAnimation.defaultsKey) private var reviewAnimation = ReviewAnimation.slide.rawValue
     @AppStorage(ReviewHand.defaultsKey) private var reviewHand = ReviewHand.right.rawValue
+    @State private var resettingReview = false
     @State private var showingAbout = false
     #if os(iOS)
     @State private var importing = false
@@ -26,6 +27,15 @@ struct ScanSourcesView: View {
                 ))
                 .disabled(!model.canEditSources)
                 .accessibilityIdentifier("photos-source")
+
+                Toggle("Skip Photos Stored Only in iCloud", isOn: Binding(
+                    get: { model.skipCloudPhotos }, set: { model.setSkipCloudPhotos($0) }
+                ))
+                .disabled(!model.canEditSources)
+                Text(model.skipCloudPhotos
+                     ? "Scanning does not download missing iCloud resources. Skipped photos may be absent from results."
+                     : "Scanning may download original photo resources from iCloud and use network data.")
+                    .font(.caption).foregroundStyle(.secondary)
 
                 if model.authorization == .limited {
                     Text("Limited access").foregroundStyle(.secondary)
@@ -104,6 +114,10 @@ struct ScanSourcesView: View {
                 }
                 .disabled(!model.canEditSources)
                 .accessibilityIdentifier("clear-scan-cache")
+                Button("Reset Review Progress", role: .destructive) { resettingReview = true }
+                    .disabled(!model.canEditSources || !model.protectionAvailable)
+                Text("Resets kept groups, deferred groups and pending cleanup. Photo locks remain protected.")
+                    .font(.caption).foregroundStyle(.secondary)
                 Text(model.cacheStatus ?? "Frees scan cache storage. Photos and source access are preserved.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -119,6 +133,11 @@ struct ScanSourcesView: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Settings")
+        .confirmationDialog("Reset Review Progress?", isPresented: $resettingReview, titleVisibility: .visible) {
+            Button("Reset Review Progress", role: .destructive) { model.resetReviewProgress() }
+        } message: {
+            Text("Clears all group decisions and pending cleanup. Locked photos remain locked. No photos are deleted.")
+        }
         .sheet(isPresented: $showingAbout) {
             AboutView()
         }

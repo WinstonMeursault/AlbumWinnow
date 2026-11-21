@@ -7,7 +7,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "slide",
-                               "-AlbumWinnow.showReviewFilenames", "NO"]
+                               "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
 
         XCTAssertFalse(app.buttons["Cleanup History"].exists)
@@ -202,7 +202,7 @@ final class PhotoFirstReviewTests: XCTestCase {
     func testClearScanCachePreservesSourcesAndAllowsScanningAgain() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO"]
+        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         app.buttons["Settings"].tap()
         let clear = app.buttons["clear-scan-cache"]
@@ -230,7 +230,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO",
-                               "--cleanup-outcome-fixture"]
+                               "--cleanup-outcome-fixture", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(app.staticTexts["No Photos Moved"].waitForExistence(timeout: 90), app.debugDescription)
         XCTAssertTrue(app.staticTexts["Photos Not Moved"].exists)
@@ -250,7 +250,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO"]
+        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
@@ -258,14 +258,15 @@ final class PhotoFirstReviewTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Scan Complete"].waitForExistence(timeout: 90))
         let group = app.buttons["duplicate-group-gallery-wide-a.png"]
         for _ in 0..<4 {
-            if group.isHittable { break }
+            // A partly visible card can report hittable while its center is behind the bottom controls.
+            if group.isHittable, group.frame.midY < scan.frame.minY - 12 { break }
             app.scrollViews["duplicate-gallery"].swipeUp()
         }
         XCTAssertTrue(group.isHittable, app.debugDescription)
         group.tap()
         let keepChoice = app.buttons["review-photo-gallery-wide-a.png"]
         if !keepChoice.waitForExistence(timeout: 3) { group.tap() }
-        XCTAssertTrue(keepChoice.waitForExistence(timeout: 8))
+        XCTAssertTrue(keepChoice.waitForExistence(timeout: 8), app.debugDescription)
         keepChoice.tap()
         app.buttons["review-confirm"].tap()
         // The panorama is the last fixture group. Confirm returns to the overview.
@@ -293,7 +294,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO"]
+        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
@@ -352,7 +353,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Scan Complete"].waitForExistence(timeout: 90))
         let group = app.buttons["duplicate-group-gallery-landscape-a.png"]
         for _ in 0..<6 {
-            if group.isHittable { break }
+            if group.isHittable, group.frame.midY < scan.frame.minY - 12 { break }
             app.scrollViews["duplicate-gallery"].swipeUp()
         }
         XCTAssertTrue(group.isHittable, app.debugDescription)

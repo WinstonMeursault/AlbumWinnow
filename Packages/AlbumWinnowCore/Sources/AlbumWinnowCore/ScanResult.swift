@@ -43,3 +43,11 @@ public enum ScanError: Error, Equatable, Sendable {
     case duplicateSourceID
     case invalidSourceSnapshot
 }
+
+
+public struct ScanAccounting: Equatable, Sendable {
+    public let processed: Int
+    public let skipped: Int
+    public let failed: Int
+    public let unfinished: Int
+}

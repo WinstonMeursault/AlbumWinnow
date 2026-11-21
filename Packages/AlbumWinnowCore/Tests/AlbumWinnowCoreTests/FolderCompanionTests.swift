@@ -18,7 +18,7 @@ func folderCompanionsProtectImagesBeforeAndAfterScanning(companion: String) asyn
     let updated = try await source.snapshot()
     #expect(updated.assets.first { $0.id == remove.id }?.photoProperties?.hasAssociatedResources == true)
     // A sidecar added after the scan must also prevent moving a previously unprotected image.
-    let outcome = try await AssetMutationService().apply([CleanupPair(keep: keep, remove: remove)], sources: [source])
+    let outcome = try await AssetMutationService().apply([CleanupPair(keep: keep, remove: remove)], sources: [source], protection: CleanupProtection())
     #expect(outcome.map(\.status) == [.skipped])
     #expect(outcome.first?.detail == CleanupError.protectedResources.localizedDescription)
     #expect(FileManager.default.fileExists(atPath: folder.appending(path: "IMG_0001.png").path))

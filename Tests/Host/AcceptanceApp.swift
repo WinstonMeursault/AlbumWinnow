@@ -14,7 +14,11 @@ import SwiftUI
         if FileManager.default.fileExists(atPath: folder.path), let scope = try? FolderScope(url: folder) {
             UserDefaults.standard.set([scope.bookmark], forKey: "AlbumWinnow.folderBookmarks")
         }
-        _model = State(initialValue: ReviewModel())
+        let testState = URL.applicationSupportDirectory.appending(path: "AcceptanceReview")
+        if !ProcessInfo.processInfo.arguments.contains("--preserve-review-state") {
+            try? FileManager.default.removeItem(at: testState)
+        }
+        _model = State(initialValue: ReviewModel(dataDirectory: testState))
     }
 
     var body: some Scene {
