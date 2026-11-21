@@ -233,6 +233,43 @@ final class ScanLifecycleTests: XCTestCase {
     }
 
     @MainActor
+    func testCancellingSupplementRequiresManualRescanBeforeRestoringCleanup() async throws {
+        let defaults = UserDefaults.standard
+        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled", "AlbumWinnow.interruptedScan",
+                    "AlbumWinnow.interruptedDownloads", "AlbumWinnow.interruptedCloudPolicy"]
+        let saved = keys.map { defaults.object(forKey: $0) }
+        keys.forEach { defaults.removeObject(forKey: $0) }
+        defer { for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) } }
+        let folder = dataDirectory.appending(path: "photos")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let fixture = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/burst-a.png")
+        let bytes = try Data(contentsOf: fixture)
+        for name in ["a.png", "b.png"] { try bytes.write(to: folder.appending(path: name)) }
+        let model = ReviewModel(dataDirectory: dataDirectory)
+        model.addFolder(folder)
+        model.scan()
+        await waitUntil { !model.running }
+        let group = try XCTUnwrap(model.result?.groups.first)
+        let confirmed = await model.confirmSelection(in: group, keepID: group.preferred.id, deleteAll: false)
+        XCTAssertTrue(confirmed)
+        // Synthetic consent IDs exercise cancellation without a Photos account or network request.
+        model.startScan(downloads: [AssetID(source: "photos-library", item: "synthetic-pending")])
+        model.cancelScan()
+        await waitUntil { !model.running }
+        XCTAssertTrue(model.resultsStale, "A cancelled supplement has not revalidated changed group membership")
+        XCTAssertFalse(model.canClean)
+        XCTAssertEqual(model.selectedCount, 1, "Saved decisions remain pending revalidation")
+        let reopened = ReviewModel(dataDirectory: dataDirectory)
+        reopened.sceneChanged(.active)
+        XCTAssertFalse(reopened.running, "A user cancellation must not restart on relaunch")
+        reopened.scan()
+        await waitUntil { !reopened.running }
+        XCTAssertEqual(reopened.selectedCount, 1)
+        XCTAssertTrue(reopened.canClean)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appending(path: "b.png").path))
+    }
+
+    @MainActor
     private func waitUntil(_ ready: () -> Bool) async {
         for _ in 0..<300 {
             if ready() { return }

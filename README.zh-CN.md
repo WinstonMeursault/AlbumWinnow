@@ -6,7 +6,7 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。应�
 
 ## 项目状态
 
-AlbumWinnow v1.1.0 新增持久核对决定、照片锁定与明确的 iCloud 扫描策略，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow v1.2.0 新增推荐依据、同步放大及结果筛选，保留持久核对决定、照片锁定与明确的 iCloud 扫描策略，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
 
 上一个 GitHub 正式版本 v1.0.0 可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
 
@@ -33,6 +33,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 ```
 
 生成的测试工程放在 `.local`，预期版本号直接读取应用构建配置。测试不使用实机或 iCloud 账户。
+
+## v1.2 核对工具
+
+在组内打开 **Review Evidence**，可查看基于实测信息的推荐理由、每张照片与参照的实际匹配类别及来源元数据。未知大小、拍摄日期和位深如实显示未知。候选资源大小不等于立即释放的设备空间。
+
+双击放大或复位，捏合调整倍率，放大后拖动只平移照片。**Group Actions** 提供 **Zoom In**、**Reset Zoom** 及独立缩放。同步使用相对图像位置，不保证裁剪图像素对齐。仅可见照片请求最长边不超过 2560 像素的细节预览，倍率受可用像素限制；复位、切组及进入后台释放细节图。预览不自动授权 iCloud 下载。
+
+**Filter and Sort** 支持核对状态、匹配类别和来源筛选，以及稳定顺序、拍摄日期、数量和候选大小排序。未知日期在两个方向都置后。筛选保留人工选择，**Confirm Cleanup** 包含筛选之外的已确认候选。进入组内时冻结核对队列。取消补扫会保留已有决定供复核，但必须手动重扫后才能清理；重启不会自动恢复主动取消的扫描。
 
 ## v1.1 核对进度与云端策略
 
@@ -63,7 +71,7 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 
 ## 技术设计
 
-`AlbumWinnowCore` 以 Swift Package 形式供各平台的 SwiftUI 应用共享。PhotoKit 和 Foundation 分别用于访问系统图库和文件。BLAKE3 判断文件字节是否一致，文件夹资源采用流式读取。ImageIO 生成受限尺寸的缩略图，提供 pHash 和 dHash 候选，再通过多尺度像素核验区分同画面候选与存在局部差异的高度相似项。推荐算法保留原始分辨率并考虑位深。SQLite 和 GRDB 存储增量指纹，损坏缓存项会重新生成；下一次扫描完成后回收不再使用的来源缓存。Swift Concurrency 限制并行图片处理数量。详情与清理预览和概览缩略图共用按大小计费的队列：最多四个小请求，大文件或大小未知的图库预览单独执行。文件提供方允许时，文件夹预览使用安全文件映射，避免额外复制整份文件到堆内存；ImageIO 将解码预览限制在 1024 像素。**Settings → Storage → Clear Scan Cache** 可删除指纹缓存并压缩数据库以释放磁盘空间，保留照片与来源授权；下一次扫描将重新读取照片。
+`AlbumWinnowCore` 以 Swift Package 形式供各平台的 SwiftUI 应用共享。PhotoKit 和 Foundation 分别用于访问系统图库和文件。BLAKE3 判断文件字节是否一致，文件夹资源采用流式读取。ImageIO 生成受限尺寸的缩略图，提供 pHash 和 dHash 候选，再通过多尺度像素核验区分同画面候选与存在局部差异的高度相似项。推荐算法保留原始分辨率并考虑位深。SQLite 和 GRDB 存储增量指纹，损坏缓存项会重新生成；下一次扫描完成后回收不再使用的来源缓存。Swift Concurrency 限制并行图片处理数量。详情与清理预览和概览缩略图共用按大小计费的队列：最多四个小请求，大文件或大小未知的图库预览单独执行。文件提供方允许时，文件夹预览使用安全文件映射，避免额外复制整份文件到堆内存；ImageIO 将普通解码预览限制在 1024 像素，可见放大细节限制在 2560 像素。**Settings → Storage → Clear Scan Cache** 可删除指纹缓存并压缩数据库以释放磁盘空间，保留照片与来源授权；下一次扫描将重新读取照片。
 
 ## 实现与验证状态
 

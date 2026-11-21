@@ -19,6 +19,8 @@ struct ImageFingerprint: Codable, Sendable {
     let differenceHash: UInt64
     let meanRGBA: [UInt8]
     let edgeDetail: Double
+    var observedBitDepth: Int? = nil
+    var captureDate: Date? = nil
 
     var aspectRatio: Double { Double(width) / Double(height) }
 }
@@ -46,7 +48,7 @@ struct PreparedImage: Sendable {
         let image = try Self.orientedImage(source, longestSide: 256, override: metadata.orientationOverride)
         let sample = try Self.render(image, width: Self.comparisonSize, height: Self.comparisonSize)
         let luminance = Self.luminanceGrid(sample, columns: 32, rows: 32)
-        fingerprint = ImageFingerprint(
+        var measured = ImageFingerprint(
             fileHash: fileHash,
             width: metadata.width,
             height: metadata.height,
@@ -57,6 +59,9 @@ struct PreparedImage: Sendable {
             meanRGBA: Self.meanRGBA(sample),
             edgeDetail: Self.edgeDetail(luminance)
         )
+        measured.observedBitDepth = metadata.observedBitDepth
+        measured.captureDate = metadata.captureDate
+        self.fingerprint = measured
         comparisonPixels = sample
     }
 
@@ -94,7 +99,7 @@ struct PreparedImage: Sendable {
         return totals.map { UInt8(($0 + count / 2) / count) }
     }
 
-    // Estimate sharpness on the same thumbnail grid for all encodings.
+    // Measure edge contrast on the same thumbnail grid for all encodings.
     private static func edgeDetail(_ luminance: [Double]) -> Double {
         var total = 0.0
         for row in 1..<31 {

@@ -45,7 +45,7 @@ public struct FileSystemSource: AssetSource {
                 }
                 assets.append(PhotoAsset(
                     id: identifier(for: url), name: url.lastPathComponent,
-                    revision: try Self.revision(of: url)
+                    revision: try Self.revision(of: url), byteCount: try Self.metadata(of: url).st_size
                 ))
             } catch {
                 issues.append(AssetIssue(id: identifier(for: url), reason: .inaccessible))
@@ -57,7 +57,7 @@ public struct FileSystemSource: AssetSource {
         return AssetSnapshot(assets: assets.map { asset in
             let url = URL(fileURLWithPath: asset.id.item)
             return PhotoAsset(id: asset.id, name: asset.name, revision: asset.revision,
-                              photoProperties: Self.properties(for: url, extensions: companions[Self.companionKey(url)] ?? []))
+                              photoProperties: Self.properties(for: url, extensions: companions[Self.companionKey(url)] ?? []), byteCount: asset.byteCount)
         }, issues: issues)
     }
 

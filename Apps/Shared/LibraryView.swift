@@ -3,7 +3,7 @@ import SwiftUI
 
 struct LibraryView: View {
     let model: ReviewModel
-    @State private var showKept = false
+    @State private var showingFilters = false
     @State private var reviewQueue: [DuplicateGroup] = []
     @State private var batchSummary: String?
     @State private var selectedGroup: AssetID?
@@ -70,6 +70,7 @@ struct LibraryView: View {
                 reviewPath.removeAll()
             }
         }
+        .sheet(isPresented: $showingFilters) { ResultFiltersView(model: model) }
         .sheet(isPresented: $showingIssues) { issues }
         .sheet(isPresented: $confirmingCleanup) { cleanupConfirmation }
         #if os(iOS)
@@ -105,8 +106,8 @@ struct LibraryView: View {
     }
 
     private var reviewTitle: Text {
-        if let groups = model.result?.groups,
-           let index = groups.firstIndex(where: { $0.id == selectedGroup }) {
+        let groups = reviewQueue.isEmpty ? model.visibleGroups : reviewQueue
+        if let index = groups.firstIndex(where: { $0.id == selectedGroup }) {
             return Text("Group \(index + 1) of \(groups.count)")
         }
         return Text("Review Group")
@@ -236,12 +237,12 @@ struct LibraryView: View {
                     ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
                 }
             } else {
-                DuplicateGallery(groups: result.groups.filter { showKept ? model.status(for: $0) == .kept : model.status(for: $0) != .kept }, model: model, selectedGroup: selectedGroup,
+                DuplicateGallery(groups: model.visibleGroups, model: model, selectedGroup: selectedGroup,
                                  narrowed: narrowed, isActive: reviewPath.isEmpty,
                                  bottomRequest: galleryBottomRequest, header: {
                     scanSummaryCard(result)
                 }) { group in
-                    reviewQueue = result.groups.filter { showKept ? model.status(for: $0) == .kept : model.status(for: $0) != .kept }
+                    reviewQueue = model.visibleGroups
                     selectedGroup = group.id
                     if !wide { reviewPath = [group.id] }
                 }
@@ -265,14 +266,20 @@ struct LibraryView: View {
             if !model.protectionAvailable {
                 Label("Protection unavailable · Cleanup disabled", systemImage: "lock.trianglebadge.exclamationmark")
             }
+            Text("\(model.visibleGroups.count) of \(result.groups.count) groups shown · \(model.resultQuery.sort.title)")
+                .font(.caption).foregroundStyle(.secondary)
             if let notice = model.reviewNotice { Text(notice).font(.caption).foregroundStyle(.secondary) }
             if let batchSummary { Text(batchSummary).font(.caption) }
+            if model.visibleGroups.isEmpty, !result.groups.isEmpty {
+                Text("No groups match these filters.").font(.subheadline)
+                Button("Clear Filters") { model.setResultQuery(ReviewResultQuery()) }
+            }
             HStack {
                 Button("Continue Review") { openSession(result, limit: nil) }
                     .disabled(model.resumeGroup == nil || !model.canClean)
                 Menu("Review Options", systemImage: "ellipsis.circle") {
                     Button("Review Ten Groups") { openSession(result, limit: 10) }
-                    Toggle("Show Kept Groups", isOn: $showKept)
+                    Button("Filter and Sort") { showingFilters = true }
                 }
                 .disabled(!model.canClean)
             }
@@ -283,9 +290,10 @@ struct LibraryView: View {
     }
 
     private func openSession(_ result: ScanResult, limit: Int?) {
-        let pending = result.groups.filter { model.status(for: $0) == .pending || model.status(for: $0) == .deferred }
-        reviewQueue = limit.map { Array(pending.prefix($0)) } ?? result.groups.filter { model.status(for: $0) != .kept }
-        selectedGroup = limit == nil ? model.resumeGroup?.id : reviewQueue.first?.id
+        let visible = model.visibleGroups
+        let pending = visible.filter { model.status(for: $0) == .pending || model.status(for: $0) == .deferred }
+        reviewQueue = limit.map { Array(pending.prefix($0)) } ?? visible
+        selectedGroup = limit == nil ? visible.first { $0.id == model.resumeGroup?.id }?.id ?? pending.first?.id : reviewQueue.first?.id
         if let selectedGroup { reviewPath = [selectedGroup] }
         batchSummary = nil
     }
@@ -372,10 +380,15 @@ struct LibraryView: View {
     private var cleanupConfirmation: some View {
         let groups = model.cleanupGroups
         let pairs = groups.flatMap(\.pairs)
+        let hiddenCount = model.hiddenCandidateCount
         return NavigationStack {
             GeometryReader { geometry in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 24) {
+                        if hiddenCount > 0 {
+                            Text("\(hiddenCount) pending photos are outside the current filters. All confirmed candidates are shown here.")
+                                .font(.subheadline)
+                        }
                         ForEach(groups) { group in
                             CleanupGroupPreview(model: model, group: group, width: max(1, geometry.size.width - 32),
                                                 heightBudget: min(420, max(240, geometry.size.height * 0.55)))

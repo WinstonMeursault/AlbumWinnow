@@ -4,6 +4,14 @@ public actor ScanEngine {
     private struct IndexedAsset: Sendable {
         let asset: PhotoAsset
         let fingerprint: ImageFingerprint
+
+        var evidence: PhotoEvidence {
+            var evidence = PhotoEvidence(width: fingerprint.width, height: fingerprint.height,
+                bitDepth: fingerprint.observedBitDepth, hasWideColor: fingerprint.hasWideColor,
+                edgeContrast: fingerprint.edgeDetail)
+            evidence.captureDate = asset.captureDate ?? fingerprint.captureDate
+            return evidence
+        }
     }
 
     private enum Preparation: Sendable {
@@ -208,6 +216,7 @@ public actor ScanEngine {
             }
             guard !assigned.contains(position) else { continue }
             var duplicates = [DuplicateMember]()
+            var evidence = [representative.asset.id: representative.evidence]
             var sample: [UInt8]?
             for candidate in index.candidates(for: representative.fingerprint, after: position)
                 where !assigned.contains(candidate) {
@@ -253,12 +262,15 @@ public actor ScanEngine {
                 }
                 assigned.insert(candidate)
                 duplicates.append(DuplicateMember(asset: other.asset, match: match))
+                evidence[other.asset.id] = other.evidence
             }
             if !duplicates.isEmpty {
                 let dimensions = ImageDimensions(width: representative.fingerprint.width,
                                                  height: representative.fingerprint.height)
-                groups.append(DuplicateGroup(preferred: representative.asset, duplicates: duplicates,
-                                             preferredDimensions: dimensions))
+                var group = DuplicateGroup(preferred: representative.asset, duplicates: duplicates,
+                                           preferredDimensions: dimensions)
+                group.evidence = evidence
+                groups.append(group)
             }
         }
         progress(.comparing(completed: ordered.count, total: ordered.count))

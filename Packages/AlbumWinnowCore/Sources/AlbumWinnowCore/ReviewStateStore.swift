@@ -30,6 +30,8 @@ public struct ReviewState: Codable, Equatable, Sendable {
     public var lockedRevisions: [AssetID: String]?
     public var anchor: String?
     public var anchorIndex: Int?
+    public var resultQuery: ReviewResultQuery?
+    public var scanCancelledByUser: Bool?
 
     public init() {}
 

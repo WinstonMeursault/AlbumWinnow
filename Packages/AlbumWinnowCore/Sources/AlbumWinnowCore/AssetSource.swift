@@ -16,12 +16,17 @@ public struct PhotoAsset: Codable, Equatable, Sendable, Identifiable {
     public let name: String
     public let revision: String
     public let photoProperties: PhotoProperties?
+    public let byteCount: Int64?
+    public let captureDate: Date?
 
-    public init(id: AssetID, name: String, revision: String, photoProperties: PhotoProperties? = nil) {
+    public init(id: AssetID, name: String, revision: String, photoProperties: PhotoProperties? = nil,
+                byteCount: Int64? = nil, captureDate: Date? = nil) {
         self.id = id
         self.name = name
         self.revision = revision
         self.photoProperties = photoProperties
+        self.byteCount = byteCount.flatMap { $0 >= 0 ? $0 : nil }
+        self.captureDate = captureDate.flatMap { $0.timeIntervalSince1970.isFinite ? $0 : nil }
     }
 }
 

@@ -115,3 +115,29 @@ func damagedFingerprintIsRebuilt(column: String) async throws {
     let warm = try await engine.scan([source])
     #expect(warm.scanned == 0 && warm.reused == 1)
 }
+
+@Test(arguments: [-16, 64])
+func invalidMeasuredBitDepthIsRebuiltBeforeShowingEvidence(depth: Int) async throws {
+    let folder = TestFiles.root.appending(path: UUID().uuidString)
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: folder) }
+    let bytes = try Data(contentsOf: TestFiles.fixtures.appending(path: "burst-a.png"))
+    for name in ["a.png", "b.png"] { try bytes.write(to: folder.appending(path: name)) }
+    let url = folder.appending(path: "scan.sqlite")
+    let engine = try ScanEngine(cacheURL: url)
+    let source = FileSystemSource(directory: folder)
+    _ = try await engine.scan([source])
+    let database = try DatabaseQueue(path: url.path)
+    try await database.write { db in
+        let rows = try Row.fetchAll(db, sql: "SELECT item, signature FROM fingerprints")
+        for row in rows {
+            var fingerprint = try JSONDecoder().decode(ImageFingerprint.self, from: row["signature"] as Data)
+            fingerprint.observedBitDepth = depth
+            try db.execute(sql: "UPDATE fingerprints SET signature = ? WHERE item = ?",
+                           arguments: [try JSONEncoder().encode(fingerprint), row["item"] as String])
+        }
+    }
+    let repaired = try await engine.scan([source])
+    #expect(repaired.reused == 0 && repaired.scanned == 2)
+    #expect(repaired.groups.first?.evidence?.values.allSatisfy { $0.bitDepth.map { (1...64).contains($0) } == true } == true)
+}

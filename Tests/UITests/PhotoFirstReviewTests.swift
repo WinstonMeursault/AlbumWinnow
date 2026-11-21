@@ -66,7 +66,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         XCTAssertTrue(landscapeA.waitForExistence(timeout: 8) && landscapeB.exists, app.debugDescription)
         XCTAssertTrue(landscapeA.label.contains("recommended to keep"))
         XCTAssertFalse(landscapeB.label.contains("recommended to keep"))
-        XCTAssertNotEqual(landscapeA.value as? String, "Selected")
+        XCTAssertTrue(landscapeA.waitForReviewValue(""))
         let metadataReady = NSPredicate(format: "label CONTAINS %@ AND label CONTAINS %@", "PNG", "×")
         expectation(for: metadataReady, evaluatedWith: landscapeA)
         waitForExpectations(timeout: 15)
@@ -83,7 +83,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         let aFrame = landscapeA.frame
         let bFrame = landscapeB.frame
         landscapeA.tap()
-        XCTAssertEqual(landscapeA.value as? String, "Selected")
+        XCTAssertTrue(landscapeA.waitForReviewValue("Selected"))
         XCTAssertTrue(landscapeA.label.contains("recommended to keep"))
         let recommended = XCTAttachment(screenshot: app.screenshot())
         recommended.name = "Recommended and selected"
@@ -91,32 +91,32 @@ final class PhotoFirstReviewTests: XCTestCase {
         add(recommended)
         XCTAssertTrue(confirm.isEnabled)
         landscapeA.tap()
-        XCTAssertNotEqual(landscapeA.value as? String, "Selected")
+        XCTAssertTrue(landscapeA.waitForReviewValue(""))
         XCTAssertFalse(confirm.isEnabled)
         landscapeA.tap()
-        XCTAssertEqual(landscapeA.value as? String, "Selected")
+        XCTAssertTrue(landscapeA.waitForReviewValue("Selected"))
         landscapeB.tap()
-        XCTAssertEqual(landscapeB.value as? String, "Selected")
-        XCTAssertNotEqual(landscapeA.value as? String, "Selected")
+        XCTAssertTrue(landscapeB.waitForReviewValue("Selected"))
+        XCTAssertTrue(landscapeA.waitForReviewValue(""))
         XCTAssertEqual(landscapeA.frame, aFrame)
         XCTAssertEqual(landscapeB.frame, bFrame)
 
         XCTAssertTrue(deleteAll.isEnabled, app.debugDescription)
         deleteAll.tap()
-        XCTAssertEqual(landscapeA.value as? String, "Marked for removal")
+        XCTAssertTrue(landscapeA.waitForReviewValue("Marked for removal"))
         XCTAssertFalse(landscapeA.label.contains("recommended to keep"))
-        XCTAssertEqual(landscapeB.value as? String, "Marked for removal")
+        XCTAssertTrue(landscapeB.waitForReviewValue("Marked for removal"))
         position(confirm, deleteAll)
         let red = XCTAttachment(screenshot: app.screenshot())
         red.name = "Whole group preview"
         red.lifetime = .keepAlways
         add(red)
         deleteAll.tap()
-        XCTAssertEqual(landscapeB.value as? String, "Selected")
+        XCTAssertTrue(landscapeB.waitForReviewValue("Selected"))
         deleteAll.tap()
         landscapeB.tap()
-        XCTAssertEqual(landscapeB.value as? String, "Selected")
-        XCTAssertEqual(deleteAll.value as? String, "Off")
+        XCTAssertTrue(landscapeB.waitForReviewValue("Selected"))
+        XCTAssertTrue(deleteAll.waitForReviewValue("Off"))
 
         let review = app.scrollViews["group-review"]
         func swipe(_ left: Bool) {
@@ -130,13 +130,14 @@ final class PhotoFirstReviewTests: XCTestCase {
         XCTAssertTrue(landscapeA.waitForExistence(timeout: 8))
         XCTAssertFalse(confirm.isEnabled)
         landscapeB.tap()
+        XCTAssertTrue(landscapeB.waitForReviewValue("Selected"))
         confirm.tap()
         XCTAssertTrue(portraitA.waitForExistence(timeout: 8))
         swipe(false)
         XCTAssertTrue(landscapeB.waitForExistence(timeout: 8))
-        XCTAssertEqual(landscapeB.value as? String, "Selected")
+        XCTAssertTrue(landscapeB.waitForReviewValue("Selected"))
         landscapeB.tap()
-        XCTAssertNotEqual(landscapeB.value as? String, "Selected")
+        XCTAssertTrue(landscapeB.waitForReviewValue(""))
         XCTAssertFalse(confirm.isEnabled)
         skip.tap()
         XCTAssertTrue(portraitA.waitForExistence(timeout: 8))
@@ -192,7 +193,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         app.navigationBars["Confirm Cleanup"].buttons["Cancel"].tap()
         portrait.tap()
         XCTAssertTrue(portraitA.waitForExistence(timeout: 8))
-        XCTAssertEqual(portraitA.value as? String, "Marked for removal")
+        XCTAssertTrue(portraitA.waitForReviewValue("Marked for removal"))
         deleteAll.tap()
         skip.tap()
         XCTAssertTrue(app.buttons["review-photo-gallery-long-a.png"].waitForExistence(timeout: 8))
@@ -268,6 +269,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         if !keepChoice.waitForExistence(timeout: 3) { group.tap() }
         XCTAssertTrue(keepChoice.waitForExistence(timeout: 8), app.debugDescription)
         keepChoice.tap()
+        XCTAssertTrue(keepChoice.waitForReviewValue("Selected"))
         app.buttons["review-confirm"].tap()
         // The panorama is the last fixture group. Confirm returns to the overview.
         let batch = app.buttons["review-batch-cleanup"]
@@ -316,6 +318,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         let photo = app.buttons["review-photo-review-detail-a.png"]
         XCTAssertTrue(photo.waitForExistence(timeout: 8))
         photo.tap()
+        XCTAssertTrue(photo.waitForReviewValue("Selected"))
         XCTAssertTrue(app.buttons["review-confirm"].isEnabled)
         let shot = XCTAttachment(screenshot: app.screenshot())
         shot.name = "Similar photos retain manual review"
@@ -364,6 +367,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         let second = app.buttons["review-photo-gallery-landscape-b.png"]
         XCTAssertFalse(first.frame.intersects(second.frame))
         first.tap()
+        XCTAssertTrue(first.waitForReviewValue("Selected"))
         let confirm = app.buttons["review-confirm"]
         XCTAssertTrue(confirm.isHittable && confirm.isEnabled)
         confirm.tap()

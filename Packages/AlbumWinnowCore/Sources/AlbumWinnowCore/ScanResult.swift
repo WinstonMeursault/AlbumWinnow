@@ -16,6 +16,7 @@ public struct DuplicateGroup: Codable, Equatable, Sendable, Identifiable {
     public let preferred: PhotoAsset
     public let duplicates: [DuplicateMember]
     public let preferredDimensions: ImageDimensions?
+    public var evidence: [AssetID: PhotoEvidence]? = nil
 
     public var id: AssetID { preferred.id }
 

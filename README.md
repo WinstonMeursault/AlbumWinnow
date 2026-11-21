@@ -6,7 +6,7 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds dup
 
 ## Project status
 
-AlbumWinnow v1.1.0 adds persistent review decisions, photo locks, and explicit iCloud scan policies. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+AlbumWinnow v1.2.0 adds recommendation evidence, synchronized zoom, and result filters while retaining persistent review decisions, photo locks, and explicit iCloud scan policies. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
 
 The previous formal v1.0.0 release remains available on the [GitHub Releases page](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
 
@@ -33,6 +33,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 ```
 
 Generated test projects stay under `.local`. The expected version is read from the app build settings. These tests do not use physical devices or an iCloud account.
+
+## v1.2 review tools
+
+Open **Review Evidence** in a group for measured recommendation reasons, each member’s actual match to the reference, and source metadata. Unknown sizes, capture dates and bit depths remain unknown. Size estimates describe candidate resources, not immediately released device space.
+
+Double-tap or double-click to zoom, pinch to adjust, and drag to pan while zoomed. **Group Actions** offers **Zoom In**, **Reset Zoom** and independent zoom. Synchronization uses relative image position, not pixel alignment across crops. Visible photos request bounded detail previews up to 2560 pixels; available pixels limit enlargement. Reset, navigation and backgrounding release detail images. Previews never silently authorize iCloud downloads.
+
+**Filter and Sort** supports review status, match category and source, plus stable, capture-date, count and candidate-size ordering. Unknown dates stay last in both directions. Filters preserve confirmed choices; **Confirm Cleanup** includes candidates outside the filter. Entering a group freezes the review queue. Cancelling a supplemental scan preserves saved choices for review but requires a manual rescan before cleanup; reopening does not restart a user-cancelled scan.
 
 ## v1.1 review and cloud policy
 
@@ -63,7 +71,7 @@ Matching and indexing run on device, and locally available photos can be scanned
 
 ## Technical design
 
-`AlbumWinnowCore` is a Swift package shared by the SwiftUI apps. PhotoKit and Foundation provide access to photos and files. BLAKE3 identifies matching file bytes, with streaming reads for folder resources. Bounded ImageIO thumbnails supply pHash and dHash candidates. Pixel checks at multiple resolutions distinguish possible same-image copies from candidates with local differences. Full source dimensions and bit depth are retained for recommendations. SQLite and GRDB store incremental fingerprints, recover damaged cache entries, and discard inactive-source data after the next completed scan. Swift Concurrency limits parallel image preparation. Detail and cleanup previews share a size-weighted queue with gallery thumbnails: up to four small requests, with large or unknown-size Photos previews running alone. Folder previews use safely mapped file data when supported by the provider, avoiding an additional full-file heap buffer. ImageIO limits decoded previews to 1024 pixels. **Settings → Storage → Clear Scan Cache** removes cached fingerprints and compacts the database to release disk space. Photos and source permissions are preserved; the next scan is a cold scan.
+`AlbumWinnowCore` is a Swift package shared by the SwiftUI apps. PhotoKit and Foundation provide access to photos and files. BLAKE3 identifies matching file bytes, with streaming reads for folder resources. Bounded ImageIO thumbnails supply pHash and dHash candidates. Pixel checks at multiple resolutions distinguish possible same-image copies from candidates with local differences. Full source dimensions and bit depth are retained for recommendations. SQLite and GRDB store incremental fingerprints, recover damaged cache entries, and discard inactive-source data after the next completed scan. Swift Concurrency limits parallel image preparation. Detail and cleanup previews share a size-weighted queue with gallery thumbnails: up to four small requests, with large or unknown-size Photos previews running alone. Folder previews use safely mapped file data when supported by the provider, avoiding an additional full-file heap buffer. ImageIO limits ordinary decoded previews to 1024 pixels and visible zoom details to 2560 pixels. **Settings → Storage → Clear Scan Cache** removes cached fingerprints and compacts the database to release disk space. Photos and source permissions are preserved; the next scan is a cold scan.
 
 ## Implementation and validation
 

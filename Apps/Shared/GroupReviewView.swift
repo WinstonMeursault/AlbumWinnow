@@ -18,9 +18,16 @@ struct GroupReviewView: View {
     let group: DuplicateGroup
     let model: ReviewModel
     let isActive: Bool
+    @Binding var zoomed: Bool
     let advance: () -> Void
 
     @ScaledMetric(relativeTo: .caption) private var minimumPreviewWidth: CGFloat = 120
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var sharedZoom = ReviewZoom()
+    @State private var independentZoom: [AssetID: ReviewZoom] = [:]
+    @State private var synchronizedZoom = true
+    @State private var lastZoomedID: AssetID?
+    @State private var showingInformation = false
     @State private var keepDraft = KeepDraft.unchanged
     @State private var deleteAllDraft: Bool?
     @State private var deleteAllUnavailable: String?
@@ -71,16 +78,27 @@ struct GroupReviewView: View {
                         .font(.caption)
                 }
                 Spacer()
+                Button("Review Evidence", systemImage: "info.circle") { showingInformation = true }
+                    .labelStyle(.iconOnly)
+                    .accessibilityIdentifier(isActive ? "review-evidence" : "")
+                    .disabled(!isActive)
                 Menu("Group Actions", systemImage: "ellipsis.circle") {
+                    Button("Zoom In", systemImage: "plus.magnifyingglass", action: zoomIn)
+                        .keyboardShortcut("+", modifiers: .command)
+                    Button("Reset Zoom", systemImage: "arrow.counterclockwise", action: resetZoom)
+                        .keyboardShortcut("0", modifiers: .command)
+                    Toggle("Sync Zoom", isOn: Binding(get: { synchronizedZoom }, set: setSynchronizedZoom))
+                    Divider()
                     Button("Keep Entire Group") { model.setStatus(.kept, for: group); advance() }
                     Button("Undo Group Decision") { model.setStatus(.pending, for: group); resetDraft() }
                 }
                 .labelStyle(.iconOnly)
-                .disabled(!model.canClean)
+                .disabled(!isActive || !model.canClean)
             }
             .padding(.horizontal).padding(.vertical, 6).background(.bar)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { controls }
+        .sheet(isPresented: $showingInformation) { GroupInformationView(model: model, group: group) }
         .task(id: isActive && model.canClean) {
             checkedRemovability = false
             guard isActive, model.canClean else { return }
@@ -99,11 +117,16 @@ struct GroupReviewView: View {
                 checkedRemovability = true
             }
         }
-        .onDisappear { confirmationTask?.cancel() }
+        .onChange(of: group) { resetZoom() }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { resetZoom() } }
+        .onChange(of: model.canClean) { _, allowed in if !allowed { resetZoom() } }
+        .onDisappear { confirmationTask?.cancel(); resetZoom() }
         .onChange(of: isActive) { _, active in
             if !active {
                 confirmationTask?.cancel()
                 resetDraft()
+                resetZoom()
+                synchronizedZoom = true
             }
         }
     }
@@ -194,6 +217,44 @@ struct GroupReviewView: View {
         deleteAllDraft = nil
     }
 
+    private func zoomBinding(for asset: PhotoAsset) -> Binding<ReviewZoom> {
+        Binding(get: { synchronizedZoom ? sharedZoom : independentZoom[asset.id] ?? ReviewZoom() }, set: {
+            if synchronizedZoom { sharedZoom = $0 } else { independentZoom[asset.id] = $0 }
+            lastZoomedID = asset.id
+            if isActive { updateZoomed() }
+        })
+    }
+
+    private func updateZoomed() {
+        zoomed = synchronizedZoom ? sharedZoom.scale > 1.001 : independentZoom.values.contains { $0.scale > 1.001 }
+    }
+
+    private func setSynchronizedZoom(_ enabled: Bool) {
+        if enabled {
+            sharedZoom = lastZoomedID.flatMap { independentZoom[$0] } ?? sharedZoom
+            independentZoom.removeAll()
+        } else {
+            independentZoom = Dictionary(uniqueKeysWithValues: assets.map { ($0.id, sharedZoom) })
+        }
+        synchronizedZoom = enabled
+        if isActive { updateZoomed() }
+    }
+
+    private func zoomIn() {
+        guard isActive, model.canClean else { return }
+        let asset = assets.first { $0.id == lastZoomedID } ?? group.preferred
+        let binding = zoomBinding(for: asset)
+        var next = binding.wrappedValue
+        next.scale = min(4, max(1, next.scale) * 2)
+        binding.wrappedValue = next
+    }
+
+    private func resetZoom() {
+        sharedZoom = ReviewZoom()
+        independentZoom.removeAll()
+        if isActive { zoomed = false }
+    }
+
     private func aspect(_ asset: PhotoAsset) -> CGFloat {
         if let aspect = previews[asset.id]?.aspectRatio { return aspect }
         return group.preferredDimensions.map { CGFloat($0.width) / CGFloat(max(1, $0.height)) } ?? 1
@@ -204,13 +265,15 @@ struct GroupReviewView: View {
         let selected = !deletingAll && keepID == asset.id
         let title = showFilenames ? Text(asset.name) : Text("Photo \(number)")
         let accessibleTitle = recommended ? Text("\(title), recommended to keep") : title
-        return Button {
+        let active = isActive && confirmationTask == nil && model.canClean && !showingInformation
+        let select = {
+            guard active else { return }
             keepDraft = .changed(selected ? nil : asset.id)
             deleteAllDraft = false
-        } label: {
-            PreviewCard(asset: asset, recommended: recommended, selected: selected, deletingAll: deletingAll,
-                        showFilename: showFilenames, isActive: isActive, preview: previews[asset.id])
         }
+        return PreviewCard(asset: asset, recommended: recommended, selected: selected, deletingAll: deletingAll,
+                           showFilename: showFilenames, preview: previews[asset.id],
+                           model: model, zoom: zoomBinding(for: asset), active: active, select: select)
         .overlay(alignment: .topLeading) {
             if model.isLocked(asset) {
                 Label("Locked", systemImage: "lock.fill")
@@ -219,13 +282,29 @@ struct GroupReviewView: View {
             }
         }
         .contextMenu {
+            if asset.id.source == "photos-library" {
+                Button("Download and Rescan This Photo", systemImage: "icloud.and.arrow.down") {
+                    model.downloadAndRescan(asset)
+                }
+                .disabled(!model.canScan)
+            }
             Button(model.isLocked(asset) ? "Unlock Photo" : "Lock Photo", systemImage: model.isLocked(asset) ? "lock.open" : "lock") {
                 model.setLocked(asset, locked: !model.isLocked(asset))
             }
             .disabled(!model.canEditSources)
         }
-        .buttonStyle(.plain)
-        .disabled(!isActive || confirmationTask != nil || !model.canClean)
+        .allowsHitTesting(active)
+        .disabled(!active)
+        .focusable(active)
+        .onKeyPress(.space) { guard active else { return .ignored }; select(); return .handled }
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { select() }
+        .accessibilityAction(named: Text("Zoom or Reset")) {
+            guard active else { return }
+            let binding = zoomBinding(for: asset)
+            binding.wrappedValue = binding.wrappedValue.scale > 1 ? ReviewZoom() : ReviewZoom(scale: 2)
+        }
         .accessibilityLabel(Text("\(accessibleTitle), \(previews[asset.id]?.details ?? String(localized: "Photo details unavailable"))"))
         .accessibilityValue(model.isLocked(asset) ? Text("Locked, must be kept") : deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
         .accessibilityAddTraits(selected ? .isSelected : [])
@@ -316,31 +395,17 @@ private struct PreviewCard: View {
     let selected: Bool
     let deletingAll: Bool
     let showFilename: Bool
-    let isActive: Bool
     let preview: LoadedPreview?
+    let model: ReviewModel
+    let zoom: Binding<ReviewZoom>
+    let active: Bool
+    let select: () -> Void
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 14)
         VStack(alignment: .leading, spacing: 6) {
             ZStack {
-                Group {
-                    if let image = preview?.image {
-                        Image(image, scale: 1, label: Text("Preview"))
-                            .resizable()
-                            .scaledToFit()
-                            .accessibilityIdentifier(isActive ? "preview-\(asset.name)" : "")
-                    } else {
-                        shape.fill(.quaternary)
-                            .overlay {
-                                if preview != nil {
-                                    Label("Preview unavailable", systemImage: "photo.badge.exclamationmark")
-                                        .font(.caption)
-                                } else {
-                                    ProgressView()
-                                }
-                            }
-                    }
-                }
+                ReviewZoomPhoto(asset: asset, model: model, preview: preview, active: active, zoom: zoom, select: select)
                 .clipShape(shape)
                 .overlay {
                     shape.strokeBorder(deletingAll ? .red : selected ? Color.accentColor : .clear, lineWidth: 2)
@@ -354,6 +419,7 @@ private struct PreviewCard: View {
                             .padding(.vertical, 4)
                             .background(Color.accentColor, in: .capsule)
                             .padding(8)
+                            .allowsHitTesting(false)
                     }
                 }
                 .overlay(alignment: .bottomLeading) {
@@ -368,6 +434,7 @@ private struct PreviewCard: View {
                             .background(.regularMaterial, in: .capsule)
                             .padding(8)
                             .accessibilityHidden(true)
+                            .allowsHitTesting(false)
                     }
                 }
             }

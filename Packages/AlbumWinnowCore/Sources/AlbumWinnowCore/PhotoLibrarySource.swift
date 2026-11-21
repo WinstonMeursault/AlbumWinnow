@@ -224,7 +224,7 @@ public struct PhotoLibrarySource: AssetSource {
             id: AssetID(source: "photos-library", item: asset.localIdentifier),
             name: resources.first { $0.type == .photo }?.originalFilename ?? asset.localIdentifier,
             revision: "\(version):\(asset.pixelWidth):\(asset.pixelHeight):\(asset.mediaSubtypes.rawValue):\(resourceSignature)",
-            photoProperties: properties
+            photoProperties: properties, captureDate: asset.creationDate
         )
     }
 

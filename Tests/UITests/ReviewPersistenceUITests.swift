@@ -25,7 +25,7 @@ final class ReviewPersistenceUITests: XCTestCase {
         let a = app.buttons["review-photo-gallery-landscape-a.png"]
         XCTAssertTrue(a.waitForExistence(timeout: 10))
         a.tap()
-        XCTAssertEqual(a.value as? String, "Selected")
+        XCTAssertTrue(a.waitForReviewValue("Selected"))
         XCTAssertTrue(app.buttons["review-confirm"].isEnabled)
         app.buttons["review-confirm"].tap()
         XCTAssertTrue(a.waitForNonExistence(timeout: 10), app.debugDescription)
@@ -45,7 +45,7 @@ final class ReviewPersistenceUITests: XCTestCase {
         b.press(forDuration: 1)
         app.buttons["Lock Photo"].tap()
         XCTAssertTrue(b.waitForExistence(timeout: 5))
-        XCTAssertEqual(b.value as? String, "Locked, must be kept")
+        XCTAssertTrue(b.waitForReviewValue("Locked, must be kept"))
         XCTAssertEqual(a.value as? String, "Selected", "Protection changes must preserve the manual keep choice")
         XCTAssertFalse(app.buttons["review-delete-all"].isEnabled)
         let shot = XCTAttachment(screenshot: app.screenshot())

@@ -2,7 +2,7 @@ import Foundation
 import GRDB
 
 struct ScanCache: Sendable {
-    private static let fingerprintVersion = 4
+    private static let fingerprintVersion = 5
     private let database: DatabaseQueue
 
     init(url: URL) throws {
@@ -67,7 +67,10 @@ struct ScanCache: Sendable {
                         guard let value = try? decoder.decode(ImageFingerprint.self, from: signature),
                               value.fileHash.count == 32, value.meanRGBA.count == 4,
                               value.width > 0, value.height > 0, value.width <= 150_000_000 / value.height,
-                              (1...64).contains(value.bitDepth), value.edgeDetail.isFinite, value.edgeDetail >= 0,
+                              (1...64).contains(value.bitDepth),
+                              value.observedBitDepth.map({ (1...64).contains($0) && $0 == value.bitDepth }) ?? true,
+                              value.captureDate.map({ $0.timeIntervalSince1970.isFinite }) ?? true,
+                              value.edgeDetail.isFinite, value.edgeDetail >= 0,
                               let pixels = try? (sample as NSData).decompressed(using: .lzfse),
                               pixels.length == PreparedImage.comparisonSize * PreparedImage.comparisonSize * 4 else {
                             return nil

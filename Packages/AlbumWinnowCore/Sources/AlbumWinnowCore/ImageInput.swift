@@ -53,6 +53,8 @@ struct ImageMetadata {
     let width: Int
     let height: Int
     let bitDepth: Int
+    let observedBitDepth: Int?
+    let captureDate: Date?
     let orientationOverride: CGImagePropertyOrientation?
 
     init(source: CGImageSource, orientation: CGImagePropertyOrientation?) throws {
@@ -70,9 +72,25 @@ struct ImageMetadata {
         let effective = orientation ?? embeddedOrientation
         self.width = effective.rawValue >= 5 ? height : width
         self.height = effective.rawValue >= 5 ? width : height
-        bitDepth = properties[kCGImagePropertyDepth] as? Int ?? 8
+        observedBitDepth = (properties[kCGImagePropertyDepth] as? Int).flatMap { (1...64).contains($0) ? $0 : nil }
+        bitDepth = observedBitDepth ?? 8
+        captureDate = Self.captureDate(exif: properties[kCGImagePropertyExifDictionary] as? [CFString: Any] ?? [:])
         orientationOverride = orientation.flatMap { $0 == embeddedOrientation ? nil : $0 }
     }
+
+    static func captureDate(exif: [CFString: Any]) -> Date? {
+        guard let date = exif[kCGImagePropertyExifDateTimeOriginal] as? String,
+              let offset = exif[kCGImagePropertyExifOffsetTimeOriginal] as? String,
+              offset.range(of: "^(Z|[+-][0-9]{2}:[0-9]{2})$", options: .regularExpression) != nil else { return nil }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy:MM:dd HH:mm:ssXXXXX"
+        formatter.isLenient = false
+        return formatter.date(from: date + offset)
+    }
+
 }
 
 extension AssetSource {

@@ -30,6 +30,7 @@ struct ReviewPager: View {
 
     @AppStorage(ReviewAnimation.defaultsKey) private var preference = ReviewAnimation.slide.rawValue
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var zoomed = false
     @State private var translation: CGFloat = 0
     @State private var settling = false
     @State private var transitionID = UUID()
@@ -52,7 +53,7 @@ struct ReviewPager: View {
                     background
                     ForEach(neighbors) { group in
                         let relative = group.id == selectedID ? 0 : (group.id == previousID ? -1 : 1)
-                        GroupReviewView(group: group, model: model, isActive: relative == 0) {
+                        GroupReviewView(group: group, model: model, isActive: relative == 0, zoomed: $zoomed) {
                             navigate(forward: true, width: width, index: index)
                         }
                             .frame(width: geometry.size.width, height: geometry.size.height)
@@ -87,7 +88,7 @@ struct ReviewPager: View {
                         .onChanged { update($0.translation, width: width, index: index) }
                         .onEnded {
                             end($0.translation, velocity: $0.velocity.width, cancelled: false, width: width, index: index)
-                        }
+                        }, including: zoomed ? .subviews : .all
                 )
                 .background {
                     ReviewTrackpadSwipe(
@@ -97,6 +98,7 @@ struct ReviewPager: View {
                 }
                 #else
                 .gesture(ReviewSwipe(
+                    enabled: !zoomed,
                     onChange: { update($0, width: width, index: index) },
                     onEnd: { end($0, velocity: $1, cancelled: $2, width: width, index: index) }
                 ))
@@ -106,7 +108,8 @@ struct ReviewPager: View {
                 .onChange(of: geometry.size) { reset() }
             }
         }
-        .onChange(of: selectedID) { reset() }
+        .onChange(of: selectedID) { reset(); zoomed = false }
+        .onChange(of: zoomed) { if zoomed { reset() } }
         .onChange(of: groups) { reset() }
         .onChange(of: preference) { reset() }
         .onChange(of: reduceMotion) { reset() }
@@ -151,13 +154,13 @@ struct ReviewPager: View {
     }
 
     private func update(_ distance: CGSize, width: CGFloat, index: Int) {
-        guard !settling, abs(distance.width) > 1.5 * abs(distance.height) else { return }
+        guard !zoomed, !settling, abs(distance.width) > 1.5 * abs(distance.height) else { return }
         let horizontal = min(width, max(-width, distance.width))
         translation = index == 0 && horizontal > 0 ? horizontal * 0.22 : horizontal
     }
 
     private func end(_ distance: CGSize, velocity: CGFloat, cancelled: Bool, width: CGFloat, index: Int) {
-        guard !settling else { return }
+        guard !zoomed, !settling else { return }
         let horizontal = distance.width
         let horizontalIntent = abs(horizontal) > 1.5 * abs(distance.height)
         let projected = horizontal + velocity * 0.15
@@ -265,6 +268,7 @@ private struct ReviewTrackpadSwipe: NSViewRepresentable {
 }
 #else
 private struct ReviewSwipe: UIGestureRecognizerRepresentable {
+    let enabled: Bool
     let onChange: (CGSize) -> Void
     let onEnd: (CGSize, CGFloat, Bool) -> Void
 
@@ -272,9 +276,14 @@ private struct ReviewSwipe: UIGestureRecognizerRepresentable {
 
     func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let recognizer = UIPanGestureRecognizer()
+        recognizer.isEnabled = enabled
         recognizer.maximumNumberOfTouches = 1
         recognizer.delegate = context.coordinator
         return recognizer
+    }
+
+    func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        recognizer.isEnabled = enabled
     }
 
     func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {

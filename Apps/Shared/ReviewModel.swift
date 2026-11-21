@@ -96,6 +96,7 @@ struct CloudDownloadProgress {
     private var stateStore: ReviewStateStore?
     private var restoreRequested = false
     private var selections: [AssetID: GroupSelection] = [:]
+    private var groupSignatures: [AssetID: String] = [:]
     var errorMessage: String?
     var sourceErrorMessage: String?
 
@@ -138,12 +139,41 @@ struct CloudDownloadProgress {
         }
     }
 
+    var resultQuery: ReviewResultQuery { reviewState.resultQuery ?? ReviewResultQuery() }
+
+    func setResultQuery(_ query: ReviewResultQuery) {
+        guard canEditSources else { return }
+        var state = reviewState
+        state.resultQuery = query
+        _ = saveState(state)
+    }
+
+    func estimatedRemovals(for group: DuplicateGroup) -> Set<AssetID> {
+        if status(for: group) == .kept { return [] }
+        if let selection = selections[group.id] {
+            return Set(group.assets.filter { selection.selected.contains($0.id) && !isProtected($0) }.map(\.id))
+        }
+        return Set(group.assets.filter { $0.id != group.preferred.id && !isProtected($0) }.map(\.id))
+    }
+
+    var visibleGroups: [DuplicateGroup] {
+        let groups = result?.groups ?? []
+        let statuses = Dictionary(uniqueKeysWithValues: groups.map { ($0.id, status(for: $0)) })
+        let removals = Dictionary(uniqueKeysWithValues: groups.map { ($0.id, estimatedRemovals(for: $0)) })
+        return resultQuery.apply(to: groups, statuses: statuses, removals: removals)
+    }
+
+    var hiddenCandidateCount: Int {
+        let visible = Set(visibleGroups.map(\.id))
+        return cleanupGroups.filter { !visible.contains($0.id) }.reduce(0) { $0 + $1.pairs.count }
+    }
+
     func selection(for groupID: AssetID) -> GroupSelection {
         selections[groupID] ?? GroupSelection()
     }
 
     func confirmSelection(in group: DuplicateGroup, keepID: AssetID?, deleteAll: Bool) async -> Bool {
-        guard canClean, !Task.isCancelled else { return false }
+        guard canClean, !Task.isCancelled, result?.groups.contains(group) == true else { return false }
         let assets = [group.preferred] + group.duplicates.map(\.asset)
         if deleteAll {
             let reason = await deleteAllUnavailableReason(for: assets)
@@ -191,7 +221,7 @@ struct CloudDownloadProgress {
             reviewState = saved
             stateStore = store
             protectionAvailable = true
-            restoreRequested = !saved.decisions.isEmpty || saved.anchor != nil
+            restoreRequested = (!saved.decisions.isEmpty || saved.anchor != nil) && saved.scanCancelledByUser != true
         } catch {
             errorMessage = "Protection could not be loaded. Cleanup is disabled. \(error.localizedDescription)"
         }
@@ -317,7 +347,12 @@ struct CloudDownloadProgress {
     func downloadPendingPhotos() {
         let pending = pendingDownloadIDs
         guard !pending.isEmpty, photosEnabled, allowsPhotos else { return }
-        startScan(downloads: pending)
+        startScan(downloads: pending, allowsDownloads: false)
+    }
+
+    func downloadAndRescan(_ asset: PhotoAsset) {
+        guard asset.id.source == photoSource.id, photosEnabled, allowsPhotos else { return }
+        startScan(downloads: [asset.id], allowsDownloads: false)
     }
 
     private var pendingDownloadIDs: Set<AssetID> {
@@ -329,6 +364,11 @@ struct CloudDownloadProgress {
     func startScan(downloads: Set<AssetID>, allowsDownloads: Bool? = nil) {
         let allowsDownloads = allowsDownloads ?? !skipCloudPhotos
         guard canScan, let engine else { return }
+        if reviewState.scanCancelledByUser == true {
+            var state = reviewState
+            state.scanCancelledByUser = false
+            _ = saveState(state)
+        }
         let (downloadUpdates, downloadContinuation) = AsyncStream.makeStream(of: PhotoLibrarySource.DownloadUpdate.self)
         let selectedSources = sources.map { source -> any AssetSource in
             guard source.id == photoSource.id else { return source }
@@ -351,6 +391,8 @@ struct CloudDownloadProgress {
         if downloads.isEmpty {
             result = nil
             resultsStale = false
+        } else if result != nil {
+            resultsStale = true
         }
         let (updates, continuation) = AsyncStream.makeStream(of: ScanProgress.self, bufferingPolicy: .bufferingNewest(1))
         let (accountUpdates, accountContinuation) = AsyncStream.makeStream(of: ScanAccounting.self, bufferingPolicy: .bufferingNewest(1))
@@ -388,6 +430,7 @@ struct CloudDownloadProgress {
             do {
                 let next = try await engine.scan(selectedSources, refreshing: downloads, progress: { continuation.yield($0) }, accounting: { accountContinuation.yield($0) })
                 try Task.checkCancellation()
+                groupSignatures = Dictionary(uniqueKeysWithValues: try next.groups.map { ($0.id, try $0.reviewSignature()) })
                 result = next
                 restoreDecisions(next.groups)
                 downloadIssues = next.issues
@@ -396,7 +439,8 @@ struct CloudDownloadProgress {
                 clearInterruptedScan()
             } catch is CancellationError {
                 scanCancelled = true
-                // A user cancellation keeps the previous scan issues available for retry.
+                // Saved plans remain visible, but a cancelled supplement cannot validate old results.
+                if let result { restoreDecisions(result.groups) }
             } catch {
                 clearInterruptedScan()
                 resultsStale = result != nil
@@ -415,6 +459,9 @@ struct CloudDownloadProgress {
     }
 
     func cancelScan() {
+        var state = reviewState
+        state.scanCancelledByUser = true
+        if protectionAvailable { _ = saveState(state) }
         restoreRequested = false
         clearInterruptedScan()
         scanTask?.cancel()
@@ -447,7 +494,7 @@ struct CloudDownloadProgress {
             var state = reviewState
             for group in result?.groups ?? [] {
                 let ids = Set(([group.preferred] + group.duplicates.map(\.asset)).map(\.id))
-                if !ids.isDisjoint(with: moved), let signature = try? group.reviewSignature() {
+                if !ids.isDisjoint(with: moved), let signature = reviewSignature(for: group) {
                     state.decisions.removeValue(forKey: signature)
                 }
             }
@@ -517,6 +564,7 @@ struct CloudDownloadProgress {
         if result != nil || running { resultsStale = true }
         selections.removeAll()
         result = nil
+        groupSignatures.removeAll()
         Task { await galleryThumbnails.clear() }
         scanTask?.cancel()
     }
@@ -542,8 +590,12 @@ struct CloudDownloadProgress {
     }
 
 
+    private func reviewSignature(for group: DuplicateGroup) -> String? {
+        groupSignatures[group.id] ?? (try? group.reviewSignature())
+    }
+
     func status(for group: DuplicateGroup) -> ReviewStatus {
-        guard let signature = try? group.reviewSignature() else { return .pending }
+        guard let signature = reviewSignature(for: group) else { return .pending }
         guard let decision = reviewState.decisions[signature], decision.invalidated != true else { return .pending }
         return decision.status
     }
@@ -586,7 +638,7 @@ struct CloudDownloadProgress {
         if locked, let groups = result?.groups {
             for group in groups {
                 let assets = [group.preferred] + group.duplicates.map(\.asset)
-                guard let signature = try? group.reviewSignature(), var decision = state.decisions[signature] else { continue }
+                guard let signature = reviewSignature(for: group), var decision = state.decisions[signature] else { continue }
                 if decision.deleteAll, assets.contains(where: { !nextProtection.validateForReview($0) }) {
                     decision = ReviewDecision(status: .pending)
                 } else {
@@ -601,7 +653,7 @@ struct CloudDownloadProgress {
     }
 
     func setStatus(_ status: ReviewStatus, for group: DuplicateGroup) {
-        guard canClean, let signature = try? group.reviewSignature() else { return }
+        guard canClean, let signature = reviewSignature(for: group) else { return }
         var state = reviewState
         var decision = state.decisions[signature].flatMap { $0.invalidated == true ? nil : $0 } ?? ReviewDecision(status: status)
         decision.status = status
@@ -621,7 +673,7 @@ struct CloudDownloadProgress {
     }
 
     func rememberPosition(_ group: DuplicateGroup) {
-        guard !cleaning, protectionAvailable, let signature = try? group.reviewSignature(),
+        guard !cleaning, protectionAvailable, let signature = reviewSignature(for: group),
               signature != reviewState.anchor else { return }
         var state = reviewState
         state.anchor = signature
@@ -631,7 +683,7 @@ struct CloudDownloadProgress {
 
     var resumeGroup: DuplicateGroup? {
         let groups = result?.groups ?? []
-        if let anchor = groups.first(where: { (try? $0.reviewSignature()) == reviewState.anchor && status(for: $0) != .kept }) {
+        if let anchor = groups.first(where: { reviewSignature(for: $0) == reviewState.anchor && status(for: $0) != .kept }) {
             return anchor
         }
         let pending = groups.enumerated().filter { status(for: $0.element) == .pending || status(for: $0.element) == .deferred }
@@ -641,7 +693,7 @@ struct CloudDownloadProgress {
     private func restoreDecisions(_ groups: [DuplicateGroup]) {
         selections.removeAll()
         guard protectionAvailable else { return }
-        let signatures = Set(groups.compactMap { try? $0.reviewSignature() })
+        let signatures = Set(groups.compactMap { reviewSignature(for: $0) })
         let currentIDs = Set(groups.flatMap { [$0.preferred.id] + $0.duplicates.map(\.id) })
         var state = reviewState
         for (signature, decision) in state.decisions where !signatures.contains(signature) && decision.invalidated != true {
@@ -654,7 +706,7 @@ struct CloudDownloadProgress {
             reviewNotice = "Photos or group evidence changed. Affected decisions need review again; locks remain protected."
         }
         for group in groups {
-            guard let signature = try? group.reviewSignature(), let decision = reviewState.decisions[signature],
+            guard let signature = reviewSignature(for: group), let decision = reviewState.decisions[signature],
                   decision.invalidated != true else { continue }
             let assets = [group.preferred] + group.duplicates.map(\.asset)
             let ids = Set(assets.map(\.id))

@@ -70,6 +70,9 @@ final class ReviewPersistenceTests: XCTestCase {
         await waitUntil { !reopened.running }
         XCTAssertEqual(reopened.selectedCount, 0, "New members invalidate old deletion decisions")
         XCTAssertNotNil(reopened.reviewNotice)
+        let staleConfirmed = await reopened.confirmSelection(in: changed, keepID: changed.preferred.id, deleteAll: false)
+        XCTAssertFalse(staleConfirmed, "A stale review view must not confirm a changed group")
+        XCTAssertEqual(reopened.selectedCount, 0)
         XCTAssertTrue(reopened.isLocked(locked))
         try FileManager.default.removeItem(at: folder.appending(path: "d.png"))
         reopened.scan()
