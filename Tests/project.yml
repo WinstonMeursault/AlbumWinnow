@@ -1,0 +1,62 @@
+name: AppAcceptance
+options:
+  deploymentTarget:
+    iOS: '26.0'
+settings:
+  GENERATE_INFOPLIST_FILE: YES
+  SWIFT_VERSION: '6.0'
+  MARKETING_VERSION: ${ALBUMWINNOW_VERSION}
+  CURRENT_PROJECT_VERSION: 1
+packages:
+  AlbumWinnowCore:
+    path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowCore
+targets:
+  AlbumWinnowAcceptance:
+    type: application
+    platform: iOS
+    sources:
+      - path: ${ALBUMWINNOW_ROOT}/Apps/Shared
+        excludes: [AlbumWinnowApp.swift]
+      - ${ALBUMWINNOW_ROOT}/Tests/Host
+      - path: ${ALBUMWINNOW_ROOT}/LICENSE
+        buildPhase: resources
+      - path: ${ALBUMWINNOW_ROOT}/THIRD-PARTY-NOTICES.txt
+        buildPhase: resources
+      - path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowCore/Tests/AlbumWinnowCoreTests/Fixtures
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: AlbumWinnowCore
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.acceptance
+      TARGETED_DEVICE_FAMILY: '1,2'
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Scan simulator test assets.
+  AppModelTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - ${ALBUMWINNOW_ROOT}/Tests/AppTests
+    dependencies:
+      - target: AlbumWinnowAcceptance
+      - package: AlbumWinnowCore
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.acceptance.model
+  AppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: ["${ALBUMWINNOW_ROOT}/Tests/UITests"]
+    dependencies:
+      - target: AlbumWinnowAcceptance
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.acceptance.ui
+      TEST_TARGET_NAME: AlbumWinnowAcceptance
+schemes:
+  AppAcceptance:
+    build:
+      targets:
+        AlbumWinnowAcceptance: all
+        AppModelTests: [test]
+        AppUITests: [test]
+    test:
+      targets: [AppModelTests, AppUITests]

@@ -1,0 +1,24 @@
+{
+  "originHash" : "01449eccf6baa0a3b1c4432a17b018187885a20153be2a040b08be901b8bf603",
+  "pins" : [
+    {
+      "identity" : "blake3-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JoshBashed/blake3-swift.git",
+      "state" : {
+        "revision" : "8f313fd61f38cbb36f2f4438f6ae5ee97c5791e8",
+        "version" : "0.2.2"
+      }
+    },
+    {
+      "identity" : "grdb.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/groue/GRDB.swift.git",
+      "state" : {
+        "revision" : "92a554cd0d5e8d67cb18993c6054e73fe42c066c",
+        "version" : "7.12.0"
+      }
+    }
+  ],
+  "version" : 3
+}
