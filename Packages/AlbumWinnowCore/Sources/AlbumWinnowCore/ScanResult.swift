@@ -16,13 +16,16 @@ public struct DuplicateGroup: Codable, Equatable, Sendable, Identifiable {
     public let preferred: PhotoAsset
     public let duplicates: [DuplicateMember]
     public let preferredDimensions: ImageDimensions?
+    public var edges: [MatchEdge]? = nil
+    public var comparisonSides: ComparisonSides? = nil
+    public var recommendedID: AssetID? = nil
     public var evidence: [AssetID: PhotoEvidence]? = nil
 
     public var id: AssetID { preferred.id }
 
     public var match: DuplicateMatch {
-        if duplicates.contains(where: { $0.match == .similarPhoto }) { return .similarPhoto }
-        if duplicates.contains(where: { $0.match == .visualDuplicate }) { return .visualDuplicate }
+        if edges?.contains(where: { $0.match == .similarPhoto }) == true || duplicates.contains(where: { $0.match == .similarPhoto }) { return .similarPhoto }
+        if edges?.contains(where: { $0.match == .visualDuplicate }) == true || duplicates.contains(where: { $0.match == .visualDuplicate }) { return .visualDuplicate }
         return .exactDuplicate
     }
 }

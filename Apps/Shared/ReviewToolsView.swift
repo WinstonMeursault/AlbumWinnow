@@ -80,6 +80,10 @@ struct GroupInformationView: View {
                 Section("Why These Photos Are Grouped") {
                     Text(group.match.title).font(.headline)
                     Text(group.match.explanation)
+                    if group.comparisonSides != nil {
+                        Text("Only cross-side edges are evidence. Photos on the same side are not assumed identical. Choosing one photo may retain additional members without a verified match to a retained photo.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                     Text("The summary uses the most cautious category. Each member below records its own match to the reference photo, not to every other member.")
                         .font(.caption).foregroundStyle(.secondary)
                     ForEach(Array(group.duplicates.enumerated()), id: \.element.id) { index, member in
@@ -104,6 +108,7 @@ struct GroupInformationView: View {
                             let date = asset.captureDate ?? evidence?.captureDate
                             Text(date.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? String(localized: "Capture date unknown"))
                             if model.isLocked(asset) { Label("Locked", systemImage: "lock.fill") }
+                            if model.isReadOnly(asset) { Label("Read-only Source", systemImage: "hand.raised.fill") }
                         }
                         .font(.subheadline)
                     }
@@ -129,8 +134,9 @@ struct GroupInformationView: View {
     }
 
     private func reason(_ reason: RecommendationReason) -> String {
-        let evidence = group.evidence?[group.preferred.id]
+        let evidence = group.evidence?[group.recommendation.id]
         switch reason {
+        case .sourcePreference: return String(localized: "Quality-ranking signals are tied; the configured source preference is used.")
         case .associatedResources: return String(localized: "Associated resource flags are present. Cleanup protection applies.")
         case .higherResolution:
             guard let evidence else { return String(localized: "Resolution unknown") }

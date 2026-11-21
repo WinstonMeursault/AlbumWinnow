@@ -20,12 +20,14 @@ public struct PhotoLibrarySource: AssetSource {
     }
 
     public let id = "photos-library"
+    public let scope: PhotoScope
     private let allowsDownloads: Bool
     public func skipsCloudAsset(_ id: AssetID) -> Bool { !permitsDownload(for: id) }
     private let downloads: Set<AssetID>
     private let downloadUpdate: @Sendable (DownloadUpdate) -> Void
 
-    public init(downloads: Set<AssetID> = [], allowsDownloads: Bool = false, downloadUpdate: @escaping @Sendable (DownloadUpdate) -> Void = { _ in }) {
+    public init(scope: PhotoScope = PhotoScope(), downloads: Set<AssetID> = [], allowsDownloads: Bool = false, downloadUpdate: @escaping @Sendable (DownloadUpdate) -> Void = { _ in }) {
+        self.scope = scope
         self.allowsDownloads = allowsDownloads
         self.downloads = downloads
         self.downloadUpdate = downloadUpdate
@@ -40,17 +42,50 @@ public struct PhotoLibrarySource: AssetSource {
     }
 
     public func snapshot() async throws -> AssetSnapshot {
+        if let dates = scope.dates { _ = try dates.contains(nil) }
         try checkAuthorization()
-        let fetch = PHAsset.fetchAssets(with: .image, options: nil)
+        var fetches: [PHFetchResult<PHAsset>] = []
+        let options = PHFetchOptions()
+        options.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
+        if let albums = scope.albums {
+            guard Self.authorizationStatus() == .authorized else { throw ScopeError.unavailableAlbum }
+            let collections = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: Array(albums.keys), options: nil)
+            guard collections.count == albums.count else { throw ScopeError.unavailableAlbum }
+            for index in 0..<collections.count {
+                let collection = collections.object(at: index)
+                guard (collection.localizedTitle ?? "") == albums[collection.localIdentifier] else { throw ScopeError.unavailableAlbum }
+                fetches.append(PHAsset.fetchAssets(in: collection, options: options))
+            }
+        } else {
+            fetches = [PHAsset.fetchAssets(with: .image, options: nil)]
+        }
         var assets = [PhotoAsset]()
-        assets.reserveCapacity(fetch.count)
-        for index in 0..<fetch.count {
-            try Task.checkCancellation()
-            assets.append(Self.describe(fetch.object(at: index)))
+        var seen = Set<AssetID>()
+        for fetch in fetches {
+            for index in 0..<fetch.count {
+                try Task.checkCancellation()
+                let asset = Self.describe(fetch.object(at: index))
+                guard seen.insert(asset.id).inserted else { continue }
+                if let dates = scope.dates, try !dates.contains(asset.captureDate) { continue }
+                assets.append(asset)
+            }
         }
         try checkAuthorization()
         downloadUpdate(.enumerated(assets.filter { permitsDownload(for: $0.id) }.map(\.id)))
         return AssetSnapshot(assets: assets)
+    }
+
+    public static func albums() throws -> [String: String] {
+        guard authorizationStatus() == .authorized else { throw ScopeError.unavailableAlbum }
+        var albums: [String: String] = [:]
+        for type in [PHAssetCollectionType.album, .smartAlbum] {
+            let fetch = PHAssetCollection.fetchAssetCollections(with: type, subtype: .any, options: nil)
+            for index in 0..<fetch.count {
+                let album = fetch.object(at: index)
+                albums[album.localIdentifier] = album.localizedTitle ?? ""
+            }
+        }
+        return albums
     }
 
     public func imageData(for asset: PhotoAsset) async throws -> Data {

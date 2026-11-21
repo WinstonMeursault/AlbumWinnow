@@ -6,7 +6,7 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds dup
 
 ## Project status
 
-AlbumWinnow v1.2.0 adds recommendation evidence, synchronized zoom, and result filters while retaining persistent review decisions, photo locks, and explicit iCloud scan policies. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+AlbumWinnow v1.3.0 adds album/date scopes, cross-source comparison, quality-tied source preferences and read-only source protection. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
 
 The previous formal v1.0.0 release remains available on the [GitHub Releases page](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
 
@@ -32,7 +32,15 @@ The app regression suite covers review and cleanup layouts, large text, backgrou
 Tests/run-app-tests.sh SIMULATOR_UDID
 ```
 
-Generated test projects stay under `.local`. The expected version is read from the app build settings. These tests do not use physical devices or an iCloud account.
+Generated test projects stay under `.local`. The expected version is read from the app build settings. These tests do not use physical devices or an iCloud account. The optional Photos album-scope test requires `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` on a dedicated simulator; it requests simulated Photos access and leaves generated photo/album fixtures there. Default regressions skip that test.
+
+## v1.3 sources and scope
+
+**Settings → Comparison Scope** selects all accessible Photos or an album union, intersected with an optional capture-date range. Civil days use the current calendar and time zone when applied; exact bounds survive recovery. Unknown capture dates are excluded unless explicitly included. Missing, renamed or inaccessible albums require scope review and never expand the scan to the whole library. Limited Photos permission cannot enumerate user albums.
+
+**Compare Two Sides Only** scans the two selected sources and records only cross-source matches. Same-side members are not assumed identical through a shared neighbor. A manual keep choice can leave extra members retained when no verified match supports their removal. **Confirm Cleanup** shows the actual retained photos and removal pairs.
+
+**Source Policy** can prefer Photos or another source only when the existing quality-ranking signals tie. Recommendation changes preserve valid manual choices. Read-only sources participate in comparison but are protected at deletion, including overlapping folder paths and known hardlink identities. Enabling protection cancels affected pending removals immediately; disabling it does not reinstate them. Source protection survives scan-cache clearing, source removal and review-progress resets. If a protected folder is inaccessible, cleanup fails closed. Folder hardlinks can be retained conservatively while any folder is read-only.
 
 ## v1.2 review tools
 

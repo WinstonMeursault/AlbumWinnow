@@ -37,12 +37,19 @@ public actor ScanEngine {
     public func scan(
         _ sources: [any AssetSource],
         refreshing: Set<AssetID> = [],
+        comparisonSides: ComparisonSides? = nil,
+        preferredSource: String? = nil,
         progress: @Sendable (ScanProgress) -> Void = { _ in },
         accounting: @Sendable (ScanAccounting) -> Void = { _ in }
     ) async throws -> ScanResult {
         guard !scanning else { throw ScanError.scanInProgress }
+        let allSourceIDs = sources.map(\.id)
+        guard Set(allSourceIDs).count == allSourceIDs.count else { throw ScanError.duplicateSourceID }
+        try comparisonSides?.validate(sources: Set(allSourceIDs))
+        let sources = sources.filter { source in
+            comparisonSides.map { source.id == $0.first || source.id == $0.second } ?? true
+        }
         let sourceIDs = sources.map(\.id)
-        guard Set(sourceIDs).count == sourceIDs.count else { throw ScanError.duplicateSourceID }
         scanning = true
         defer { scanning = false }
 
@@ -118,7 +125,17 @@ public actor ScanEngine {
         }
 
         try Task.checkCancellation()
-        let (groups, comparisonIssues) = try await findGroups(indexed, sources: sources, progress: progress)
+        var (groups, comparisonIssues) = try await findGroups(indexed, sources: sources, sides: comparisonSides, progress: progress)
+        if let preferredSource {
+            let byID = Dictionary(uniqueKeysWithValues: indexed.map { ($0.asset.id, $0) })
+            for index in groups.indices {
+                let reference = byID[groups[index].preferred.id]!
+                groups[index].recommendedID = groups[index].assets.first { asset in
+                    guard asset.id.source == preferredSource, let other = byID[asset.id] else { return false }
+                    return Self.qualityTied(reference, other)
+                }?.id
+            }
+        }
         issues.append(contentsOf: comparisonIssues)
         skippedIDs = Set(issues.filter { $0.reason == .cloudSkipped }.map(\.id))
         failedIDs = Set(issues.filter { $0.reason != .cloudSkipped }.map(\.id)).subtracting(skippedIDs)
@@ -184,7 +201,7 @@ public actor ScanEngine {
     }
 
     private func findGroups(
-        _ assets: [IndexedAsset], sources: [any AssetSource], progress: (ScanProgress) -> Void
+        _ assets: [IndexedAsset], sources: [any AssetSource], sides: ComparisonSides?, progress: (ScanProgress) -> Void
     ) async throws -> ([DuplicateGroup], [AssetIssue]) {
         let byID = Dictionary(uniqueKeysWithValues: sources.map { ($0.id, $0) })
         var issues = [AssetIssue]()
@@ -206,6 +223,7 @@ public actor ScanEngine {
             }
             return Self.precedes(lhs.asset.id, rhs.asset.id)
         }
+        if let sides { return try await findCrossGroups(ordered, sources: byID, sides: sides, progress: progress) }
         let index = CandidateIndex(ordered.map(\.fingerprint))
         var assigned = Set<Int>()
         var groups = [DuplicateGroup]()
@@ -272,6 +290,105 @@ public actor ScanEngine {
                 group.evidence = evidence
                 groups.append(group)
             }
+        }
+        progress(.comparing(completed: ordered.count, total: ordered.count))
+        return (groups, issues)
+    }
+
+    private static func qualityTied(_ a: IndexedAsset, _ b: IndexedAsset) -> Bool {
+        (a.asset.photoProperties?.hasAssociatedResources == true) == (b.asset.photoProperties?.hasAssociatedResources == true) &&
+        a.fingerprint.width * a.fingerprint.height == b.fingerprint.width * b.fingerprint.height &&
+        a.fingerprint.bitDepth == b.fingerprint.bitDepth && a.fingerprint.hasWideColor == b.fingerprint.hasWideColor &&
+        a.fingerprint.edgeDetail == b.fingerprint.edgeDetail
+    }
+
+    private func findCrossGroups(_ ordered: [IndexedAsset], sources: [String: any AssetSource],
+                                 sides: ComparisonSides, progress: (ScanProgress) -> Void) async throws -> ([DuplicateGroup], [AssetIssue]) {
+        // Same-byte copies on a side share one candidate lookup, with explicit cross-side star edges.
+        var cohorts: [String: [Data: [Int]]] = [:]
+        for (index, item) in ordered.enumerated() where item.asset.id.source == sides.first || item.asset.id.source == sides.second {
+            cohorts[item.asset.id.source, default: [:]][item.fingerprint.fileHash, default: []].append(index)
+        }
+        let representatives = cohorts.values.flatMap { $0.values.compactMap(\.first) }.sorted()
+        let index = CandidateIndex(representatives.map { ordered[$0].fingerprint })
+        var edges: [MatchEdge] = []
+        var adjacency: [Int: Set<Int>] = [:]
+        var edgeIndices: [Int: Set<Int>] = [:]
+        var issues: [AssetIssue] = []
+        func appendEdge(_ a: Int, _ b: Int, match: DuplicateMatch) throws {
+            let left = ordered[a].asset, right = ordered[b].asset
+            if let first = sources[left.id.source] as? FileSystemSource, let second = sources[right.id.source] as? FileSystemSource,
+               try FileSystemSource.referToSameFile(first.currentURL(for: left), second.currentURL(for: right)) { return }
+            edgeIndices[a, default: []].insert(edges.count)
+            edgeIndices[b, default: []].insert(edges.count)
+            edges.append(MatchEdge(first: left.id, second: right.id, match: match))
+            adjacency[a, default: []].insert(b)
+            adjacency[b, default: []].insert(a)
+        }
+        for (lookup, position) in representatives.enumerated() {
+            let left = ordered[position]
+            try Task.checkCancellation()
+            if lookup.isMultiple(of: 32) { progress(.comparing(completed: lookup, total: representatives.count)) }
+            for matchIndex in index.candidates(for: left.fingerprint, after: lookup) {
+                let candidate = representatives[matchIndex]
+                let right = ordered[candidate]
+                guard sides.permits(left.asset.id, right.asset.id) else { continue }
+                try Task.checkCancellation()
+                guard let first = sources[left.asset.id.source], let second = sources[right.asset.id.source] else { continue }
+                do {
+                    let match: DuplicateMatch
+                    if left.fingerprint.fileHash == right.fingerprint.fileHash { match = .exactDuplicate }
+                    else {
+                        guard DuplicateDetector.isVisualCandidate(left.fingerprint, right.fingerprint),
+                              try DuplicateDetector.verifyPixels(cache.sample(for: left.asset), cache.sample(for: right.asset)) else { continue }
+                        match = try await DuplicateDetector.compare(left.asset, source: first, right.asset, source: second)
+                    }
+                    guard match != .distinct else { continue }
+                    try appendEdge(position, candidate, match: match)
+                    for duplicate in cohorts[left.asset.id.source]?[left.fingerprint.fileHash] ?? [] where duplicate != position {
+                        try Task.checkCancellation()
+                        try appendEdge(duplicate, candidate, match: match)
+                    }
+                    for duplicate in cohorts[right.asset.id.source]?[right.fingerprint.fileHash] ?? [] where duplicate != candidate {
+                        try Task.checkCancellation()
+                        try appendEdge(position, duplicate, match: match)
+                    }
+                } catch is CancellationError { throw CancellationError() }
+                catch {
+                    let context = error as? ComparisonReadError
+                    let id = context?.assetID ?? right.asset.id
+                    issues.append(Self.issue(for: id, error: context?.underlying ?? error, source: sources[id.source] ?? second))
+                }
+            }
+        }
+        var seen = Set<Int>()
+        var groups: [DuplicateGroup] = []
+        for root in ordered.indices where adjacency[root] != nil && !seen.contains(root) {
+            var members = [root]
+            seen.insert(root)
+            var next = 0
+            var componentEdges = Set<Int>()
+            while next < members.count {
+                componentEdges.formUnion(edgeIndices[members[next]] ?? [])
+                for member in (adjacency[members[next]] ?? []).sorted() where seen.insert(member).inserted { members.append(member) }
+                next += 1
+            }
+            members.sort()
+            let reference = ordered[root]
+            let actual = componentEdges.sorted().map { edges[$0] }
+            let direct = Dictionary(uniqueKeysWithValues: actual.compactMap { edge -> (AssetID, DuplicateMatch)? in
+                if edge.first == reference.asset.id { return (edge.second, edge.match) }
+                if edge.second == reference.asset.id { return (edge.first, edge.match) }
+                return nil
+            })
+            var group = DuplicateGroup(preferred: reference.asset, duplicates: members.filter { $0 != root }.map {
+                let asset = ordered[$0].asset
+                return DuplicateMember(asset: asset, match: direct[asset.id] ?? .distinct)
+            }, preferredDimensions: ImageDimensions(width: reference.fingerprint.width, height: reference.fingerprint.height))
+            group.edges = actual
+            group.comparisonSides = sides
+            group.evidence = Dictionary(uniqueKeysWithValues: members.map { (ordered[$0].asset.id, ordered[$0].evidence) })
+            groups.append(group)
         }
         progress(.comparing(completed: ordered.count, total: ordered.count))
         return (groups, issues)

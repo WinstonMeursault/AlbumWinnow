@@ -77,6 +77,10 @@ struct GroupReviewView: View {
                     Text("\(assets.count - selection.selected.count) kept · \(selection.selected.count) pending cleanup")
                         .font(.caption)
                 }
+                if group.comparisonSides != nil {
+                    Text("Cross-side evidence only; unmatched members remain kept.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Spacer()
                 Button("Review Evidence", systemImage: "info.circle") { showingInformation = true }
                     .labelStyle(.iconOnly)
@@ -87,7 +91,7 @@ struct GroupReviewView: View {
                         .keyboardShortcut("+", modifiers: .command)
                     Button("Reset Zoom", systemImage: "arrow.counterclockwise", action: resetZoom)
                         .keyboardShortcut("0", modifiers: .command)
-                    Toggle("Sync Zoom", isOn: Binding(get: { synchronizedZoom }, set: setSynchronizedZoom))
+                    Toggle("Sync Zoom", isOn: Binding(get: { synchronizedZoom }, set: { setSynchronizedZoom($0) }))
                     Divider()
                     Button("Keep Entire Group") { model.setStatus(.kept, for: group); advance() }
                     Button("Undo Group Decision") { model.setStatus(.pending, for: group); resetDraft() }
@@ -107,7 +111,7 @@ struct GroupReviewView: View {
             deleteAllUnavailable = reason
             checkedRemovability = true
         }
-        .onChange(of: model.reviewState.locked) {
+        .onChange(of: Set(assets.filter { model.isProtected($0) }.map(\.id))) {
             checkedRemovability = false
             deleteAllDraft = false
             confirmationTask?.cancel()
@@ -261,7 +265,7 @@ struct GroupReviewView: View {
     }
 
     private func card(_ asset: PhotoAsset, number: Int) -> some View {
-        let recommended = !deletingAll && asset.id == group.preferred.id
+        let recommended = !deletingAll && asset.id == group.recommendation.id
         let selected = !deletingAll && keepID == asset.id
         let title = showFilenames ? Text(asset.name) : Text("Photo \(number)")
         let accessibleTitle = recommended ? Text("\(title), recommended to keep") : title
@@ -275,8 +279,8 @@ struct GroupReviewView: View {
                            showFilename: showFilenames, preview: previews[asset.id],
                            model: model, zoom: zoomBinding(for: asset), active: active, select: select)
         .overlay(alignment: .topLeading) {
-            if model.isLocked(asset) {
-                Label("Locked", systemImage: "lock.fill")
+            if model.isLocked(asset) || model.isReadOnly(asset) {
+                Label(model.isLocked(asset) ? "Locked" : "Read-only Source", systemImage: model.isLocked(asset) ? "lock.fill" : "hand.raised.fill")
                     .font(.caption).padding(8).background(.regularMaterial, in: .capsule).padding(8)
                     .allowsHitTesting(false)
             }
@@ -306,7 +310,7 @@ struct GroupReviewView: View {
             binding.wrappedValue = binding.wrappedValue.scale > 1 ? ReviewZoom() : ReviewZoom(scale: 2)
         }
         .accessibilityLabel(Text("\(accessibleTitle), \(previews[asset.id]?.details ?? String(localized: "Photo details unavailable"))"))
-        .accessibilityValue(model.isLocked(asset) ? Text("Locked, must be kept") : deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
+        .accessibilityValue(model.isLocked(asset) ? Text("Locked, must be kept") : model.isReadOnly(asset) ? Text("Read-only, must be kept") : deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier(isActive ? "review-photo-\(asset.name)" : "")
         .task(id: asset) {

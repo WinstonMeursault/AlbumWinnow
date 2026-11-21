@@ -16,7 +16,7 @@ public struct PhotoEvidence: Codable, Equatable, Sendable {
 }
 
 public enum RecommendationReason: String, Codable, Sendable {
-    case associatedResources, higherResolution, higherBitDepth, wideColor, edgeContrast, noQualityAdvantage
+    case sourcePreference, associatedResources, higherResolution, higherBitDepth, wideColor, edgeContrast, noQualityAdvantage
 }
 
 public struct SizeEstimate: Equatable, Sendable {
@@ -50,8 +50,9 @@ public extension DuplicateGroup {
     }
 
     var recommendationReasons: [RecommendationReason] {
-        let others = duplicates.map(\.asset)
-        var reasons: [RecommendationReason] = []
+        let preferred = recommendation
+        let others = assets.filter { $0.id != preferred.id }
+        var reasons: [RecommendationReason] = recommendedID == nil ? [] : [.sourcePreference]
         if preferred.photoProperties?.hasAssociatedResources == true,
            others.contains(where: { $0.photoProperties?.hasAssociatedResources != true }) {
             reasons.append(.associatedResources)
@@ -123,8 +124,8 @@ public struct ReviewResultQuery: Codable, Equatable, Sendable {
             case .count:
                 if a.assets.count != b.assets.count { return a.assets.count > b.assets.count }
             case .bytes:
-                let left = a.sizeEstimate(removing: removals[a.id] ?? Set(a.duplicates.filter { $0.asset.photoProperties?.hasAssociatedResources != true }.map(\.id)))
-                let right = b.sizeEstimate(removing: removals[b.id] ?? Set(b.duplicates.filter { $0.asset.photoProperties?.hasAssociatedResources != true }.map(\.id)))
+                let left = a.sizeEstimate(removing: removals[a.id] ?? Set(a.removalPairs(keeping: a.recommendation.id, protection: CleanupProtection()).map { $0.remove.id }))
+                let right = b.sizeEstimate(removing: removals[b.id] ?? Set(b.removalPairs(keeping: b.recommendation.id, protection: CleanupProtection()).map { $0.remove.id }))
                 if left.hasKnownAmount != right.hasKnownAmount { return left.hasKnownAmount }
                 if left.knownBytes != right.knownBytes { return left.knownBytes > right.knownBytes }
             }

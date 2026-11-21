@@ -30,7 +30,7 @@ public actor AssetMutationService {
             do {
                 for pair in group {
                     try Task.checkCancellation()
-                    try protection.validate(pair.remove)
+                    try protection.validatePair(pair)
                     try Self.validateRemoval(pair.remove, sources: byID)
                 }
             } catch {
@@ -42,7 +42,7 @@ public actor AssetMutationService {
             do {
                 try Task.checkCancellation()
                 if let id = pair.wholeGroupID, let error = rejectedGroups[id] { throw error }
-                try protection.validate(pair.remove)
+                try protection.validatePair(pair)
                 try await Self.verify(pair, sources: byID)
                 try Task.checkCancellation()
                 if let folder = byID[pair.remove.id.source] as? FileSystemSource {
@@ -150,7 +150,7 @@ public actor AssetMutationService {
         var result: Result<String?, any Error>?
         NSFileCoordinator().coordinate(writingItemAt: url, options: .forDeleting, error: &coordinationError) { coordinatedURL in
             result = Result {
-                try protection.validate(pair.remove)
+                try protection.validatePair(pair)
                 guard try folder.removableURL(for: pair.remove).path == coordinatedURL.standardizedFileURL.path else {
                     throw CleanupError.changedAsset
                 }
@@ -176,7 +176,7 @@ public actor AssetMutationService {
         try await PHPhotoLibrary.shared().performChanges {
             do {
                 let assets = try pairs.map { pair in
-                    try protection.validate(pair.remove)
+                    try protection.validatePair(pair)
                     if let retained = pair.keep { try validate(retained, sources: sources) }
                     guard let library = sources[pair.remove.id.source] as? PhotoLibrarySource else {
                         throw CleanupError.unavailableSource
@@ -201,7 +201,7 @@ public actor AssetMutationService {
             CleanupItem(pair: pair, status: .failed, detail: "This photo is no longer accessible from its source.")
         case AssetAccessError.changedDuringScan:
             CleanupItem(pair: pair, status: .skipped, detail: CleanupError.changedAsset.localizedDescription)
-        case CleanupError.userProtected, CleanupError.unavailableProtection, CleanupError.protectedResources, CleanupError.noLongerDuplicate, CleanupError.changedAsset, CleanupError.sameFile:
+        case CleanupError.userProtected, CleanupError.readOnlySource, CleanupError.unavailableProtection, CleanupError.protectedResources, CleanupError.noLongerDuplicate, CleanupError.changedAsset, CleanupError.sameFile:
             CleanupItem(pair: pair, status: .skipped, detail: error.localizedDescription)
         default:
             CleanupItem(pair: pair, status: .failed, detail: error.localizedDescription)

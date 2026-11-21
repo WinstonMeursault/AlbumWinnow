@@ -78,6 +78,8 @@ struct ScanSourcesView: View {
                 .accessibilityIdentifier("add-folder")
             }
 
+            ScanPolicySettings(model: model)
+
             Section("Review") {
                 Toggle("Show Filenames in Review", isOn: $showReviewFilenames)
                     .accessibilityIdentifier("show-review-filenames")

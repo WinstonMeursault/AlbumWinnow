@@ -84,6 +84,7 @@ struct CloudDownloadProgress {
     private(set) var progress: ScanProgress?
     private(set) var downloadProgress: CloudDownloadProgress?
     private(set) var lastCleanup: [CleanupItem]?
+    private(set) var updatingPolicy = false
     private(set) var running = false
     private(set) var cleaning = false
     private(set) var clearingCache = false
@@ -93,6 +94,7 @@ struct CloudDownloadProgress {
     private(set) var reviewState = ReviewState()
     private(set) var protectionAvailable = false
     private(set) var skipCloudPhotos = true
+    private var currentProtection = CleanupProtection(available: false)
     private var stateStore: ReviewStateStore?
     private var restoreRequested = false
     private var selections: [AssetID: GroupSelection] = [:]
@@ -113,10 +115,10 @@ struct CloudDownloadProgress {
 
     var allowsPhotos: Bool { authorization == .authorized || authorization == .limited }
     var hasScanSources: Bool { !folders.isEmpty || (photosEnabled && allowsPhotos) }
-    var canEditSources: Bool { !running && !cleaning && !clearingCache }
+    var canEditSources: Bool { !updatingPolicy && !running && !cleaning && !clearingCache }
     var canScan: Bool { canEditSources && hasScanSources && engine != nil }
     var canClean: Bool { protectionAvailable && canEditSources && !resultsStale && result != nil }
-    var protection: CleanupProtection { CleanupProtection(locked: reviewState.locked, available: protectionAvailable, lockedRevisions: reviewState.lockedRevisions ?? [:]) }
+    var protection: CleanupProtection { protectionAvailable ? currentProtection : CleanupProtection(available: false) }
     var pendingDownloadCount: Int { pendingDownloadIDs.count }
     var selectedCount: Int { selections.values.reduce(0) { $0 + $1.selected.count } }
     var cleanupGroups: [CleanupGroup] {
@@ -130,12 +132,10 @@ struct CloudDownloadProgress {
                 return CleanupGroup(id: group.id, keep: nil, retained: [], pairs: pairs, match: group.match)
             }
             let keep = assets.first(where: { $0.id == selection.keepID }) ?? group.preferred
-            let pairs = assets.compactMap { asset -> CleanupPair? in
-                guard selection.selected.contains(asset.id), asset.id != keep.id,
-                      !isProtected(asset) else { return nil }
-                return CleanupPair(keep: keep, remove: asset)
-            }
-            return pairs.isEmpty ? nil : CleanupGroup(id: group.id, keep: keep, retained: assets.filter { !selection.selected.contains($0.id) || isProtected($0) }, pairs: pairs, match: group.match)
+            let pairs = group.removalPairs(keeping: keep.id, protection: protection)
+                .filter { selection.selected.contains($0.remove.id) }
+            let removing = Set(pairs.map { $0.remove.id })
+            return pairs.isEmpty ? nil : CleanupGroup(id: group.id, keep: keep, retained: assets.filter { !removing.contains($0.id) }, pairs: pairs, match: group.match)
         }
     }
 
@@ -153,7 +153,7 @@ struct CloudDownloadProgress {
         if let selection = selections[group.id] {
             return Set(group.assets.filter { selection.selected.contains($0.id) && !isProtected($0) }.map(\.id))
         }
-        return Set(group.assets.filter { $0.id != group.preferred.id && !isProtected($0) }.map(\.id))
+        return Set(group.removalPairs(keeping: group.recommendation.id, protection: protection).map { $0.remove.id })
     }
 
     var visibleGroups: [DuplicateGroup] {
@@ -185,8 +185,8 @@ struct CloudDownloadProgress {
             selections[group.id] = GroupSelection(selected: Set(assets.map(\.id)), deleteAll: true)
         } else {
             guard let keepID, assets.contains(where: { $0.id == keepID }) else { return false }
-            let removable = assets.filter { $0.id != keepID && !isProtected($0) }
-            selections[group.id] = GroupSelection(keepID: keepID, selected: Set(removable.map(\.id)))
+            let pairs = group.removalPairs(keeping: keepID, protection: protection)
+            selections[group.id] = GroupSelection(keepID: keepID, selected: Set(pairs.map { $0.remove.id }))
         }
         guard let selection = selections[group.id] else { return false }
         var state = reviewState
@@ -219,6 +219,7 @@ struct CloudDownloadProgress {
             let store = try ReviewStateStore(url: data.appending(path: "review.sqlite"))
             let saved = try store.load()
             reviewState = saved
+            currentProtection = Self.makeProtection(saved)
             stateStore = store
             protectionAvailable = true
             restoreRequested = (!saved.decisions.isEmpty || saved.anchor != nil) && saved.scanCancelledByUser != true
@@ -372,7 +373,7 @@ struct CloudDownloadProgress {
         let (downloadUpdates, downloadContinuation) = AsyncStream.makeStream(of: PhotoLibrarySource.DownloadUpdate.self)
         let selectedSources = sources.map { source -> any AssetSource in
             guard source.id == photoSource.id else { return source }
-            return PhotoLibrarySource(downloads: downloads, allowsDownloads: allowsDownloads) { update in downloadContinuation.yield(update) }
+            return PhotoLibrarySource(scope: reviewState.photoScope ?? PhotoScope(), downloads: downloads, allowsDownloads: allowsDownloads) { update in downloadContinuation.yield(update) }
         }
         #if os(iOS)
         UserDefaults.standard.set(allowsDownloads, forKey: Self.interruptedCloudPolicyKey)
@@ -428,7 +429,10 @@ struct CloudDownloadProgress {
             }
             var downloadIssues: [AssetIssue] = []
             do {
-                let next = try await engine.scan(selectedSources, refreshing: downloads, progress: { continuation.yield($0) }, accounting: { accountContinuation.yield($0) })
+                try await refreshReadOnlyRevisions()
+                try Task.checkCancellation()
+                let next = try await engine.scan(selectedSources, refreshing: downloads,
+                    comparisonSides: reviewState.comparisonSides, preferredSource: reviewState.preferredSource, progress: { continuation.yield($0) }, accounting: { accountContinuation.yield($0) })
                 try Task.checkCancellation()
                 groupSignatures = Dictionary(uniqueKeysWithValues: try next.groups.map { ($0.id, try $0.reviewSignature()) })
                 result = next
@@ -604,8 +608,15 @@ struct CloudDownloadProgress {
         !CleanupProtection(locked: reviewState.locked, lockedRevisions: reviewState.lockedRevisions ?? [:]).validateForReview(asset)
     }
 
+    func isReadOnly(_ asset: PhotoAsset) -> Bool { protection.isReadOnly(asset) }
+
     func isProtected(_ asset: PhotoAsset) -> Bool {
-        asset.photoProperties?.hasAssociatedResources == true || isLocked(asset)
+        asset.photoProperties?.hasAssociatedResources == true || !protection.validateForReview(asset)
+    }
+
+    private static func makeProtection(_ state: ReviewState) -> CleanupProtection {
+        CleanupProtection(locked: state.locked, lockedRevisions: state.lockedRevisions ?? [:],
+            readOnlySources: state.readOnlySources ?? [], readOnlyRevisions: state.readOnlyRevisions ?? [:], comparisonSides: state.comparisonSides)
     }
 
     @discardableResult
@@ -614,6 +625,7 @@ struct CloudDownloadProgress {
             guard let stateStore else { throw CleanupError.unavailableProtection }
             try stateStore.save(state)
             reviewState = state
+            currentProtection = Self.makeProtection(state)
             return true
         } catch {
             protectionAvailable = false
@@ -634,7 +646,8 @@ struct CloudDownloadProgress {
             revisions.removeValue(forKey: asset.id)
         }
         state.lockedRevisions = revisions
-        let nextProtection = CleanupProtection(locked: state.locked, lockedRevisions: revisions)
+        let nextProtection = CleanupProtection(locked: state.locked, lockedRevisions: revisions,
+            readOnlySources: state.readOnlySources ?? [], readOnlyRevisions: state.readOnlyRevisions ?? [:], comparisonSides: state.comparisonSides)
         if locked, let groups = result?.groups {
             for group in groups {
                 let assets = [group.preferred] + group.duplicates.map(\.asset)
@@ -716,9 +729,80 @@ struct CloudDownloadProgress {
             } else {
                 guard let keepID = decision.keepID, ids.contains(keepID), !decision.removals.contains(keepID) else { continue }
             }
-            let removals = Set(assets.filter { decision.removals.contains($0.id) && !isProtected($0) }.map(\.id))
+            let valid = decision.deleteAll ? ids : Set(group.removalPairs(keeping: decision.keepID!, protection: protection).map { $0.remove.id })
+            let removals = Set(assets.filter { valid.contains($0.id) && decision.removals.contains($0.id) && !isProtected($0) }.map(\.id))
             selections[group.id] = GroupSelection(keepID: decision.keepID, selected: removals, deleteAll: decision.deleteAll)
         }
+    }
+
+    var photoScope: PhotoScope { reviewState.photoScope ?? PhotoScope() }
+    var comparisonSides: ComparisonSides? { reviewState.comparisonSides }
+    var preferredSource: String? { reviewState.preferredSource }
+    var readOnlySources: Set<String> { reviewState.readOnlySources ?? [] }
+
+    func setPhotoScope(_ scope: PhotoScope) {
+        guard canEditSources, scope != photoScope else { return }
+        do {
+            if let dates = scope.dates { _ = try dates.contains(nil) }
+            var state = reviewState
+            state.photoScope = scope
+            if saveState(state) { invalidateResults() }
+        } catch { sourceErrorMessage = "Choose a valid capture-date range." }
+    }
+
+    func setComparisonSides(_ sides: ComparisonSides?) {
+        guard canEditSources, sides != comparisonSides else { return }
+        do {
+            try sides?.validate(sources: Set(sources.map(\.id)))
+            var state = reviewState
+            state.comparisonSides = sides
+            if saveState(state) { invalidateResults() }
+        } catch { sourceErrorMessage = "Choose two different available sources." }
+    }
+
+    func setPreferredSource(_ source: String?) {
+        guard canEditSources, source != preferredSource, source == nil || sources.contains(where: { $0.id == source }) else { return }
+        var state = reviewState
+        state.preferredSource = source
+        if saveState(state) { invalidateResults() }
+    }
+
+    func setReadOnly(_ source: String, enabled: Bool) async {
+        guard canEditSources, protectionAvailable else { return }
+        updatingPolicy = true
+        defer { updatingPolicy = false }
+        var state = reviewState
+        var protected = state.readOnlySources ?? []
+        if enabled { protected.insert(source) } else { protected.remove(source) }
+        state.readOnlySources = protected
+        state.readOnlyRevisions = state.readOnlyRevisions ?? [:]
+        guard saveState(state) else { return }
+        do { try await refreshReadOnlyRevisions() }
+        catch { resultsStale = result != nil; sourceErrorMessage = "Read-only protection needs a successful rescan. " + error.localizedDescription }
+        trimProtectedDecisions()
+    }
+
+    private func refreshReadOnlyRevisions() async throws {
+        var revisions = reviewState.readOnlyRevisions ?? [:]
+        for folder in folders where readOnlySources.contains(folder.id) {
+            let snapshot = try await folder.source.snapshot()
+            guard snapshot.issues.isEmpty else { throw CleanupError.unavailableProtection }
+            for asset in snapshot.assets { revisions[asset.id] = asset.revision }
+        }
+        var state = reviewState
+        state.readOnlyRevisions = revisions
+        guard saveState(state) else { throw CleanupError.unavailableProtection }
+    }
+
+    private func trimProtectedDecisions() {
+        var state = reviewState
+        for group in result?.groups ?? [] {
+            guard let signature = reviewSignature(for: group), var decision = state.decisions[signature] else { continue }
+            if decision.deleteAll && group.assets.contains(where: isProtected) { decision = ReviewDecision(status: .pending) }
+            else { decision.removals = Set(group.assets.filter { decision.removals.contains($0.id) && !isProtected($0) }.map(\.id)) }
+            state.decisions[signature] = decision
+        }
+        if saveState(state) { restoreDecisions(result?.groups ?? []) }
     }
 
     private func saveFolders() {
