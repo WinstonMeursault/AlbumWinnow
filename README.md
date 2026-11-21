@@ -6,7 +6,9 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds dup
 
 ## Project status
 
-AlbumWinnow is in development for v1.0. Development builds target macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+AlbumWinnow v1.0.0 is the first stable release. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+
+Release downloads are available on the [GitHub Releases page](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
 
 ## Build and run
 
@@ -70,7 +72,7 @@ swift run --package-path Tests/Performance -c release ScanBenchmark .local/bench
 
 Use 50000 or 100000 for the larger runs, with a fresh directory and sufficient disk space. Each image is 4032 × 3072; 100,000 images and two fingerprint caches require approximately 50 GB. Reported RSS is the process lifetime peak. A cold scan starts with an empty application cache; filesystem caches are not flushed. These synthetic images validate scale and known exact pairs, not recognition accuracy on natural photos or end-to-end PhotoKit throughput.
 
-Before v1.0, real iCloud transfers still require account-specific verification, including network failures and foreground/background transitions. Automated tests exercise request callbacks, cancellation races, error propagation, and library-change handling without an iCloud account. Broader natural-photo accuracy and device-specific performance remain separate validation work.
+Release regression tests use generated fixtures and simulators. Automated iCloud tests exercise request callbacks, cancellation races, error propagation, and library-change handling without an iCloud account. These tests do not establish accuracy across natural photo libraries or performance across all devices, accounts, and network conditions.
 
 ## License
 

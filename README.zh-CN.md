@@ -6,7 +6,9 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。应�
 
 ## 项目状态
 
-AlbumWinnow 正在开发 v1.0。开发版面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow v1.0.0 是首个正式版本，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+
+可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
 
 ## 构建与运行
 
@@ -70,7 +72,7 @@ swift run --package-path Tests/Performance -c release ScanBenchmark .local/bench
 
 较大规模将数量改为 50000 或 100000，使用新目录，并预留磁盘空间。每张图片为 4032 × 3072，10 万张素材及两份指纹缓存约需 50 GB。RSS 为进程累计峰值；冷扫仅表示应用缓存为空，不会清空文件系统缓存。合成图用于验证规模和已知完全重复配对，不能代表自然照片识别准确率或 PhotoKit 端到端速度。
 
-v1.0 发布前仍需针对实际账户验证 iCloud 传输、网络失败和前后台切换。自动化测试在没有 iCloud 账户的条件下覆盖请求回调、取消竞争、错误传递及图库变化处理。更广泛的自然照片准确率和各类设备性能属于独立验收工作。
+发布回归使用生成的测试图片和模拟器。iCloud 自动化测试在没有实际账户的条件下覆盖请求回调、取消竞争、错误传递及图库变化处理。这些测试不代表自然照片图库的完整准确率，也不代表所有设备、账户和网络条件下的性能。
 
 ## 许可证
 
