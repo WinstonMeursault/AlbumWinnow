@@ -51,9 +51,17 @@ public struct DuplicateDetector: Sendable {
         let firstInput = try await comparisonInput(first, source: firstSource)
         let secondInput = try await comparisonInput(second, source: secondSource)
         let match = try compare(firstInput, secondInput)
-        try firstSource.validateImage(for: first)
-        try secondSource.validateImage(for: second)
+        try validateComparisonImage(first, source: firstSource)
+        try validateComparisonImage(second, source: secondSource)
         return match
+    }
+
+    static func validateComparisonImage(_ asset: PhotoAsset, source: any AssetSource) throws {
+        do {
+            try source.validateImage(for: asset)
+        } catch {
+            throw ComparisonReadError(assetID: asset.id, underlying: error)
+        }
     }
 
     private static func comparisonInput(_ asset: PhotoAsset, source: any AssetSource) async throws -> ImageInput {

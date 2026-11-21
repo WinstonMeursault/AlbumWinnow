@@ -114,6 +114,79 @@ final class ScanLifecycleTests: XCTestCase {
     }
 
     @MainActor
+    func testRetryAndCancellationPreserveStaleResultsUntilSuccessfulScan() async throws {
+        let defaults = UserDefaults.standard
+        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled",
+                    "AlbumWinnow.interruptedScan", "AlbumWinnow.interruptedDownloads"]
+        let saved = keys.map { defaults.object(forKey: $0) }
+        for key in keys { defaults.removeObject(forKey: key) }
+        let folder = URL.documentsDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer {
+            for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
+            try? FileManager.default.removeItem(at: folder)
+        }
+        let fixtures = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures")
+        let bytes = try Data(contentsOf: fixtures.appending(path: "burst-a.png"))
+        for name in ["a.png", "b.png"] { try bytes.write(to: folder.appending(path: name)) }
+        let model = ReviewModel()
+        model.addFolder(folder)
+        model.scan()
+        await waitUntil { !model.running }
+        XCTAssertTrue(model.canClean)
+        let downloads: Set<AssetID> = [AssetID(source: "photos-library", item: "pending")]
+        model.startScan(downloads: downloads)
+        model.libraryDidChange()
+        model.cancelScan()
+        await waitUntil { !model.running }
+        XCTAssertTrue(model.resultsStale)
+        model.startScan(downloads: downloads)
+        model.cancelScan()
+        await waitUntil { !model.running }
+        XCTAssertTrue(model.resultsStale)
+        XCTAssertFalse(model.canClean)
+        model.scan()
+        await waitUntil { !model.running }
+        XCTAssertFalse(model.resultsStale)
+        XCTAssertTrue(model.canClean)
+    }
+
+    @MainActor
+    func testClearingCachePreservesFolderAccessAndPhotos() async throws {
+        let defaults = UserDefaults.standard
+        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled",
+                    "AlbumWinnow.interruptedScan", "AlbumWinnow.interruptedDownloads"]
+        let saved = keys.map { defaults.object(forKey: $0) }
+        for key in keys { defaults.removeObject(forKey: key) }
+        let folder = URL.documentsDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer {
+            for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
+            try? FileManager.default.removeItem(at: folder)
+        }
+        let fixture = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/burst-a.png")
+        let bytes = try Data(contentsOf: fixture)
+        let photo = folder.appending(path: "photo.png")
+        try bytes.write(to: photo)
+        let model = ReviewModel()
+        model.addFolder(folder)
+        model.scan()
+        await waitUntil { !model.running }
+        let bookmarks = defaults.array(forKey: "AlbumWinnow.folderBookmarks") as? [Data]
+        await model.clearScanCache()
+        XCTAssertFalse(model.clearingCache)
+        XCTAssertNil(model.result)
+        XCTAssertNotNil(model.cacheStatus)
+        XCTAssertTrue(model.canScan)
+        XCTAssertEqual(defaults.array(forKey: "AlbumWinnow.folderBookmarks") as? [Data], bookmarks)
+        XCTAssertEqual(try Data(contentsOf: photo), bytes)
+        model.scan()
+        await waitUntil { !model.running }
+        XCTAssertEqual(model.result?.scanned, 1)
+        XCTAssertEqual(model.result?.reused, 0)
+    }
+
+    @MainActor
     func testFolderCleanupIsRecoverableOrLeavesBothOriginals() async throws {
         let base = URL.documentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)

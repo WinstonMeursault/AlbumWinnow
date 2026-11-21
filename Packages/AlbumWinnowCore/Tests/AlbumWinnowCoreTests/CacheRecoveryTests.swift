@@ -86,3 +86,32 @@ func damagedFingerprintIsRebuilt(column: String) async throws {
     #expect(result.reused == 1)
     #expect(try await database.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM sqlite_master WHERE name = 'scans'") } == 0)
 }
+
+@Test func clearingCacheReclaimsDiskAndForcesColdScanWithoutChangingPhotos() async throws {
+    let folder = TestFiles.root.appending(path: UUID().uuidString)
+    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: folder) }
+    let photo = folder.appending(path: "image.png")
+    let bytes = try Data(contentsOf: TestFiles.fixtures.appending(path: "burst-a.png"))
+    try bytes.write(to: photo)
+    let source = FileSystemSource(directory: folder)
+    let url = folder.appending(path: "scan.sqlite")
+    let engine = try ScanEngine(cacheURL: url)
+    _ = try await engine.scan([source])
+    let db = try DatabaseQueue(path: url.path)
+    try await db.write { db in
+        // Enlarge only a disposable derived cache. clearCache must remove these bytes without decoding them.
+        try db.execute(sql: "UPDATE fingerprints SET sample = zeroblob(8388608)")
+    }
+    let before = try #require(FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int)
+    try await engine.clearCache()
+    let after = try #require(FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int)
+    #expect(before > 8_000_000)
+    #expect(after < 100_000)
+    #expect(try await db.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM fingerprints") } == 0)
+    #expect(try Data(contentsOf: photo) == bytes)
+    let cold = try await engine.scan([source])
+    #expect(cold.scanned == 1 && cold.reused == 0)
+    let warm = try await engine.scan([source])
+    #expect(warm.scanned == 0 && warm.reused == 1)
+}

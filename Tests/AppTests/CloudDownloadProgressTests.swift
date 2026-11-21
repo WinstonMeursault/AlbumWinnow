@@ -17,12 +17,42 @@ final class CloudDownloadProgressTests: XCTestCase {
         progress.update(.finished(first, available: false))
         progress.update(.transferring(first, fraction: 0.9))
         XCTAssertEqual(progress.processed, 2)
-        XCTAssertEqual(progress.available, 1)
-        XCTAssertEqual(progress.failed, 1)
+        XCTAssertEqual(progress.available, 0)
+        XCTAssertEqual(progress.failed, 2)
         progress.end(cancelled: false)
         XCTAssertEqual(progress.remaining, 1)
         XCTAssertTrue(progress.ended)
         XCTAssertTrue(progress.needsRetry)
+    }
+
+    func testLaterReadsAndFinalScanOutcomeReplaceEarlierAvailability() {
+        let id = AssetID(source: "photos-library", item: "repeated")
+        var progress = CloudDownloadProgress(total: 1)
+        progress.update(.finished(id, available: true))
+        progress.update(.finished(id, available: false))
+        XCTAssertEqual(progress.available, 0)
+        XCTAssertEqual(progress.failed, 1)
+        progress.update(.finished(id, available: true))
+        XCTAssertEqual(progress.available, 1)
+        XCTAssertEqual(progress.failed, 0)
+        progress.reconcile(issues: [AssetIssue(id: id, reason: .cloudDownloadFailed)], requested: [id])
+        progress.end(cancelled: false)
+        XCTAssertEqual(progress.available, 0)
+        XCTAssertEqual(progress.failed, 1)
+        XCTAssertTrue(progress.needsRetry)
+    }
+
+    func testUnsupportedDownloadedImageIsNotReportedAsADownloadFailure() {
+        let id = AssetID(source: "photos-library", item: "downloaded")
+        let other = AssetID(source: "photos-library", item: "not-requested")
+        var progress = CloudDownloadProgress(total: 1)
+        progress.update(.finished(id, available: true))
+        progress.reconcile(issues: [AssetIssue(id: id, reason: .unsupportedImage),
+                                    AssetIssue(id: other, reason: .cloudDownloadFailed)], requested: [id])
+        progress.end(cancelled: false)
+        XCTAssertEqual(progress.available, 1)
+        XCTAssertEqual(progress.failed, 0)
+        XCTAssertFalse(progress.needsRetry)
     }
 
     func testCancelledTransferAndRetry() {

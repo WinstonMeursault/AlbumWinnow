@@ -21,6 +21,11 @@ public actor ScanEngine {
         self.parallelism = min(4, max(1, parallelism))
     }
 
+    public func clearCache() throws {
+        guard !scanning else { throw ScanError.scanInProgress }
+        try cache.clear()
+    }
+
     public func scan(
         _ sources: [any AssetSource],
         refreshing: Set<AssetID> = [],

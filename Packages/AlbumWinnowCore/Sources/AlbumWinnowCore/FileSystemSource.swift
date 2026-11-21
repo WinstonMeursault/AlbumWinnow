@@ -29,6 +29,7 @@ public struct FileSystemSource: AssetSource {
         }
 
         var assets: [PhotoAsset] = []
+        var companions: [String: Set<String>] = [:]
         while let url = enumerator.nextObject() as? URL {
             try Task.checkCancellation()
             do {
@@ -37,8 +38,9 @@ public struct FileSystemSource: AssetSource {
                     enumerator.skipDescendants()
                     continue
                 }
-                guard values.isRegularFile == true,
-                      UTType(filenameExtension: url.pathExtension)?.conforms(to: .image) == true else {
+                guard values.isRegularFile == true else { continue }
+                companions[Self.companionKey(url), default: []].insert(url.pathExtension.lowercased())
+                guard UTType(filenameExtension: url.pathExtension)?.conforms(to: .image) == true else {
                     continue
                 }
                 assets.append(PhotoAsset(
@@ -52,7 +54,11 @@ public struct FileSystemSource: AssetSource {
         if issues.contains(where: { $0.id == identifier(for: directory) }) {
             throw AssetAccessError.inaccessible
         }
-        return AssetSnapshot(assets: assets, issues: issues)
+        return AssetSnapshot(assets: assets.map { asset in
+            let url = URL(fileURLWithPath: asset.id.item)
+            return PhotoAsset(id: asset.id, name: asset.name, revision: asset.revision,
+                              photoProperties: Self.properties(for: url, extensions: companions[Self.companionKey(url)] ?? []))
+        }, issues: issues)
     }
 
     public func imageData(for asset: PhotoAsset) async throws -> Data {
@@ -60,6 +66,11 @@ public struct FileSystemSource: AssetSource {
         let data = try Data(contentsOf: url)
         _ = try currentURL(for: asset)
         return data
+    }
+
+    public func byteCount(for asset: PhotoAsset) async throws -> Int {
+        let url = try currentURL(for: asset)
+        return Int(clamping: try Self.metadata(of: url).st_size)
     }
 
     public func thumbnail(for asset: PhotoAsset, maxPixelSize: Int) async throws -> CGImage {
@@ -91,6 +102,39 @@ public struct FileSystemSource: AssetSource {
             throw AssetAccessError.changedDuringScan
         }
         return url
+    }
+
+    func removableURL(for asset: PhotoAsset) throws -> URL {
+        let url = try currentURL(for: asset)
+        let parent = url.deletingLastPathComponent()
+        let prefix = url.deletingPathExtension().lastPathComponent.lowercased() + "."
+        let siblings = try FileManager.default.contentsOfDirectory(atPath: parent.path)
+        let key = Self.companionKey(url)
+        let matches = siblings.lazy.filter { $0.lowercased().hasPrefix(prefix) }.map { parent.appending(path: $0) }
+        let extensions = Set(matches.filter { Self.companionKey($0) == key }.map { $0.pathExtension.lowercased() })
+        guard !Self.properties(for: url, extensions: extensions).hasAssociatedResources else {
+            throw CleanupError.protectedResources
+        }
+        return url
+    }
+
+    private static func companionKey(_ url: URL) -> String {
+        var stem = url.deletingPathExtension()
+        if ["aae", "xmp"].contains(url.pathExtension.lowercased()),
+           UTType(filenameExtension: stem.pathExtension)?.conforms(to: .image) == true {
+            stem = stem.deletingPathExtension()
+        }
+        return url.deletingLastPathComponent().standardizedFileURL.path + "/" + stem.lastPathComponent.lowercased()
+    }
+
+    private static func properties(for url: URL, extensions: Set<String>) -> PhotoProperties {
+        let hasRAW = extensions.contains { UTType(filenameExtension: $0)?.conforms(to: .rawImage) == true }
+        let alternateRAW = hasRAW && extensions.contains {
+            $0 != url.pathExtension.lowercased() && UTType(filenameExtension: $0)?.conforms(to: .image) == true
+        }
+        return PhotoProperties(isLivePhoto: !extensions.isDisjoint(with: ["mov", "mp4", "m4v"]),
+                               hasEdits: !extensions.isDisjoint(with: ["aae", "xmp"]),
+                               hasAlternatePhoto: alternateRAW)
     }
 
     private func identifier(for url: URL) -> AssetID {

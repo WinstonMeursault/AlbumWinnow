@@ -92,6 +92,23 @@ struct ScanSourcesView: View {
                 .accessibilityIdentifier("review-animation")
             }
 
+            Section("Storage") {
+                Button {
+                    Task { await model.clearScanCache() }
+                } label: {
+                    if model.clearingCache {
+                        ProgressView("Clearing Scan Cache…")
+                    } else {
+                        Label("Clear Scan Cache", systemImage: "externaldrive.badge.minus")
+                    }
+                }
+                .disabled(!model.canEditSources)
+                .accessibilityIdentifier("clear-scan-cache")
+                Text(model.cacheStatus ?? "Frees scan cache storage. Photos and source access are preserved.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("About") {
                 Button("About & Open Source", systemImage: "info.circle") {
                     showingAbout = true

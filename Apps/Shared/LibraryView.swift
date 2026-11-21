@@ -188,11 +188,7 @@ struct LibraryView: View {
             } else if let result = model.result {
                 scanResults(result, wide: wide, narrowed: narrowed)
             } else if let cleanup = model.lastCleanup {
-                ContentUnavailableView {
-                    Label("Cleanup Finished", systemImage: "checkmark.circle")
-                } description: {
-                    Text(cleanupSummary(cleanup))
-                }
+                CleanupOutcomeView(items: cleanup, model: model)
             } else if !model.hasScanSources {
                 ContentUnavailableView {
                     Label("Choose Scan Sources", systemImage: "photo.stack")
@@ -322,12 +318,6 @@ struct LibraryView: View {
                 .monospacedDigit()
         }
         .font(.subheadline)
-    }
-
-    private func cleanupSummary(_ items: [CleanupItem]) -> String {
-        let counts = Dictionary(grouping: items, by: \.status).mapValues(\.count)
-        let moved = counts[.movedToTrash, default: 0] + counts[.movedToRecentlyDeleted, default: 0]
-        return "\(moved) moved · \(counts[.skipped, default: 0]) skipped · \(counts[.failed, default: 0]) failed"
     }
 
     private var cleanupConfirmation: some View {
@@ -592,8 +582,7 @@ private struct CleanupPhotoPreview: View {
         .accessibilityLabel(Text("\(removing ? String(localized: "Will Remove") : String(localized: "Keep")), \(preview?.details ?? String(localized: "Photo details unavailable"))"))
         .accessibilityIdentifier("cleanup-\(removing ? "remove" : "keep")-\(asset.name)")
         .task(id: asset) {
-            if let input = try? await model.image(for: asset) {
-                let loaded = await LoadedPreview.load(asset: asset, input: input)
+            if let loaded = try? await model.preview(for: asset) {
                 guard !Task.isCancelled else { return }
                 preview = loaded
                 aspectRatio = loaded.aspectRatio ?? 1
@@ -650,5 +639,73 @@ private struct CleanupPhotoDetail: View {
         #if os(macOS)
         .frame(minWidth: 480, idealWidth: 800, minHeight: 340, idealHeight: 640)
         #endif
+    }
+}
+
+struct CleanupOutcomeView: View {
+    let items: [CleanupItem]
+    let model: ReviewModel
+
+    private var incomplete: [CleanupItem] { items.filter { $0.status == .failed || $0.status == .skipped } }
+    private var moved: Int { items.count - incomplete.count }
+
+    var body: some View {
+        List {
+            Section {
+                Label(incomplete.isEmpty ? "Cleanup Finished" : moved == 0 ? "No Photos Moved" : "Cleanup Partially Completed",
+                      systemImage: incomplete.isEmpty ? "checkmark.circle" : "exclamationmark.triangle")
+                    .font(.headline)
+                    .foregroundStyle(incomplete.isEmpty ? Color.primary : .orange)
+                Text("\(moved) moved · \(items.filter { $0.status == .skipped }.count) skipped · \(items.filter { $0.status == .failed }.count) failed")
+                    .foregroundStyle(.secondary)
+            }
+            if !incomplete.isEmpty {
+                Section("Photos Not Moved") {
+                    ForEach(Array(incomplete.enumerated()), id: \.element.id) { index, item in
+                        CleanupIssueRow(item: item, number: index + 1, model: model)
+                    }
+                }
+            }
+        }
+        .accessibilityIdentifier("cleanup-outcome")
+    }
+}
+
+private struct CleanupIssueRow: View {
+    let item: CleanupItem
+    let number: Int
+    let model: ReviewModel
+    @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilename = false
+    @State private var image: CGImage?
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Color.secondary.opacity(0.1)
+                .overlay {
+                    if let image {
+                        Image(decorative: image, scale: 1).resizable().scaledToFit()
+                    } else {
+                        Image(systemName: "photo.badge.exclamationmark").foregroundStyle(.secondary)
+                    }
+                }
+                .frame(width: 72, height: 72)
+                .clipShape(.rect(cornerRadius: 8))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Photo preview")
+                .accessibilityIdentifier("cleanup-issue-preview-\(item.pair.remove.name)")
+            VStack(alignment: .leading, spacing: 4) {
+                if showFilename { Text(item.pair.remove.name).lineLimit(2) }
+                else { Text("Photo \(number)") }
+                Text(item.status == .skipped ? "Skipped" : "Failed").fontWeight(.medium)
+                Text(item.detail ?? String(localized: "The photo could not be moved. Scan again to retry."))
+                    .textSelection(.enabled)
+                Text(model.sourceLabel(item.pair.remove.id.source)).foregroundStyle(.secondary)
+            }
+            .font(.subheadline)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .task(id: item.id) {
+            image = try? await model.thumbnail(for: item.pair.remove, pixelSize: 256)
+        }
     }
 }

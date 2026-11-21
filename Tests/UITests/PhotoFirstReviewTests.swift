@@ -199,6 +199,53 @@ final class PhotoFirstReviewTests: XCTestCase {
         closeReview()
         XCTAssertEqual(cleanup.label, "Confirm Cleanup (3)")
     }
+    func testClearScanCachePreservesSourcesAndAllowsScanningAgain() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO"]
+        app.launch()
+        app.buttons["Settings"].tap()
+        let clear = app.buttons["clear-scan-cache"]
+        for _ in 0..<5 {
+            if clear.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(clear.isHittable)
+        clear.tap()
+        let cleared = app.staticTexts["Scan cache cleared. The next scan will read all photos again."]
+        for _ in 0..<3 {
+            if cleared.waitForExistence(timeout: 2) { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(cleared.waitForExistence(timeout: 30), app.debugDescription)
+        app.navigationBars["Settings"].buttons["Done"].tap()
+        let scan = app.buttons["start-scan"]
+        XCTAssertTrue(scan.isEnabled)
+        scan.tap()
+        XCTAssertTrue(app.staticTexts["Scan Complete"].waitForExistence(timeout: 90))
+        XCTAssertTrue(app.buttons["duplicate-group-gallery-landscape-a.png"].exists)
+    }
+
+    func testCleanupFailuresShowPhotosAndReasonsWithoutHistory() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO",
+                               "--cleanup-outcome-fixture"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["No Photos Moved"].waitForExistence(timeout: 90), app.debugDescription)
+        XCTAssertTrue(app.staticTexts["Photos Not Moved"].exists)
+        XCTAssertTrue(app.staticTexts["Failed"].exists)
+        XCTAssertTrue(app.staticTexts["Skipped"].exists)
+        XCTAssertTrue(app.staticTexts["This photo is no longer accessible from its source."].exists)
+        XCTAssertTrue(app.staticTexts["This item has an associated video, an edit or an alternate original."].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["cleanup-issue-preview-protected.png"].exists)
+        XCTAssertFalse(app.buttons["Cleanup History"].exists)
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Cleanup failures with photo previews and reasons"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+    }
+
     func testPanoramaCleanupUsesStackedRow() {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait

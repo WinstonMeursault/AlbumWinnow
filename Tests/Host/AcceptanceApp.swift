@@ -1,3 +1,4 @@
+import AlbumWinnowCore
 import CoreGraphics
 import ImageIO
 import SwiftUI
@@ -19,9 +20,39 @@ import SwiftUI
     var body: some Scene {
         WindowGroup {
             LibraryView(model: model)
-                .task { model.sceneChanged(scenePhase) }
+                .task {
+                    model.sceneChanged(scenePhase)
+                    if ProcessInfo.processInfo.arguments.contains("--cleanup-outcome-fixture") {
+                        await prepareCleanupOutcome()
+                    }
+                }
                 .onChange(of: scenePhase) { _, phase in model.sceneChanged(phase) }
         }
+    }
+
+    @MainActor
+    private func prepareCleanupOutcome() async {
+        do {
+            for folder in model.folders { model.removeFolder(folder.id) }
+            let folder = URL.documentsDirectory.appending(path: "CleanupOutcomeFixture")
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            for name in ["missing.png", "protected.png.AAE"] {
+                try? FileManager.default.removeItem(at: folder.appending(path: name))
+            }
+            let fixture = try Self.require(Bundle.main.resourceURL).appending(path: "Fixtures/burst-a.png")
+            let bytes = try Data(contentsOf: fixture)
+            for name in ["keep.png", "missing.png", "protected.png"] { try bytes.write(to: folder.appending(path: name)) }
+            model.addFolder(folder)
+            model.scan()
+            while model.running { try await Task.sleep(for: .milliseconds(20)) }
+            let group = try Self.require(model.result?.groups.first)
+            let keep = try Self.require(([group.preferred] + group.duplicates.map(\.asset)).first { $0.name == "keep.png" })
+            guard await model.confirmSelection(in: group, keepID: keep.id, deleteAll: false) else { return }
+            let pairs = model.cleanupGroups.flatMap(\.pairs)
+            try FileManager.default.removeItem(at: folder.appending(path: "missing.png"))
+            try Data([0]).write(to: folder.appending(path: "protected.png.AAE"))
+            await model.applyCleanup(pairs)
+        } catch { model.errorMessage = error.localizedDescription }
     }
 
     private static func require<Value>(_ value: Value?) throws -> Value {

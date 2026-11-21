@@ -191,12 +191,8 @@ struct GroupReviewView: View {
         .accessibilityIdentifier(isActive ? "review-photo-\(asset.name)" : "")
         .task(id: asset) {
             guard previews[asset.id]?.asset != asset else { return }
-            let preview: LoadedPreview
-            if let input = try? await model.image(for: asset) {
-                preview = await LoadedPreview.load(asset: asset, input: input)
-            } else {
-                preview = LoadedPreview(asset: asset, image: nil, format: nil, byteCount: nil, dimensions: nil)
-            }
+            let preview = (try? await model.preview(for: asset)) ??
+                LoadedPreview(asset: asset, image: nil, format: nil, byteCount: nil, dimensions: nil)
             guard !Task.isCancelled else { return }
             previews[asset.id] = preview
         }
@@ -377,7 +373,7 @@ struct PhotoMetadataView: View {
     }
 }
 
-struct LoadedPreview {
+struct LoadedPreview: Sendable {
     let asset: PhotoAsset
     let image: CGImage?
     let format: String?
@@ -395,43 +391,52 @@ struct LoadedPreview {
         image.map { CGFloat($0.width) / CGFloat($0.height) }
     }
 
+    nonisolated static func load(asset: PhotoAsset, file: URL) async throws -> LoadedPreview {
+        try Task.checkCancellation()
+        return try autoreleasepool {
+            // Mapping avoids a separate full-file heap buffer when the provider supports safe mapping.
+            let data = try NSData(contentsOf: file, options: .mappedIfSafe)
+            let source = CGImageSourceCreateWithData(data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary)
+            return load(asset: asset, source: source, byteCount: data.length, orientation: nil)
+        }
+    }
+
     nonisolated static func load(asset: PhotoAsset, input: AssetImage) async -> LoadedPreview {
-        guard let source = CGImageSourceCreateWithData(input.data as CFData, nil) else {
-            return LoadedPreview(asset: asset, image: nil, format: nil,
-                                 byteCount: input.data.count, dimensions: nil)
+        let source = CGImageSourceCreateWithData(input.data as CFData, [kCGImageSourceShouldCache: false] as CFDictionary)
+        return load(asset: asset, source: source, byteCount: input.data.count, orientation: input.orientation)
+    }
+
+    private nonisolated static func load(asset: PhotoAsset, source: CGImageSource?, byteCount: Int?,
+                                         orientation: CGImagePropertyOrientation?) -> LoadedPreview {
+        guard let source else {
+            return LoadedPreview(asset: asset, image: nil, format: nil, byteCount: byteCount, dimensions: nil)
         }
         let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
         let embedded = properties?[kCGImagePropertyOrientation] as? UInt32 ?? CGImagePropertyOrientation.up.rawValue
-        let orientation = input.orientation?.rawValue ?? embedded
+        let effectiveOrientation = orientation?.rawValue ?? embedded
         let width = properties?[kCGImagePropertyPixelWidth] as? Int
         let height = properties?[kCGImagePropertyPixelHeight] as? Int
         let dimensions: String?
         if let width, let height {
-            dimensions = orientation >= 5 ? "\(height) × \(width)" : "\(width) × \(height)"
+            dimensions = effectiveOrientation >= 5 ? "\(height) × \(width)" : "\(width) × \(height)"
         } else {
             dimensions = nil
         }
         let format = CGImageSourceGetType(source).flatMap {
             UTType($0 as String)?.preferredFilenameExtension?.uppercased()
         }
-        let image = await thumbnail(input)
-        return LoadedPreview(asset: asset, image: image, format: format,
-                             byteCount: input.data.count, dimensions: dimensions)
-    }
-
-    nonisolated static func thumbnail(_ input: AssetImage) async -> CGImage? {
-        guard let source = CGImageSourceCreateWithData(input.data as CFData, nil) else { return nil }
-        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
-        let embedded = properties?[kCGImagePropertyOrientation] as? UInt32 ?? CGImagePropertyOrientation.up.rawValue
-        let override = input.orientation.flatMap { $0.rawValue == embedded ? nil : $0 }
+        let override = orientation.flatMap { $0.rawValue == embedded ? nil : $0 }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
             kCGImageSourceCreateThumbnailWithTransform: override == nil,
+            kCGImageSourceShouldCache: false,
             kCGImageSourceThumbnailMaxPixelSize: 1024,
         ]
-        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
-        guard let override, override != .up else { return image }
-        let oriented = CIImage(cgImage: image).oriented(override)
-        return CIContext().createCGImage(oriented, from: oriented.extent)
+        var image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+        if let pixels = image, let override, override != .up {
+            let oriented = CIImage(cgImage: pixels).oriented(override)
+            image = CIContext(options: [.cacheIntermediates: false]).createCGImage(oriented, from: oriented.extent)
+        }
+        return LoadedPreview(asset: asset, image: image, format: format, byteCount: byteCount, dimensions: dimensions)
     }
 }

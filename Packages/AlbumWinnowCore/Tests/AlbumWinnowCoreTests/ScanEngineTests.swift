@@ -80,6 +80,7 @@ private struct SlowSource: AssetSource {
     }
     for await update in updates {
         if case .fingerprinting(let completed, _) = update, completed >= 16 {
+            await #expect(throws: ScanError.scanInProgress) { try await engine.clearCache() }
             scan.cancel()
             break
         }

@@ -141,4 +141,9 @@ struct ScanCache: Sendable {
             }
         }
     }
+
+    func clear() throws {
+        try database.write { db in try db.execute(sql: "DELETE FROM fingerprints") }
+        try database.vacuum()
+    }
 }

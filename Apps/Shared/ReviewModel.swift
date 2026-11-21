@@ -11,7 +11,7 @@ struct CloudDownloadProgress {
     private(set) var ended = false
     private(set) var cancelled = false
     private var active: [AssetID: Double] = [:]
-    private var finished = Set<AssetID>()
+    private var finished: [AssetID: Bool] = [:]
 
     init(total: Int) { self.total = total }
 
@@ -23,12 +23,21 @@ struct CloudDownloadProgress {
         guard !ended else { return }
         switch update {
         case let .transferring(id, fraction):
-            guard !finished.contains(id), fraction.isFinite else { return }
+            guard finished[id] == nil, fraction.isFinite else { return }
             active[id] = max(active[id, default: 0], min(0.99, fraction))
         case let .finished(id, isAvailable):
-            guard finished.insert(id).inserted else { return }
+            if let previous = finished.updateValue(isAvailable, forKey: id) {
+                if previous { available -= 1 } else { failed -= 1 }
+            }
             active.removeValue(forKey: id)
             if isAvailable { available += 1 } else { failed += 1 }
+        }
+    }
+
+    mutating func reconcile(issues: [AssetIssue], requested: Set<AssetID>) {
+        for issue in issues where requested.contains(issue.id) &&
+            (issue.reason == .cloudDownloadRequired || issue.reason == .cloudDownloadFailed) {
+            update(.finished(issue.id, available: false))
         }
     }
 
@@ -70,6 +79,8 @@ struct CloudDownloadProgress {
     private(set) var lastCleanup: [CleanupItem]?
     private(set) var running = false
     private(set) var cleaning = false
+    private(set) var clearingCache = false
+    private(set) var cacheStatus: String?
     private(set) var resultsStale = false
     private var selections: [AssetID: GroupSelection] = [:]
     var errorMessage: String?
@@ -88,9 +99,9 @@ struct CloudDownloadProgress {
 
     var allowsPhotos: Bool { authorization == .authorized || authorization == .limited }
     var hasScanSources: Bool { !folders.isEmpty || (photosEnabled && allowsPhotos) }
-    var canEditSources: Bool { !running && !cleaning }
+    var canEditSources: Bool { !running && !cleaning && !clearingCache }
     var canScan: Bool { canEditSources && hasScanSources && engine != nil }
-    var canClean: Bool { !running && !cleaning && !resultsStale && result != nil }
+    var canClean: Bool { canEditSources && !resultsStale && result != nil }
     var pendingDownloadCount: Int { pendingDownloadIDs.count }
     var selectedCount: Int { selections.values.reduce(0) { $0 + $1.selected.count } }
     var cleanupGroups: [CleanupGroup] {
@@ -246,6 +257,22 @@ struct CloudDownloadProgress {
 
     func scan() { startScan(downloads: []) }
 
+    func clearScanCache() async {
+        guard canEditSources, let engine else { return }
+        clearingCache = true
+        cacheStatus = nil
+        defer { clearingCache = false }
+        do {
+            try await engine.clearCache()
+            invalidateResults()
+            lastCleanup = nil
+            downloadProgress = nil
+            cacheStatus = "Scan cache cleared. The next scan will read all photos again."
+        } catch {
+            sourceErrorMessage = error.localizedDescription
+        }
+    }
+
     func downloadPendingPhotos() {
         let pending = pendingDownloadIDs
         guard !pending.isEmpty, photosEnabled, allowsPhotos else { return }
@@ -272,10 +299,12 @@ struct CloudDownloadProgress {
         running = true
         libraryChangedDuringScan = false
         selections.removeAll()
-        resultsStale = false
         lastCleanup = nil
         downloadProgress = downloads.isEmpty ? nil : CloudDownloadProgress(total: downloads.count)
-        if downloads.isEmpty { result = nil }
+        if downloads.isEmpty {
+            result = nil
+            resultsStale = false
+        }
         let (updates, continuation) = AsyncStream.makeStream(of: ScanProgress.self, bufferingPolicy: .bufferingNewest(1))
         scanTask = Task {
             let observer = Task {
@@ -285,9 +314,11 @@ struct CloudDownloadProgress {
                 for await update in downloadUpdates {
                     downloadProgress?.update(update)
                     #if os(iOS)
-                    if case let .finished(id, true) = update {
-                        let remaining = UserDefaults.standard.stringArray(forKey: Self.interruptedDownloadsKey) ?? []
-                        UserDefaults.standard.set(remaining.filter { $0 != id.item }, forKey: Self.interruptedDownloadsKey)
+                    if case let .finished(id, available) = update,
+                       UserDefaults.standard.bool(forKey: Self.interruptedScanKey) {
+                        var remaining = Set(UserDefaults.standard.stringArray(forKey: Self.interruptedDownloadsKey) ?? [])
+                        if available { remaining.remove(id.item) } else { remaining.insert(id.item) }
+                        UserDefaults.standard.set(remaining.sorted(), forKey: Self.interruptedDownloadsKey)
                     }
                     #endif
                 }
@@ -302,10 +333,12 @@ struct CloudDownloadProgress {
                 resumeInterruptedScan()
                 #endif
             }
+            var downloadIssues: [AssetIssue] = []
             do {
                 let next = try await engine.scan(selectedSources, refreshing: downloads) { continuation.yield($0) }
                 try Task.checkCancellation()
                 result = next
+                downloadIssues = next.issues
                 resultsStale = libraryChangedDuringScan
                 if resultsStale { errorMessage = "The photo library changed during the scan. Scan again before cleanup." }
                 clearInterruptedScan()
@@ -318,11 +351,9 @@ struct CloudDownloadProgress {
             }
             downloadContinuation.finish()
             await downloadObserver.value
+            downloadProgress?.reconcile(issues: downloadIssues, requested: downloads)
             downloadProgress?.end(cancelled: Task.isCancelled)
-            let unavailable = result?.issues.contains {
-                downloads.contains($0.id) && ($0.reason == .cloudDownloadRequired || $0.reason == .cloudDownloadFailed)
-            } == true
-            if let download = downloadProgress, !download.cancelled, download.needsRetry || unavailable, errorMessage == nil {
+            if let download = downloadProgress, !download.cancelled, download.needsRetry, errorMessage == nil {
                 errorMessage = "Some iCloud photos are still unavailable for this scan. Open Scan Issues to review the results and retry."
             }
         }
@@ -362,11 +393,28 @@ struct CloudDownloadProgress {
         }
     }
 
-    func image(for asset: PhotoAsset) async throws -> AssetImage {
+    func preview(for asset: PhotoAsset) async throws -> LoadedPreview {
         guard let source = sources.first(where: { $0.id == asset.id.source }) else {
             throw CleanupError.unavailableSource
         }
-        return try await source.image(for: asset)
+        let folder = folders.first { $0.id == asset.id.source }
+        defer { withExtendedLifetime(folder) {} }
+        let bytes: Int
+        if let files = source as? FileSystemSource {
+            bytes = try await files.byteCount(for: asset)
+        } else {
+            // Photos does not expose a reliable original size before requesting the data.
+            bytes = 64 * 1024 * 1024
+        }
+        return try await galleryThumbnails.preview(estimatedBytes: bytes) {
+            if let files = source as? FileSystemSource {
+                let url = try files.currentURL(for: asset)
+                let preview = try await LoadedPreview.load(asset: asset, file: url)
+                _ = try files.currentURL(for: asset)
+                return preview
+            }
+            return await LoadedPreview.load(asset: asset, input: try await source.image(for: asset))
+        }
     }
 
     func thumbnail(for asset: PhotoAsset, pixelSize: Int) async throws -> CGImage {

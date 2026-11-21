@@ -29,7 +29,7 @@ actor GalleryThumbnails {
 
     private let cache: NSCache<CacheKey, CGImage>
     private var active = 0
-    private var waiters: [(id: UUID, continuation: CheckedContinuation<Void, any Error>)] = []
+    private var waiters: [(id: UUID, units: Int, continuation: CheckedContinuation<Void, any Error>)] = []
 
     init() {
         let cache = NSCache<CacheKey, CGImage>()
@@ -44,7 +44,7 @@ actor GalleryThumbnails {
         if let cached = cache.object(forKey: cacheKey) { return cached }
 
         try await acquire()
-        defer { release() }
+        defer { release(units: 1) }
         try Task.checkCancellation()
         if let cached = cache.object(forKey: cacheKey) { return cached }
 
@@ -56,17 +56,28 @@ actor GalleryThumbnails {
 
     func clear() { cache.removeAllObjects() }
 
-    private func acquire() async throws {
+    func preview(estimatedBytes: Int = 0, load: @Sendable () async throws -> LoadedPreview) async throws -> LoadedPreview {
+        let budget = 16 * 1024 * 1024
+        let units = min(4, max(1, estimatedBytes / budget + (estimatedBytes % budget > 0 ? 1 : 0)))
+        try await acquire(units: units)
+        defer { release(units: units) }
+        try Task.checkCancellation()
+        let preview = try await load()
+        try Task.checkCancellation()
+        return preview
+    }
+
+    private func acquire(units: Int = 1) async throws {
         let id = UUID()
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
                 if Task.isCancelled {
                     continuation.resume(throwing: CancellationError())
-                } else if active < 4 {
-                    active += 1
+                } else if waiters.isEmpty && active + units <= 4 {
+                    active += units
                     continuation.resume()
                 } else {
-                    waiters.append((id, continuation))
+                    waiters.append((id, units, continuation))
                 }
             }
         } onCancel: {
@@ -77,12 +88,17 @@ actor GalleryThumbnails {
     private func cancelWaiter(_ id: UUID) {
         guard let index = waiters.firstIndex(where: { $0.id == id }) else { return }
         waiters.remove(at: index).continuation.resume(throwing: CancellationError())
+        drainWaiters()
     }
 
-    private func release() {
-        if waiters.isEmpty {
-            active -= 1
-        } else {
+    private func release(units: Int) {
+        active -= units
+        drainWaiters()
+    }
+
+    private func drainWaiters() {
+        while let next = waiters.first, active + next.units <= 4 {
+            active += next.units
             waiters.removeFirst().continuation.resume()
         }
     }

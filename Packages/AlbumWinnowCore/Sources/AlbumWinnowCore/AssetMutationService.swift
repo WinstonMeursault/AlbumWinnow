@@ -115,7 +115,7 @@ public actor AssetMutationService {
         guard asset.photoProperties?.hasAssociatedResources != true else { throw CleanupError.protectedResources }
         switch sources[asset.id.source] {
         case let folder as FileSystemSource:
-            let url = try folder.currentURL(for: asset)
+            let url = try folder.removableURL(for: asset)
             guard FileManager.default.isDeletableFile(atPath: url.path) else { throw AssetAccessError.inaccessible }
         case let photos as PhotoLibrarySource:
             _ = try photos.removableAsset(for: asset)
@@ -147,7 +147,7 @@ public actor AssetMutationService {
         var result: Result<String?, any Error>?
         NSFileCoordinator().coordinate(writingItemAt: url, options: .forDeleting, error: &coordinationError) { coordinatedURL in
             result = Result {
-                guard try folder.currentURL(for: pair.remove).path == coordinatedURL.standardizedFileURL.path else {
+                guard try folder.removableURL(for: pair.remove).path == coordinatedURL.standardizedFileURL.path else {
                     throw CleanupError.changedAsset
                 }
                 if let retained = pair.keep {
@@ -192,6 +192,8 @@ public actor AssetMutationService {
         return switch error {
         case is CancellationError:
             CleanupItem(pair: pair, status: .skipped, detail: "Cleanup was cancelled.")
+        case AssetAccessError.inaccessible:
+            CleanupItem(pair: pair, status: .failed, detail: "This photo is no longer accessible from its source.")
         case AssetAccessError.changedDuringScan:
             CleanupItem(pair: pair, status: .skipped, detail: CleanupError.changedAsset.localizedDescription)
         case CleanupError.protectedResources, CleanupError.noLongerDuplicate, CleanupError.changedAsset, CleanupError.sameFile:
