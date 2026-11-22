@@ -9,7 +9,7 @@ final class SceneQueueUITests: XCTestCase {
         app.launchArguments = ["--scene-fixture", "-AlbumWinnow.photosEnabled", "NO",
                                "-AlbumWinnow.reviewAnimation", "none", "-AlbumWinnow.showReviewFilenames", "YES",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
-        app.launch()
+        app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15))
         scan.tap()

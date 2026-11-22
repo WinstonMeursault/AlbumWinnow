@@ -12,12 +12,12 @@ enum ReviewAnimation: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: LocalizedStringKey {
+    var title: String {
         switch self {
-        case .slide: "Slide"
-        case .cover: "Cover"
-        case .fade: "Fade"
-        case .none: "None"
+        case .slide: L10n.text("app_slide")
+        case .cover: L10n.text("app_cover")
+        case .fade: L10n.text("app_fade")
+        case .none: L10n.text("app_none")
         }
     }
 }
@@ -69,7 +69,7 @@ struct ReviewPager: View {
                             .accessibilityHidden(relative != 0)
                     }
                     if index == groups.count - 1 {
-                        Label("Back to Overview", systemImage: "square.grid.2x2")
+                        Label(L10n.text("app_back_to_overview"), systemImage: "square.grid.2x2")
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background { background }
@@ -103,8 +103,8 @@ struct ReviewPager: View {
                     onEnd: { end($0, velocity: $1, cancelled: $2, width: width, index: index) }
                 ))
                 #endif
-                .accessibilityAction(named: Text("Previous Group")) { navigate(forward: false, width: width, index: index) }
-                .accessibilityAction(named: Text("Next Group")) { navigate(forward: true, width: width, index: index) }
+                .accessibilityAction(named: Text(L10n.text("app_previous_group"))) { navigate(forward: false, width: width, index: index) }
+                .accessibilityAction(named: Text(L10n.text("app_next_group"))) { navigate(forward: true, width: width, index: index) }
                 .onChange(of: geometry.size) { reset() }
             }
         }

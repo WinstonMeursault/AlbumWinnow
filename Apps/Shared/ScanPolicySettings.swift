@@ -8,33 +8,33 @@ struct ScanPolicySettings: View {
     @State private var second = ""
 
     private var sources: [(id: String, name: String)] {
-        (model.photosEnabled && model.allowsPhotos ? [("photos-library", "Photos")] : []) +
+        (model.photosEnabled && model.allowsPhotos ? [("photos-library", L10n.text("app_photos"))] : []) +
             model.folders.map { ($0.id, $0.name) }
     }
 
     var body: some View {
-        Section("Comparison Scope") {
-            Button("Photo Albums and Dates…") { showingScope = true }
+        Section(L10n.text("app_comparison_scope")) {
+            Button(L10n.text("app_photo_albums_and_dates")) { showingScope = true }
                 .accessibilityIdentifier("photo-scope")
                 .disabled(!model.photosEnabled || !model.allowsPhotos)
-            Text(model.photoScope.albums.map { "\($0.count) selected albums" } ?? String(localized: "All accessible photos"))
+            Text(model.photoScope.albums.map { L10n.text("app_arg1_selected_albums", Int64($0.count)) } ?? L10n.text("app_all_accessible_photos"))
                 .font(.caption).foregroundStyle(.secondary)
             if let dates = model.photoScope.dates {
                 Text("\(dates.start.formatted(date: .abbreviated, time: .omitted)) – \(dates.end.addingTimeInterval(-1).formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
             }
-            Toggle("Compare Two Sides Only", isOn: Binding(get: { model.comparisonSides != nil }, set: {
+            Toggle(L10n.text("app_compare_two_sides_only"), isOn: Binding(get: { model.comparisonSides != nil }, set: {
                 model.setComparisonSides($0 ? ComparisonSides(first: first, second: second) : nil)
             }))
             .accessibilityIdentifier("compare-two-sides")
-            Picker("Side A", selection: $first) { sourceOptions }
-            Picker("Side B", selection: $second) { sourceOptions }
+            Picker(L10n.text("app_side_a"), selection: $first) { sourceOptions }
+            Picker(L10n.text("app_side_b"), selection: $second) { sourceOptions }
             if let sides = model.comparisonSides {
-                Text("Active: \(model.sourceLabel(sides.first)) ⇄ \(model.sourceLabel(sides.second))")
+                Text(L10n.text("app_active_arg1_arg2", model.sourceLabel(sides.first), model.sourceLabel(sides.second)))
                     .font(.caption)
-                Button("Apply Two Sides") { applySides() }
+                Button(L10n.text("app_apply_two_sides")) { applySides() }
             }
-            Text("Cross-side mode uses only matches between the two sources. It may keep extra photos when a selected copy has no verified match to another member.")
+            Text(L10n.text("app_cross_side_mode_uses_only_matches_between_the_two_sources_it_may_keep_extra_photos_when_a_selected_copy_has_no_verified_match_to_another_member"))
                 .font(.caption).foregroundStyle(.secondary)
         }
         .disabled(!model.canEditSources)
@@ -43,21 +43,21 @@ struct ScanPolicySettings: View {
             first = model.comparisonSides?.first ?? sources.first?.id ?? ""
             second = model.comparisonSides?.second ?? sources.dropFirst().first?.id ?? ""
         }
-        Section("Source Policy") {
-            Picker("Quality Tie Preference", selection: Binding(get: { model.preferredSource ?? "" }, set: {
+        Section(L10n.text("app_source_policy")) {
+            Picker(L10n.text("app_quality_tie_preference"), selection: Binding(get: { model.preferredSource ?? "" }, set: {
                 model.setPreferredSource($0.isEmpty ? nil : $0)
             })) {
-                Text("Quality First").tag("")
+                Text(L10n.text("app_quality_first")).tag("")
                 ForEach(sources, id: \.id) { Text($0.name).tag($0.id) }
                 if let preferred = model.preferredSource, !sources.contains(where: { $0.id == preferred }) {
-                    Text("Unavailable Source").tag(preferred)
+                    Text(L10n.text("app_unavailable_source")).tag(preferred)
                 }
             }
             ForEach(sources, id: \.id) { source in readOnlyToggle(source.id, name: source.name) }
             ForEach(model.readOnlySources.filter { id in !sources.contains { $0.id == id } }.sorted(), id: \.self) { id in
-                readOnlyToggle(id, name: String(localized: "Unavailable Source"))
+                readOnlyToggle(id, name: L10n.text("app_unavailable_source"))
             }
-            Text("Read-only sources participate in comparison but cannot be cleaned. Locks and associated resources remain protected. Hardlinked files may be kept conservatively while a folder is read-only.")
+            Text(L10n.text("app_read_only_sources_participate_in_comparison_but_cannot_be_cleaned_locks_and_associated_resources_remain_protected_hardlinked_files_may_be_kept_conservatively_while_a_folder_is_read_only"))
                 .font(.caption).foregroundStyle(.secondary)
         }
         .disabled(!model.canEditSources)
@@ -65,11 +65,11 @@ struct ScanPolicySettings: View {
 
     private var sourceOptions: some View {
         Group {
-            Text("Choose Source").tag("")
+            Text(L10n.text("app_choose_source")).tag("")
             ForEach(sources, id: \.id) { Text($0.name).tag($0.id) }
             if let sides = model.comparisonSides {
                 ForEach([sides.first, sides.second].filter { id in !sources.contains { $0.id == id } }, id: \.self) { id in
-                    Text("Unavailable Source").tag(id)
+                    Text(L10n.text("app_unavailable_source")).tag(id)
                 }
             }
         }
@@ -80,7 +80,7 @@ struct ScanPolicySettings: View {
     }
 
     private func readOnlyToggle(_ id: String, name: String) -> some View {
-        Toggle("Read-only · \(name)", isOn: Binding(get: { model.readOnlySources.contains(id) }, set: { enabled in
+        Toggle(L10n.text("app_read_only_arg1", name), isOn: Binding(get: { model.readOnlySources.contains(id) }, set: { enabled in
             Task { await model.setReadOnly(id, enabled: enabled) }
         }))
     }
@@ -101,10 +101,10 @@ private struct PhotoScopeEditor: View {
     var body: some View {
         NavigationStack {
             Form {
-                Toggle("Selected Albums Only", isOn: $selectedAlbums)
+                Toggle(L10n.text("app_selected_albums_only"), isOn: $selectedAlbums)
                 if selectedAlbums {
                     if model.authorization == .limited {
-                        Text("Albums are unavailable with limited photo access. Review access or choose all accessible photos explicitly.")
+                        Text(L10n.text("app_albums_are_unavailable_with_limited_photo_access_review_access_or_choose_all_accessible_photos_explicitly"))
                     }
                     ForEach(albums.keys.sorted { (albums[$0] ?? "") < (albums[$1] ?? "") }, id: \.self) { id in
                         Toggle(albums[id] ?? "", isOn: Binding(get: { selection[id] != nil }, set: {
@@ -112,26 +112,26 @@ private struct PhotoScopeEditor: View {
                         }))
                     }
                     ForEach(selection.keys.filter { albums[$0] != selection[$0] }.sorted(), id: \.self) { id in
-                        Button("Remove Unavailable or Renamed Album: \(selection[id] ?? "")") { selection.removeValue(forKey: id) }
+                        Button(L10n.text("app_remove_unavailable_or_renamed_album_arg1", selection[id] ?? "")) { selection.removeValue(forKey: id) }
                     }
-                    Text("Multiple albums form a union. Empty selection scans no photos; unavailable selections never fall back to the whole library.")
+                    Text(L10n.text("app_multiple_albums_form_a_union_empty_selection_scans_no_photos_unavailable_selections_never_fall_back_to_the_whole_library"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                Toggle("Capture Date Range", isOn: $dated)
+                Toggle(L10n.text("app_capture_date_range"), isOn: $dated)
                 if dated {
-                    DatePicker("First Day", selection: $first, displayedComponents: .date)
-                    DatePicker("Last Day", selection: $last, displayedComponents: .date)
-                    Toggle("Include Unknown Capture Dates", isOn: $includesUnknown)
-                    Text("Uses the current calendar and time zone when applied. The exact start and end are saved for scan recovery.")
+                    DatePicker(L10n.text("app_first_day"), selection: $first, displayedComponents: .date)
+                    DatePicker(L10n.text("app_last_day"), selection: $last, displayedComponents: .date)
+                    Toggle(L10n.text("app_include_unknown_capture_dates"), isOn: $includesUnknown)
+                    Text(L10n.text("app_uses_the_current_calendar_and_time_zone_when_applied_the_exact_start_and_end_are_saved_for_scan_recovery"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if let error { Text(error).foregroundStyle(.red) }
             }
             .formStyle(.grouped)
-            .navigationTitle("Photo Scope")
+            .navigationTitle(L10n.text("app_photo_scope"))
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Apply") { apply() }.disabled(!model.canEditSources) }
+                ToolbarItem(placement: .cancellationAction) { Button(L10n.text("app_cancel")) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button(L10n.text("app_apply")) { apply() }.disabled(!model.canEditSources) }
             }
         }
         #if os(macOS)
@@ -144,7 +144,7 @@ private struct PhotoScopeEditor: View {
             dated = scope.dates != nil
             if let range = scope.dates { first = range.start; last = range.end.addingTimeInterval(-1); includesUnknown = range.includesUnknown }
             do { albums = try PhotoLibrarySource.albums() }
-            catch { self.error = "Albums could not be loaded. Existing selections are preserved." }
+            catch { self.error = L10n.text("app_albums_could_not_be_loaded_existing_selections_are_preserved") }
         }
     }
 
@@ -155,6 +155,6 @@ private struct PhotoScopeEditor: View {
             scope.dates = dated ? try CaptureRange(firstDay: first, lastDay: last, includesUnknown: includesUnknown) : nil
             model.setPhotoScope(scope)
             dismiss()
-        } catch { self.error = "Choose a valid capture-date range." }
+        } catch { self.error = L10n.text("app_choose_a_valid_capture_date_range") }
     }
 }

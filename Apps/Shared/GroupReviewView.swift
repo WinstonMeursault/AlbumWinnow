@@ -74,27 +74,27 @@ struct GroupReviewView: View {
             HStack {
                 Text(model.status(for: group).title).font(.caption)
                 if selection.keepID != nil || selection.deleteAll {
-                    Text("\(assets.count - selection.selected.count) kept · \(selection.selected.count) pending cleanup")
+                    Text(L10n.text("app_arg1_kept_arg2_pending_cleanup", Int64(assets.count - selection.selected.count), Int64(selection.selected.count)))
                         .font(.caption)
                 }
                 if group.comparisonSides != nil {
-                    Text("Cross-side evidence only; unmatched members remain kept.")
+                    Text(L10n.text("app_cross_side_evidence_only_unmatched_members_remain_kept"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Review Evidence", systemImage: "info.circle") { showingInformation = true }
+                Button(L10n.text("app_review_evidence"), systemImage: "info.circle") { showingInformation = true }
                     .labelStyle(.iconOnly)
                     .accessibilityIdentifier(isActive ? "review-evidence" : "")
                     .disabled(!isActive)
-                Menu("Group Actions", systemImage: "ellipsis.circle") {
-                    Button("Zoom In", systemImage: "plus.magnifyingglass", action: zoomIn)
+                Menu(L10n.text("app_group_actions"), systemImage: "ellipsis.circle") {
+                    Button(L10n.text("app_zoom_in"), systemImage: "plus.magnifyingglass", action: zoomIn)
                         .keyboardShortcut("+", modifiers: .command)
-                    Button("Reset Zoom", systemImage: "arrow.counterclockwise", action: resetZoom)
+                    Button(L10n.text("app_reset_zoom"), systemImage: "arrow.counterclockwise", action: resetZoom)
                         .keyboardShortcut("0", modifiers: .command)
-                    Toggle("Sync Zoom", isOn: Binding(get: { synchronizedZoom }, set: { setSynchronizedZoom($0) }))
+                    Toggle(L10n.text("app_sync_zoom"), isOn: Binding(get: { synchronizedZoom }, set: { setSynchronizedZoom($0) }))
                     Divider()
-                    Button("Keep Entire Group") { model.setStatus(.kept, for: group); advance() }
-                    Button("Undo Group Decision") { model.setStatus(.pending, for: group); resetDraft() }
+                    Button(L10n.text("app_keep_entire_group")) { model.setStatus(.kept, for: group); advance() }
+                    Button(L10n.text("app_undo_group_decision")) { model.setStatus(.pending, for: group); resetDraft() }
                 }
                 .labelStyle(.iconOnly)
                 .disabled(!isActive || !model.canClean)
@@ -138,16 +138,16 @@ struct GroupReviewView: View {
     private var controls: some View {
         VStack(spacing: 6) {
             if checkedRemovability, let deleteAllUnavailable {
-                Text("Delete All unavailable: \(deleteAllUnavailable)")
+                Text(L10n.text("app_delete_all_unavailable_arg1", deleteAllUnavailable))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             if group.match == .similarPhoto || group.match == .sceneSimilar {
-                Text("Similar photos · Check differences before confirming.")
+                Text(L10n.text("app_similar_photos_check_differences_before_confirming"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if group.match == .visualDuplicate {
-                Text("Possible matches · Compare details before confirming.")
+                Text(L10n.text("app_possible_matches_compare_details_before_confirming"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -158,7 +158,7 @@ struct GroupReviewView: View {
                     resetDraft()
                     advance()
                 } label: {
-                    actionTitle("Skip")
+                    actionTitle(L10n.text("app_skip"))
                 }
                 .foregroundStyle(.primary)
                 .disabled(!isActive || confirmationTask != nil)
@@ -184,32 +184,32 @@ struct GroupReviewView: View {
                 advance()
             }
         } label: {
-            actionTitle("Confirm")
+            actionTitle(L10n.text("app_confirm"))
         }
         .buttonStyle(.borderedProminent)
         .tint(deletingAll ? .red : .accentColor)
         .disabled(!isActive || confirmationTask != nil || !model.canClean ||
                   (deletingAll ? !checkedRemovability || deleteAllUnavailable != nil : keepID == nil))
         .accessibilityIdentifier(isActive ? "review-confirm" : "")
-        .accessibilityHint(deletingAll ? Text("Adds the entire group to pending cleanup") :
-                                        Text("Keeps the selected photo and queues removable copies"))
+        .accessibilityHint(deletingAll ? Text(L10n.text("app_adds_the_entire_group_to_pending_cleanup")) :
+                                        Text(L10n.text("app_keeps_the_selected_photo_and_queues_removable_copies")))
     }
 
     private var deleteAllButton: some View {
         Button {
             deleteAllDraft = !deletingAll
         } label: {
-            actionTitle("Delete All")
+            actionTitle(L10n.text("app_delete_all"))
         }
         .foregroundStyle(.red)
         .tint(deletingAll ? .red : nil)
         .disabled(!isActive || confirmationTask != nil || !checkedRemovability || !model.canClean || deleteAllUnavailable != nil)
         .accessibilityIdentifier(isActive ? "review-delete-all" : "")
-        .accessibilityValue(deletingAll ? Text("On") : Text("Off"))
-        .accessibilityHint(Text("Previews removing every photo in this group"))
+        .accessibilityValue(deletingAll ? Text(L10n.text("app_on")) : Text(L10n.text("app_off")))
+        .accessibilityHint(Text(L10n.text("app_previews_removing_every_photo_in_this_group")))
     }
 
-    private func actionTitle(_ title: LocalizedStringKey) -> some View {
+    private func actionTitle(_ title: String) -> some View {
         Text(title)
             .lineLimit(2)
             .minimumScaleFactor(0.65)
@@ -268,8 +268,8 @@ struct GroupReviewView: View {
     private func card(_ asset: PhotoAsset, number: Int) -> some View {
         let recommended = !deletingAll && asset.id == group.recommendation.id && group.hasQualityRecommendation != false
         let selected = !deletingAll && keepID == asset.id
-        let title = showFilenames ? Text(asset.name) : Text("Photo \(number)")
-        let accessibleTitle = recommended ? Text("\(title), recommended to keep") : title
+        let title = showFilenames ? asset.name : L10n.text("app_photo_arg1", Int64(number))
+        let accessibleTitle = recommended ? L10n.text("app_arg1_recommended_to_keep", title) : title
         let active = isActive && confirmationTask == nil && model.canClean && !showingInformation
         let select = {
             guard active else { return }
@@ -281,19 +281,19 @@ struct GroupReviewView: View {
                            model: model, zoom: zoomBinding(for: asset), active: active, select: select)
         .overlay(alignment: .topLeading) {
             if model.isLocked(asset) || model.isReadOnly(asset) {
-                Label(model.isLocked(asset) ? "Locked" : "Read-only Source", systemImage: model.isLocked(asset) ? "lock.fill" : "hand.raised.fill")
+                Label(model.isLocked(asset) ? L10n.text("app_locked") : L10n.text("app_read_only_source"), systemImage: model.isLocked(asset) ? "lock.fill" : "hand.raised.fill")
                     .font(.caption).padding(8).background(.regularMaterial, in: .capsule).padding(8)
                     .allowsHitTesting(false)
             }
         }
         .contextMenu {
             if asset.id.source == "photos-library" {
-                Button("Download and Rescan This Photo", systemImage: "icloud.and.arrow.down") {
+                Button(L10n.text("app_download_and_rescan_this_photo"), systemImage: "icloud.and.arrow.down") {
                     model.downloadAndRescan(asset)
                 }
                 .disabled(!model.canScan)
             }
-            Button(model.isLocked(asset) ? "Unlock Photo" : "Lock Photo", systemImage: model.isLocked(asset) ? "lock.open" : "lock") {
+            Button(model.isLocked(asset) ? L10n.text("app_unlock_photo") : L10n.text("app_lock_photo"), systemImage: model.isLocked(asset) ? "lock.open" : "lock") {
                 model.setLocked(asset, locked: !model.isLocked(asset))
             }
             .disabled(!model.canEditSources)
@@ -305,13 +305,13 @@ struct GroupReviewView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
         .accessibilityAction { select() }
-        .accessibilityAction(named: Text("Zoom or Reset")) {
+        .accessibilityAction(named: Text(L10n.text("app_zoom_or_reset"))) {
             guard active else { return }
             let binding = zoomBinding(for: asset)
             binding.wrappedValue = binding.wrappedValue.scale > 1 ? ReviewZoom() : ReviewZoom(scale: 2)
         }
-        .accessibilityLabel(Text("\(accessibleTitle), \(previews[asset.id]?.details ?? String(localized: "Photo details unavailable"))"))
-        .accessibilityValue(model.isLocked(asset) ? Text("Locked, must be kept") : model.isReadOnly(asset) ? Text("Read-only, must be kept") : deletingAll ? Text("Marked for removal") : selected ? Text("Selected") : Text(""))
+        .accessibilityLabel(Text("\(accessibleTitle), \(previews[asset.id]?.details ?? L10n.text("app_photo_details_unavailable"))"))
+        .accessibilityValue(model.isLocked(asset) ? Text(L10n.text("app_locked_must_be_kept")) : model.isReadOnly(asset) ? Text(L10n.text("app_read_only_must_be_kept")) : deletingAll ? Text(L10n.text("app_marked_for_removal")) : selected ? Text(L10n.text("review_photo_selected_to_keep")) : Text(""))
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier(isActive ? "review-photo-\(asset.name)" : "")
         .task(id: asset) {
@@ -417,7 +417,7 @@ private struct PreviewCard: View {
                 }
                 .overlay(alignment: .topTrailing) {
                     if selected {
-                        Text("Selected")
+                        Text(L10n.text("review_photo_selected_to_keep"))
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 8)
@@ -429,7 +429,7 @@ private struct PreviewCard: View {
                 }
                 .overlay(alignment: .bottomLeading) {
                     if recommended {
-                        Text("Recommended")
+                        Text(L10n.text("app_recommended"))
                             .font(.caption.weight(.medium))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
@@ -478,16 +478,16 @@ struct PhotoMetadataView: View {
 
     private var metadataSummary: some View {
         HStack(spacing: 0) {
-            Text(preview?.format ?? String(localized: "Unknown format"))
+            Text(preview?.format ?? L10n.text("app_unknown_format"))
             Text(" · ")
             Text(preview?.byteCount.map {
                 ByteCountFormatter.string(fromByteCount: Int64($0), countStyle: .file)
-            } ?? String(localized: "Size unknown"))
+            } ?? L10n.text("app_size_unknown"))
         }
     }
 
     private var metadataDimensions: some View {
-        Text(preview?.dimensions ?? String(localized: "Resolution unknown"))
+        Text(preview?.dimensions ?? L10n.text("app_resolution_unknown"))
     }
 }
 
@@ -500,9 +500,9 @@ struct LoadedPreview: Sendable {
 
     var details: String {
         let size = byteCount.map { ByteCountFormatter.string(fromByteCount: Int64($0), countStyle: .file) }
-        return [format ?? String(localized: "Unknown format"),
-                size ?? String(localized: "Size unknown"),
-                dimensions ?? String(localized: "Resolution unknown")].joined(separator: " · ")
+        return [format ?? L10n.text("app_unknown_format"),
+                size ?? L10n.text("app_size_unknown"),
+                dimensions ?? L10n.text("app_resolution_unknown")].joined(separator: " · ")
     }
 
     var aspectRatio: CGFloat? {

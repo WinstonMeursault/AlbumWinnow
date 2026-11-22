@@ -45,6 +45,12 @@
 		2A76805FDBDFE8E5A7FCDAA3 /* ScanPolicySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA947A31D7662E6A06038A66 /* ScanPolicySettings.swift */; };
 		CDA4D097E2CBF078B0A7023E /* PhotoDifferenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D0143F6609E57BB7EBA42A /* PhotoDifferenceView.swift */; };
 		54E904A59D000CA6A6046D8C /* PhotoDifferenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D0143F6609E57BB7EBA42A /* PhotoDifferenceView.swift */; };
+		0051377EF5988DE713E60BFD /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89147F0CC422D8118E6B72F /* Localization.swift */; };
+		B1689A1E3C160F99BD7BFFB7 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89147F0CC422D8118E6B72F /* Localization.swift */; };
+		CC9F1689B68C4EC6A5EF1A8A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8BF0B2A3F2D6C40D21F6F978 /* Localizable.xcstrings */; };
+		26B737121413019135B8216B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8BF0B2A3F2D6C40D21F6F978 /* Localizable.xcstrings */; };
+		8547557609F2571482F4A5F8 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A6AE6D83D69934D59B9B727 /* InfoPlist.xcstrings */; };
+		4DFBA9ADCC274061FA91E3B0 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A6AE6D83D69934D59B9B727 /* InfoPlist.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +76,9 @@
 		B9EE0F127FE096E99E62A524 /* ReviewZoomPhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewZoomPhoto.swift; sourceTree = "<group>"; };
 		DA947A31D7662E6A06038A66 /* ScanPolicySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanPolicySettings.swift; sourceTree = "<group>"; };
 		25D0143F6609E57BB7EBA42A /* PhotoDifferenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDifferenceView.swift; sourceTree = "<group>"; };
+		A89147F0CC422D8118E6B72F /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		8BF0B2A3F2D6C40D21F6F978 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Resources/Localizable.xcstrings; sourceTree = "<group>"; };
+		1A6AE6D83D69934D59B9B727 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Resources/InfoPlist.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -124,6 +133,7 @@
 				AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */,
 				277E3A7EDDA92B1545F436A8 /* FolderScope.swift */,
 				2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */,
+				A89147F0CC422D8118E6B72F /* Localization.swift */,
 				25D0143F6609E57BB7EBA42A /* PhotoDifferenceView.swift */,
 				DA947A31D7662E6A06038A66 /* ScanPolicySettings.swift */,
 				B9EE0F127FE096E99E62A524 /* ReviewZoomPhoto.swift */,
@@ -137,6 +147,8 @@
 				C102AA0905194B0180000041 /* Assets.xcassets */,
 				C102AA0905194B0180000051 /* AboutView.swift */,
 				C102AA0905194B0180000061 /* PrivacyInfo.xcprivacy */,
+				1A6AE6D83D69934D59B9B727 /* InfoPlist.xcstrings */,
+				8BF0B2A3F2D6C40D21F6F978 /* Localizable.xcstrings */,
 				C102AA0905194B0180000071 /* LICENSE */,
 				C102AA0905194B0180000081 /* THIRD-PARTY-NOTICES.txt */,
 			);
@@ -217,6 +229,8 @@
 			knownRegions = (
 				Base,
 				en,
+				"zh-Hans",
+				ja,
 			);
 			mainGroup = D663F01A0986CFD3CB94D518;
 			minimizedProjectReferenceProxies = 1;
@@ -241,6 +255,8 @@
 			files = (
 				C102AA0905194B0180000042 /* Assets.xcassets in Resources */,
 				C102AA0905194B0180000062 /* PrivacyInfo.xcprivacy in Resources */,
+				8547557609F2571482F4A5F8 /* InfoPlist.xcstrings in Resources */,
+				CC9F1689B68C4EC6A5EF1A8A /* Localizable.xcstrings in Resources */,
 				C102AA0905194B0180000072 /* LICENSE in Resources */,
 				C102AA0905194B0180000082 /* THIRD-PARTY-NOTICES.txt in Resources */,
 			);
@@ -252,6 +268,8 @@
 			files = (
 				C102AA0905194B0180000043 /* Assets.xcassets in Resources */,
 				C102AA0905194B0180000063 /* PrivacyInfo.xcprivacy in Resources */,
+				4DFBA9ADCC274061FA91E3B0 /* InfoPlist.xcstrings in Resources */,
+				26B737121413019135B8216B /* Localizable.xcstrings in Resources */,
 				C102AA0905194B0180000073 /* LICENSE in Resources */,
 				C102AA0905194B0180000083 /* THIRD-PARTY-NOTICES.txt in Resources */,
 			);
@@ -267,6 +285,7 @@
 				84858ADCA1BE3815203516E7 /* AlbumWinnowApp.swift in Sources */,
 				0E7D913A238401877DDEBED9 /* FolderScope.swift in Sources */,
 				004544D8146902FB7745C798 /* GroupReviewView.swift in Sources */,
+				0051377EF5988DE713E60BFD /* Localization.swift in Sources */,
 				CDA4D097E2CBF078B0A7023E /* PhotoDifferenceView.swift in Sources */,
 				AD5876A542A88D756398EB82 /* ScanPolicySettings.swift in Sources */,
 				0DBDE7ECB149CA57B3F3263F /* ReviewZoomPhoto.swift in Sources */,
@@ -288,6 +307,7 @@
 				F18A76D3AFFDF7CF36EC83C4 /* AlbumWinnowApp.swift in Sources */,
 				BD334C02554178A420275AC9 /* FolderScope.swift in Sources */,
 				995C20DEF25F0E206436F678 /* GroupReviewView.swift in Sources */,
+				B1689A1E3C160F99BD7BFFB7 /* Localization.swift in Sources */,
 				54E904A59D000CA6A6046D8C /* PhotoDifferenceView.swift in Sources */,
 				2A76805FDBDFE8E5A7FCDAA3 /* ScanPolicySettings.swift in Sources */,
 				C42C9EA568C7EFCE65939EFC /* ReviewZoomPhoto.swift in Sources */,
@@ -387,7 +407,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.6.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.winstonmeursault.albumwinnow;
@@ -470,7 +490,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 1.6.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

@@ -8,40 +8,40 @@ struct ResultFiltersView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Picker("Review Status", selection: binding(\.status)) {
+                Picker(L10n.text("app_review_status"), selection: binding(\.status)) {
                     ForEach(ReviewStatusFilter.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
                 .accessibilityIdentifier("result-status-filter")
-                Picker("Match Category", selection: binding(\.match)) {
-                    Text("All Categories").tag(nil as DuplicateMatch?)
+                Picker(L10n.text("app_match_category"), selection: binding(\.match)) {
+                    Text(L10n.text("app_all_categories")).tag(nil as DuplicateMatch?)
                     ForEach(model.reviewCollection == .similarScenes ? [DuplicateMatch.sceneSimilar] : [DuplicateMatch.exactDuplicate, .visualDuplicate, .similarPhoto], id: \.self) {
                         Text($0.title).tag(Optional($0))
                     }
                 }
-                Picker("Source", selection: binding(\.source)) {
-                    Text("All Sources").tag(nil as String?)
-                    Text("Photos").tag(Optional("photos-library"))
+                Picker(L10n.text("app_source"), selection: binding(\.source)) {
+                    Text(L10n.text("app_all_sources")).tag(nil as String?)
+                    Text(L10n.text("app_photos")).tag(Optional("photos-library"))
                     ForEach(model.folders) { Text($0.name).tag(Optional($0.id)) }
                     if let source = model.resultQuery.source, source != "photos-library",
                        !model.folders.contains(where: { $0.id == source }) {
-                        Text("Unavailable Source").tag(Optional(source))
+                        Text(L10n.text("app_unavailable_source")).tag(Optional(source))
                     }
                 }
-                Picker("Sort", selection: binding(\.sort)) {
+                Picker(L10n.text("app_sort"), selection: binding(\.sort)) {
                     ForEach(ReviewSort.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
                 .accessibilityIdentifier("result-sort")
-                Text("Dates use the latest known capture metadata in each group. Unknown dates stay last in either direction. Size sorting uses known candidate bytes; partial sizes are lower bounds.")
+                Text(L10n.text("app_dates_use_the_latest_known_capture_metadata_in_each_group_unknown_dates_stay_last_in_either_direction_size_sorting_uses_known_candidate_bytes_partial_sizes_are_lower_bounds"))
                     .font(.caption).foregroundStyle(.secondary)
-                Button("Clear Filters") { model.clearResultFilters() }
-                Text("Filtering never clears confirmed cleanup candidates. A review session keeps its current order until you return to the overview.")
+                Button(L10n.text("app_clear_filters")) { model.clearResultFilters() }
+                Text(L10n.text("app_filtering_never_clears_confirmed_cleanup_candidates_a_review_session_keeps_its_current_order_until_you_return_to_the_overview"))
                     .font(.caption).foregroundStyle(.secondary)
             }
             .formStyle(.grouped)
             .disabled(!model.canEditSources)
-            .navigationTitle("Filter and Sort")
+            .navigationTitle(L10n.text("app_filter_and_sort"))
             .toolbarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("app_done")) { dismiss() } } }
         }
         #if os(macOS)
         .frame(minWidth: 420, idealWidth: 500, minHeight: 400, idealHeight: 520)
@@ -66,106 +66,106 @@ struct GroupInformationView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Recommendation Evidence") {
+                Section(L10n.text("app_recommendation_evidence")) {
                     let reasons = group.recommendationReasons
                     ForEach(Array(reasons.prefix(2)), id: \.self) { Text(reason($0)) }
                     if reasons.count > 2 {
-                        DisclosureGroup("More Evidence") {
+                        DisclosureGroup(L10n.text("app_more_evidence")) {
                             ForEach(Array(reasons.dropFirst(2)), id: \.self) { Text(reason($0)) }
                         }
                     }
-                    Text("Recommended is a suggestion. Selected is your keep choice. Locked photos must also remain; a lock is not a quality rating.")
+                    Text(L10n.text("app_recommended_is_a_suggestion_selected_is_your_keep_choice_locked_photos_must_also_remain_a_lock_is_not_a_quality_rating"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                Section("Why These Photos Are Grouped") {
+                Section(L10n.text("app_why_these_photos_are_grouped")) {
                     Text(group.match.title).font(.headline)
                     Text(group.match.explanation)
                     if group.comparisonSides != nil {
-                        Text("Only cross-side edges are evidence. Photos on the same side are not assumed identical. Choosing one photo may retain additional members without a verified match to a retained photo.")
+                        Text(L10n.text("app_only_cross_side_edges_are_evidence_photos_on_the_same_side_are_not_assumed_identical_choosing_one_photo_may_retain_additional_members_without_a_verified_match_to_a_retained_photo"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
-                    Text("The summary uses the most cautious category. Each member below records its own match to the reference photo, not to every other member.")
+                    Text(L10n.text("app_the_summary_uses_the_most_cautious_category_each_member_below_records_its_own_match_to_the_reference_photo_not_to_every_other_member"))
                         .font(.caption).foregroundStyle(.secondary)
                     ForEach(Array(group.duplicates.enumerated()), id: \.element.id) { index, member in
-                        LabeledContent(showFilenames ? member.asset.name : "Photo \(index + 2)") {
+                        LabeledContent(showFilenames ? member.asset.name : L10n.text("app_photo_arg1", Int64(index + 2))) {
                             Text(member.match.title)
                         }
                     }
-                    Text("Reference: \(showFilenames ? group.preferred.name : String(localized: "Photo 1"))")
+                    Text(L10n.text("app_reference_arg1", showFilenames ? group.preferred.name : L10n.text("app_photo_1")))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 if group.sceneAlgorithm != nil {
-                    Section("Scene Similarity Evidence") {
-                        Text("Visual features agree within this group. A shared burst identifier and capture-time proximity are candidate hints, not proof of identical content.")
-                        Text("Groups require every member to agree with the representative and the other members, with at most 24 photos. Larger scenes and similarity chains can be split. Low-texture photos may be omitted.")
+                    Section(L10n.text("app_scene_similarity_evidence")) {
+                        Text(L10n.text("app_visual_features_agree_within_this_group_a_shared_burst_identifier_and_capture_time_proximity_are_candidate_hints_not_proof_of_identical_content"))
+                        Text(L10n.text("app_groups_require_every_member_to_agree_with_the_representative_and_the_other_members_with_at_most_24_photos_larger_scenes_and_similarity_chains_can_be_split_low_texture_photos_may_be_omitted"))
                             .font(.caption).foregroundStyle(.secondary)
-                        Text("Natural-photo precision and recall have not been measured. Inspect content differences before deciding what to keep.")
+                        Text(L10n.text("app_natural_photo_precision_and_recall_have_not_been_measured_inspect_content_differences_before_deciding_what_to_keep"))
                             .font(.caption).foregroundStyle(.secondary)
-                        Text("\(group.sceneEvidence?.count ?? 0) actual pair comparisons")
-                        DisclosureGroup("Pair Details") {
+                        Text(L10n.text("app_arg1_actual_pair_comparisons", Int64(group.sceneEvidence?.count ?? 0)))
+                        DisclosureGroup(L10n.text("app_pair_details")) {
                             ForEach(Array((group.sceneEvidence ?? []).enumerated()), id: \.offset) { index, evidence in
-                                Text("Pair \(index + 1): feature distance \(Double(evidence.featureDistance).formatted(.number.precision(.fractionLength(3))))")
-                                if evidence.sharedBurst { Text("Shared Photos burst identifier") }
+                                Text(L10n.text("app_pair_arg1_feature_distance_arg2", Int64(index + 1), Double(evidence.featureDistance).formatted(.number.precision(.fractionLength(3)))))
+                                if evidence.sharedBurst { Text(L10n.text("app_shared_photos_burst_identifier")) }
                             }
                         }
-                        Text("Feature distance is not a confidence percentage. Smaller values mean closer representations, not guaranteed duplicates.")
+                        Text(L10n.text("app_feature_distance_is_not_a_confidence_percentage_smaller_values_mean_closer_representations_not_guaranteed_duplicates"))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                Section("Photo Metadata") {
+                Section(L10n.text("app_photo_metadata")) {
                     ForEach(Array(group.assets.enumerated()), id: \.element.id) { index, asset in
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(showFilenames ? asset.name : "Photo \(index + 1)").font(.headline)
+                            Text(showFilenames ? asset.name : L10n.text("app_photo_arg1", Int64(index + 1))).font(.headline)
                             Text(model.sourceLabel(asset.id.source))
                             let evidence = group.evidence?[asset.id]
                             if let evidence {
                                 Text("\(evidence.width) × \(evidence.height)")
-                                Text(evidence.bitDepth.map { "\($0)-bit" } ?? String(localized: "Bit depth unknown"))
-                            } else { Text("Resolution and bit depth unknown") }
-                            Text(asset.byteCount.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? String(localized: "Size unknown"))
+                                Text(evidence.bitDepth.map { L10n.text("app_arg1_bit", Int64($0)) } ?? L10n.text("app_bit_depth_unknown"))
+                            } else { Text(L10n.text("app_resolution_and_bit_depth_unknown")) }
+                            Text(asset.byteCount.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? L10n.text("app_size_unknown"))
                             let date = asset.captureDate ?? evidence?.captureDate
-                            Text(date.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? String(localized: "Capture date unknown"))
+                            Text(date.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? L10n.text("app_capture_date_unknown"))
                             if let quality = group.sceneQuality?[asset.id] {
-                                Text("Thumbnail focus energy: \(quality.focusEnergy.formatted(.number.precision(.fractionLength(4))))")
-                                Text("Clipped shadows: \(quality.darkClipping.formatted(.percent.precision(.fractionLength(1)))); clipped highlights: \(quality.brightClipping.formatted(.percent.precision(.fractionLength(1))))")
-                                Text("These measured thumbnail signals do not establish subject focus, artistic intent or aesthetic quality.")
+                                Text(L10n.text("app_thumbnail_focus_energy_arg1", quality.focusEnergy.formatted(.number.precision(.fractionLength(4)))))
+                                Text(L10n.text("app_clipped_shadows_arg1_clipped_highlights_arg2", quality.darkClipping.formatted(.percent.precision(.fractionLength(1))), quality.brightClipping.formatted(.percent.precision(.fractionLength(1)))))
+                                Text(L10n.text("app_these_measured_thumbnail_signals_do_not_establish_subject_focus_artistic_intent_or_aesthetic_quality"))
                                     .font(.caption).foregroundStyle(.secondary)
                             }
-                            if model.isLocked(asset) { Label("Locked", systemImage: "lock.fill") }
-                            if model.isReadOnly(asset) { Label("Read-only Source", systemImage: "hand.raised.fill") }
+                            if model.isLocked(asset) { Label(L10n.text("app_locked"), systemImage: "lock.fill") }
+                            if model.isReadOnly(asset) { Label(L10n.text("app_read_only_source"), systemImage: "hand.raised.fill") }
                         }
                         .font(.subheadline)
                     }
                 }
-                Section("Candidate Resource Size") {
+                Section(L10n.text("app_candidate_resource_size")) {
                     if group.hasQualityRecommendation == false, model.selection(for: group.id).keepID == nil,
                        !model.selection(for: group.id).deleteAll {
-                        Text("Choose and confirm a keeper before estimating candidate size.")
+                        Text(L10n.text("app_choose_and_confirm_a_keeper_before_estimating_candidate_size"))
                     } else {
                         Text(group.sizeEstimate(removing: model.estimatedRemovals(for: group)).summary)
                     }
-                    Text("This is not a promise of immediately released device storage. iCloud optimization and Recently Deleted affect actual free space.")
+                    Text(L10n.text("app_this_is_not_a_promise_of_immediately_released_device_storage_icloud_optimization_and_recently_deleted_affect_actual_free_space"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                Section("Difference Preview") {
+                Section(L10n.text("app_difference_preview")) {
                     NavigationLink {
                         PhotoDifferenceView(model: model, group: group)
                     } label: {
-                        Label("Show Differences", systemImage: "square.on.square")
+                        Label(L10n.text("app_show_differences"), systemImage: "square.on.square")
                     }
                     .accessibilityIdentifier("show-differences")
-                    Text("Choose a reference and comparison photo. Differences are shown only when their previews can be reliably aligned.")
+                    Text(L10n.text("app_choose_a_reference_and_comparison_photo_differences_are_shown_only_when_their_previews_can_be_reliably_aligned"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                Section("Zoom") {
-                    Text("Double-tap or double-click a photo to zoom or reset. Use the group menu for Zoom In, Reset Zoom and Sync Zoom. Dragging while zoomed pans the image instead of changing groups.")
-                    Text("Photos are linked by relative image position, not pixel alignment. Crops and different viewpoints may show different objects. Detail previews are limited to available pixels and do not silently download from iCloud.")
+                Section(L10n.text("app_zoom")) {
+                    Text(L10n.text("app_double_tap_or_double_click_a_photo_to_zoom_or_reset_use_the_group_menu_for_zoom_in_reset_zoom_and_sync_zoom_dragging_while_zoomed_pans_the_image_instead_of_changing_groups"))
+                    Text(L10n.text("app_photos_are_linked_by_relative_image_position_not_pixel_alignment_crops_and_different_viewpoints_may_show_different_objects_detail_previews_are_limited_to_available_pixels_and_do_not_silently_download_from_icloud"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("Review Evidence")
+            .navigationTitle(L10n.text("app_review_evidence"))
             .toolbarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("app_done")) { dismiss() }.accessibilityIdentifier("evidence-done") } }
         }
         #if os(macOS)
         .frame(minWidth: 460, idealWidth: 600, minHeight: 400, idealHeight: 620)
@@ -175,19 +175,19 @@ struct GroupInformationView: View {
     private func reason(_ reason: RecommendationReason) -> String {
         let evidence = group.evidence?[group.recommendation.id]
         switch reason {
-        case .focusSignal: return String(localized: "More measured thumbnail edge energy at the same image dimensions and comparable exposure. Check subject focus manually; intentional blur can be appropriate.")
-        case .exposureSignal: return String(localized: "Less measured shadow/highlight clipping at the same image dimensions. Exposure can be intentional; inspect the original appearance.")
-        case .sourcePreference: return String(localized: "Quality-ranking signals are tied; the configured source preference is used.")
-        case .associatedResources: return String(localized: "Associated resource flags are present. Cleanup protection applies.")
+        case .focusSignal: return L10n.text("app_more_measured_thumbnail_edge_energy_at_the_same_image_dimensions_and_comparable_exposure_check_subject_focus_manually_intentional_blur_can_be_appropriate")
+        case .exposureSignal: return L10n.text("app_less_measured_shadow_highlight_clipping_at_the_same_image_dimensions_exposure_can_be_intentional_inspect_the_original_appearance")
+        case .sourcePreference: return L10n.text("app_quality_ranking_signals_are_tied_the_configured_source_preference_is_used")
+        case .associatedResources: return L10n.text("app_associated_resource_flags_are_present_cleanup_protection_applies")
         case .higherResolution:
-            guard let evidence else { return String(localized: "Resolution unknown") }
-            return String(localized: "More pixels than another copy (\(evidence.width) × \(evidence.height)). Resolution alone does not establish sharpness.")
+            guard let evidence else { return L10n.text("app_resolution_unknown") }
+            return L10n.text("app_more_pixels_than_another_copy_arg1_arg2_resolution_alone_does_not_establish_sharpness", Int64(evidence.width), Int64(evidence.height))
         case .higherBitDepth:
-            guard let depth = evidence?.bitDepth else { return String(localized: "Bit depth unknown") }
-            return String(localized: "Higher documented bit depth (\(depth)-bit) than another copy.")
-        case .wideColor: return String(localized: "The decoded image has a wide-color profile.")
-        case .edgeContrast: return String(localized: "A thumbnail edge-contrast tie-break is used. This is not a calibrated sharpness comparison.")
-        case .noQualityAdvantage: return String(localized: "No established quality advantage. Choose according to your preference.")
+            guard let depth = evidence?.bitDepth else { return L10n.text("app_bit_depth_unknown") }
+            return L10n.text("app_higher_documented_bit_depth_arg1_bit_than_another_copy", Int64(depth))
+        case .wideColor: return L10n.text("app_the_decoded_image_has_a_wide_color_profile")
+        case .edgeContrast: return L10n.text("app_a_thumbnail_edge_contrast_tie_break_is_used_this_is_not_a_calibrated_sharpness_comparison")
+        case .noQualityAdvantage: return L10n.text("app_no_established_quality_advantage_choose_according_to_your_preference")
         }
     }
 }
@@ -195,12 +195,12 @@ struct GroupInformationView: View {
 extension ReviewStatusFilter {
     var title: String {
         switch self {
-        case .active: String(localized: "All Except Kept")
-        case .all: String(localized: "All Review States")
-        case .pending: String(localized: "Needs Review")
-        case .confirmed: String(localized: "Confirmed")
-        case .deferred: String(localized: "Later")
-        case .kept: String(localized: "Entire Group Kept")
+        case .active: L10n.text("app_all_except_kept")
+        case .all: L10n.text("app_all_review_states")
+        case .pending: L10n.text("app_needs_review")
+        case .confirmed: L10n.text("app_confirmed")
+        case .deferred: L10n.text("app_later")
+        case .kept: L10n.text("app_entire_group_kept")
         }
     }
 }
@@ -208,11 +208,11 @@ extension ReviewStatusFilter {
 extension ReviewSort {
     var title: String {
         switch self {
-        case .stable: String(localized: "Stable Order")
-        case .newest: String(localized: "Capture Date · Newest First")
-        case .oldest: String(localized: "Capture Date · Oldest First")
-        case .count: String(localized: "Most Photos")
-        case .bytes: String(localized: "Largest Candidate Size")
+        case .stable: L10n.text("app_stable_order")
+        case .newest: L10n.text("app_capture_date_newest_first")
+        case .oldest: L10n.text("app_capture_date_oldest_first")
+        case .count: L10n.text("app_most_photos")
+        case .bytes: L10n.text("app_largest_candidate_size")
         }
     }
 }
@@ -220,21 +220,21 @@ extension ReviewSort {
 extension DuplicateMatch {
     var title: String {
         switch self {
-        case .sceneSimilar: String(localized: "Burst / Similar Scene")
-        case .exactDuplicate: String(localized: "Exact Duplicate")
-        case .visualDuplicate: String(localized: "Possible Same Image")
-        case .similarPhoto: String(localized: "Highly Similar · Review Differences")
-        case .distinct: String(localized: "Different Photos")
+        case .sceneSimilar: L10n.text("app_burst_similar_scene")
+        case .exactDuplicate: L10n.text("app_exact_duplicate")
+        case .visualDuplicate: L10n.text("app_possible_same_image_caption")
+        case .similarPhoto: L10n.text("app_highly_similar_review_differences")
+        case .distinct: L10n.text("app_different_photos")
         }
     }
 
     var explanation: String {
         switch self {
-        case .sceneSimilar: String(localized: "Visual scene features are close. Frames may contain different expressions, movement or objects; this is not duplicate proof.")
-        case .exactDuplicate: String(localized: "File bytes and effective orientation agree.")
-        case .visualDuplicate: String(localized: "Multi-scale image checks agree. Size, format or compression may differ.")
-        case .similarPhoto: String(localized: "The overall image is close, but higher-resolution checks found local differences. Manual review is required.")
-        case .distinct: String(localized: "These photos do not have a verified duplicate relationship.")
+        case .sceneSimilar: L10n.text("app_visual_scene_features_are_close_frames_may_contain_different_expressions_movement_or_objects_this_is_not_duplicate_proof")
+        case .exactDuplicate: L10n.text("app_file_bytes_and_effective_orientation_agree")
+        case .visualDuplicate: L10n.text("app_multi_scale_image_checks_agree_size_format_or_compression_may_differ")
+        case .similarPhoto: L10n.text("app_the_overall_image_is_close_but_higher_resolution_checks_found_local_differences_manual_review_is_required")
+        case .distinct: L10n.text("app_these_photos_do_not_have_a_verified_duplicate_relationship")
         }
     }
 }
@@ -242,9 +242,9 @@ extension DuplicateMatch {
 extension SizeEstimate {
     var summary: String {
         let bytes = ByteCountFormatter.string(fromByteCount: knownBytes, countStyle: .file)
-        if knownCount == 0, unknownCount > 0 { return String(localized: "Size unknown") }
-        if unknownCount > 0 { return String(localized: "At least \(bytes), plus \(unknownCount) photos of unknown size") }
-        if overflowed { return String(localized: "At least \(bytes)") }
+        if knownCount == 0, unknownCount > 0 { return L10n.text("app_size_unknown") }
+        if unknownCount > 0 { return L10n.text("app_at_least_arg1_plus_arg2_photos_of_unknown_size", Int64(unknownCount), bytes) }
+        if overflowed { return L10n.text("app_at_least_arg1", bytes) }
         return bytes
     }
 }

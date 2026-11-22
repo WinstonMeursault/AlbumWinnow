@@ -6,7 +6,7 @@ final class AboutTests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         app.buttons["Settings"].tap()
 
         let about = app.buttons["about-open-source"]

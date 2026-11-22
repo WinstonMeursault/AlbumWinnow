@@ -21,6 +21,7 @@ func folderCompanionsProtectImagesBeforeAndAfterScanning(companion: String) asyn
     let outcome = try await AssetMutationService().apply([CleanupPair(keep: keep, remove: remove)], sources: [source], protection: CleanupProtection())
     #expect(outcome.map(\.status) == [.skipped])
     #expect(outcome.first?.detail == CleanupError.protectedResources.localizedDescription)
+    #expect(outcome.first?.failureReason == .cleanup(.protectedResources))
     #expect(FileManager.default.fileExists(atPath: folder.appending(path: "IMG_0001.png").path))
     #expect(try Data(contentsOf: folder.appending(path: companion)) == Data("associated resource".utf8))
 }

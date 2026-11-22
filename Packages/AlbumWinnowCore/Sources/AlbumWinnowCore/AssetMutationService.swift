@@ -202,15 +202,15 @@ public actor AssetMutationService {
         let error = (error as? ComparisonReadError)?.underlying ?? error
         return switch error {
         case is CancellationError:
-            CleanupItem(pair: pair, status: .skipped, detail: "Cleanup was cancelled.")
+            CleanupItem(pair: pair, status: .skipped, detail: "Cleanup was cancelled.", failureReason: .cancelled)
         case AssetAccessError.inaccessible:
-            CleanupItem(pair: pair, status: .failed, detail: "This photo is no longer accessible from its source.")
+            CleanupItem(pair: pair, status: .failed, detail: "This photo is no longer accessible from its source.", failureReason: .inaccessible)
         case AssetAccessError.changedDuringScan:
-            CleanupItem(pair: pair, status: .skipped, detail: CleanupError.changedAsset.localizedDescription)
+            CleanupItem(pair: pair, status: .skipped, detail: CleanupError.changedAsset.localizedDescription, failureReason: .cleanup(.changedAsset))
         case CleanupError.userProtected, CleanupError.readOnlySource, CleanupError.unavailableProtection, CleanupError.protectedResources, CleanupError.noLongerDuplicate, CleanupError.changedAsset, CleanupError.sameFile:
-            CleanupItem(pair: pair, status: .skipped, detail: error.localizedDescription)
+            CleanupItem(pair: pair, status: .skipped, detail: error.localizedDescription, failureReason: (error as? CleanupError).map { .cleanup($0) })
         default:
-            CleanupItem(pair: pair, status: .failed, detail: error.localizedDescription)
+            CleanupItem(pair: pair, status: .failed, detail: error.localizedDescription, failureReason: (error as? CleanupError).map { .cleanup($0) })
         }
     }
 }

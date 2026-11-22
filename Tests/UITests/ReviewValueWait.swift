@@ -7,3 +7,11 @@ extension XCUIElement {
         return XCTWaiter.wait(for: [expectation], timeout: 3) == .completed
     }
 }
+
+@MainActor
+extension XCUIApplication {
+    func launchInEnglish() {
+        launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        launch()
+    }
+}

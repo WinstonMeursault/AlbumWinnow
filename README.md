@@ -1,12 +1,12 @@
 # AlbumWinnow
 
-English · [简体中文](README.zh-CN.md)
+English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds duplicates across the system photo library and user-selected folders, recommends which copies to keep, and lets users review each group before cleanup.
 
 ## Project status
 
-AlbumWinnow v1.5.0 adds optional pairwise difference previews with conservative alignment checks. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+AlbumWinnow v1.6.0 adds English, Simplified Chinese and Japanese localization, including review, cleanup, settings, accessibility labels and Photos permission descriptions. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
 
 The previous formal v1.0.0 release remains available on the [GitHub Releases page](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
 
@@ -33,6 +33,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 ```
 
 Generated test projects stay under `.local`. The expected version is read from the app build settings. These tests do not use physical devices or an iCloud account. The optional Photos album-scope test requires `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` on a dedicated simulator; it requests simulated Photos access and leaves generated photo/album fixtures there. Default regressions skip that test.
+
+## v1.6 languages
+
+The app follows system language preferences and the operating system’s per-app language setting. Choose English, Simplified Chinese or Japanese, then restart the app. Unsupported languages fall back to English. Changing language preserves manual keep choices, locks, scope and pending cleanup; reopening never deletes photos automatically.
+
+**Selected** identifies your chosen keeper; **Recommended** is an algorithm suggestion; **Locked** requires retaining a protected photo. Confirmed removal candidates are separately labeled **pending cleanup**. User filenames and album titles retain their original text. Official license documents and explicitly marked original diagnostics may remain in their original language.
+
+Translations live in a platform-neutral message table and are exported to native Apple catalogs. See [Localization](Localization/README.md) for editing and validation. This prepares the wording workflow for a future Android app; Android support is not included.
 
 ## v1.5 difference previews
 

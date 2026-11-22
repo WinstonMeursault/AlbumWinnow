@@ -1,18 +1,18 @@
 # AlbumWinnow
 
-[English](README.md) · 简体中文
+[English](README.md) · 简体中文 · [日本語](README.ja.md)
 
 AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。应用可在系统照片图库和用户选定的文件夹中查找重复照片，推荐保留版本，并让用户在清理前逐组核对。
 
 ## 项目状态
 
-AlbumWinnow v1.5.0 新增默认关闭的两图差异预览及保守的对齐校验，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow v1.6.0 新增英文、简体中文、日语，覆盖核对、清理、设置、辅助功能标签与照片权限说明，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
 
 上一个 GitHub 正式版本 v1.0.0 可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
 
 ## 构建与运行
 
-在 Xcode 中打开 `AlbumWinnow.xcodeproj`。运行 macOS 版时选择 **AlbumWinnow**，运行 iPhone 或 iPad 模拟器时选择 **AlbumWinnowMobile**。在 **Settings** 的 **Scan Sources** 分区启用照片图库或添加文件夹，再回到重复项页面点击 **Scan**。
+在 Xcode 中打开 `AlbumWinnow.xcodeproj`。运行 macOS 版时选择 **AlbumWinnow**，运行 iPhone 或 iPad 模拟器时选择 **AlbumWinnowMobile**。在**设置**的**扫描来源**分区启用照片图库或添加文件夹，再回到重复项页面点击**扫描**。
 
 也可以用 `swift build --package-path Packages/AlbumWinnowCore` 独立构建共享 Swift 包。
 
@@ -35,6 +35,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 生成的测试工程放在 `.local`，预期版本号直接读取应用构建配置。测试不使用实机或 iCloud 账户。
 
 可选的 Photos 相册范围用例需要在专用模拟器上设置 `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` 才会运行，请求模拟器照片权限，并在其中保留生成的照片与相册样本；默认回归跳过该用例。
+
+## v1.6 多语言
+
+应用跟随系统语言偏好，也支持操作系统提供的单独应用语言设置。选择英文、简体中文或日语后重新打开应用；不支持的语言回退到英文。切换语言保留人工保留选择、锁定、扫描范围与待清理计划；重新打开不会自动删除照片。
+
+**已选保留**表示人工指定的保留项，**建议保留**表示算法建议，**已锁定**表示必须保留的受保护照片；确认后的删除候选单独标为**待清理**。文件名和相册标题保留原文，官方许可证与明确标注的原始诊断信息可能保留原语言。
+
+三语文案由平台无关的消息表维护，导出为 Apple 原生资源。维护与验证方法见 [Localization](Localization/README.md)。此设计为未来 Android 的翻译复用做准备，本版不包含 Android 应用。
 
 ## v1.5 差异预览
 

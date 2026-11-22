@@ -34,8 +34,22 @@ public struct CleanupItem: Equatable, Sendable, Identifiable {
     public let pair: CleanupPair
     public let status: CleanupStatus
     public let detail: String?
+    public let failureReason: CleanupFailureReason?
 
     public var id: AssetID { pair.id }
+
+    init(pair: CleanupPair, status: CleanupStatus, detail: String?, failureReason: CleanupFailureReason? = nil) {
+        self.pair = pair
+        self.status = status
+        self.detail = detail
+        self.failureReason = failureReason
+    }
+}
+
+public enum CleanupFailureReason: Equatable, Sendable {
+    case cleanup(CleanupError)
+    case cancelled
+    case inaccessible
 }
 
 public enum CleanupError: LocalizedError, Equatable, Sendable {

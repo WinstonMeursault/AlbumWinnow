@@ -25,6 +25,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      - name: Validate localization sources and generated catalogs
+        run: |
+          python3 -m unittest discover -s Tests/Localization
+          python3 Tools/Localization/export.py --check
       - name: Show toolchain
         run: |
           xcodebuild -version
@@ -64,7 +68,7 @@ jobs:
   app-tests:
     name: Simulator regression tests
     runs-on: macos-26
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7
       - name: Prepare test generator

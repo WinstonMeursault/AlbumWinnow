@@ -20,41 +20,41 @@ struct PhotoDifferenceView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Choose two photos to compare. Your keep choice stays unchanged.")
+                Text(L10n.text("app_choose_two_photos_to_compare_your_keep_choice_stays_unchanged"))
                     .font(.caption).foregroundStyle(.secondary)
                 VStack(alignment: .leading) {
-                    Text("Reference").font(.caption)
+                    Text(L10n.text("app_reference")).font(.caption)
                         .accessibilityIdentifier("difference-reference-label")
                     Menu {
-                        Picker("Reference", selection: $referenceID) {
-                            Text("Choose Photo").tag(nil as AssetID?)
+                        Picker(L10n.text("app_reference"), selection: $referenceID) {
+                            Text(L10n.text("app_choose_photo")).tag(nil as AssetID?)
                             ForEach(group.assets) { asset in Text(title(asset)).tag(Optional(asset.id)) }
                         }
                         .pickerStyle(.inline)
                     } label: {
                         Text(menuTitle(referenceID)).lineLimit(1).minimumScaleFactor(0.75)
                     }
-                    .accessibilityLabel("Reference")
+                    .accessibilityLabel(L10n.text("app_reference"))
                     .accessibilityValue(menuTitle(referenceID))
                     .accessibilityIdentifier("difference-reference")
                 }
                 VStack(alignment: .leading) {
-                    Text("Comparison").font(.caption)
+                    Text(L10n.text("app_comparison")).font(.caption)
                         .accessibilityIdentifier("difference-comparison-label")
                     Menu {
-                        Picker("Comparison", selection: $comparisonID) {
-                            Text("Choose Photo").tag(nil as AssetID?)
+                        Picker(L10n.text("app_comparison"), selection: $comparisonID) {
+                            Text(L10n.text("app_choose_photo")).tag(nil as AssetID?)
                             ForEach(group.assets.filter { $0.id != referenceID }) { asset in Text(title(asset)).tag(Optional(asset.id)) }
                         }
                         .pickerStyle(.inline)
                     } label: {
                         Text(menuTitle(comparisonID)).lineLimit(1).minimumScaleFactor(0.75)
                     }
-                    .accessibilityLabel("Comparison")
+                    .accessibilityLabel(L10n.text("app_comparison"))
                     .accessibilityValue(menuTitle(comparisonID))
                     .accessibilityIdentifier("difference-comparison")
                 }
-                Button(result == nil ? "Show Differences" : "Refresh Differences") {
+                Button(result == nil ? L10n.text("app_show_differences") : L10n.text("app_refresh_differences")) {
                     result = nil
                     errorMessage = nil
                     showHighlights = true
@@ -64,44 +64,44 @@ struct PhotoDifferenceView: View {
                 .disabled(referenceID == nil || comparisonID == nil || referenceID == comparisonID ||
                           loading || model.running || model.cleaning || model.resultsStale)
                 .accessibilityIdentifier("difference-show")
-                if loading { ProgressView("Comparing previews…") }
+                if loading { ProgressView(L10n.text("app_comparing_previews")) }
                 if let errorMessage {
                     Label(errorMessage, systemImage: "exclamationmark.triangle")
                         .accessibilityIdentifier("difference-unavailable")
                 }
                 if let result {
                     if let reason = result.unavailableReason {
-                        Label("Cannot reliably show differences", systemImage: "rectangle.slash")
+                        Label(L10n.text("app_cannot_reliably_show_differences"), systemImage: "rectangle.slash")
                             .accessibilityIdentifier("difference-unavailable")
                         Text(explanation(reason)).font(.caption).foregroundStyle(.secondary)
                     } else {
-                        Picker("Display", selection: $showHighlights) {
-                            Text("Original").tag(false)
-                            Text("Differences").tag(true)
+                        Picker(L10n.text("app_display"), selection: $showHighlights) {
+                            Text(L10n.text("app_original")).tag(false)
+                            Text(L10n.text("app_differences")).tag(true)
                         }
                         .pickerStyle(.segmented)
                         .accessibilityIdentifier("difference-display")
                     }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 240), alignment: .top)], spacing: 16) {
-                        photo(result.reference, label: String(localized: "Reference"), regions: [])
-                        photo(result.comparison, label: String(localized: "Comparison"),
+                        photo(result.reference, label: L10n.text("app_reference"), regions: [])
+                        photo(result.comparison, label: L10n.text("app_comparison"),
                               regions: showHighlights ? result.regions : [])
                     }
                     if result.unavailableReason == nil {
                         if result.regions.isEmpty {
-                            Text("No significant local differences at this preview resolution.")
+                            Text(L10n.text("app_no_significant_local_differences_at_this_preview_resolution"))
                                 .accessibilityIdentifier("difference-region-count")
                         } else {
-                            Text(result.regions.count == 1 ? "1 Local Change Region" : "\(result.regions.count) Local Change Regions")
+                            Text(result.regions.count == 1 ? L10n.text("app_1_local_change_region") : L10n.text("app_arg1_local_change_regions", Int64(result.regions.count)))
                                 .accessibilityIdentifier("difference-region-count")
                             if showHighlights {
-                                Text("Highlight Opacity").font(.caption)
-                                Slider(value: $opacity, in: 0...0.75) { Text("Highlight Opacity") }
+                                Text(L10n.text("app_highlight_opacity")).font(.caption)
+                                Slider(value: $opacity, in: 0...0.75) { Text(L10n.text("app_highlight_opacity")) }
                                     .accessibilityIdentifier("difference-opacity")
                             }
                         }
                     }
-                    Text("These are approximate image-change hints from previews up to 512 pixels, with global color and compression noise suppressed. Small details can be missed. Use synchronized zoom in the group to inspect originals. Hints do not change matching, recommendations or cleanup choices.")
+                    Text(L10n.text("app_these_are_approximate_image_change_hints_from_previews_up_to_512_pixels_with_global_color_and_compression_noise_suppressed_small_details_can_be_missed_use_synchronized_zoom_in_the_group_to_inspect_originals_hints_do_not_change_matching_recommendations_or_cleanup_choices"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
@@ -109,7 +109,7 @@ struct PhotoDifferenceView: View {
             .frame(maxWidth: 1000, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
-        .navigationTitle("Compare Photos")
+        .navigationTitle(L10n.text("app_compare_photos"))
         .toolbarTitleDisplayMode(.inline)
         .onChange(of: referenceID) { _, value in
             if comparisonID == value { comparisonID = nil }
@@ -137,11 +137,11 @@ struct PhotoDifferenceView: View {
 
     private func title(_ asset: PhotoAsset) -> String {
         if showFilenames { return asset.name }
-        return String(localized: "Photo \((group.assets.firstIndex(of: asset) ?? 0) + 1)")
+        return L10n.text("app_photo_arg1", Int64((group.assets.firstIndex(of: asset) ?? 0) + 1))
     }
 
     private func menuTitle(_ id: AssetID?) -> String {
-        group.assets.first { $0.id == id }.map { title($0) } ?? String(localized: "Choose Photo")
+        group.assets.first { $0.id == id }.map { title($0) } ?? L10n.text("app_choose_photo")
     }
 
     private func reset() {
@@ -174,26 +174,26 @@ struct PhotoDifferenceView: View {
             .frame(height: 280)
             .background(.quaternary, in: .rect(cornerRadius: 12))
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("\(label) preview"))
+            .accessibilityLabel(Text(L10n.text("app_arg1_preview", label)))
         }
     }
 
     private func explanation(_ reason: DifferenceUnavailableReason) -> String {
         switch reason {
-        case .geometry: return String(localized: "The image proportions differ. Crops or changed viewpoints require manual comparison.")
-        case .insufficientDetail: return String(localized: "There is not enough stable detail to verify alignment. Inspect the photos with synchronized zoom in the group.")
-        case .alignment: return String(localized: "The framing or image details do not agree closely enough for a reliable overlay. Inspect the originals manually.")
+        case .geometry: return L10n.text("app_the_image_proportions_differ_crops_or_changed_viewpoints_require_manual_comparison")
+        case .insufficientDetail: return L10n.text("app_there_is_not_enough_stable_detail_to_verify_alignment_inspect_the_photos_with_synchronized_zoom_in_the_group")
+        case .alignment: return L10n.text("app_the_framing_or_image_details_do_not_agree_closely_enough_for_a_reliable_overlay_inspect_the_originals_manually")
         }
     }
 
     private func message(_ error: Error) -> String {
         switch error {
         case AssetAccessError.changedDuringScan, ScopeError.unavailableAlbum:
-            return String(localized: "The photos or their scope changed. Return to the overview and scan again.")
+            return L10n.text("app_the_photos_or_their_scope_changed_return_to_the_overview_and_scan_again")
         case AssetAccessError.cloudDownloadRequired, AssetAccessError.cloudDownloadFailed:
-            return String(localized: "A local preview is unavailable. Download and rescan from the group menu before comparing again.")
-        case is CancellationError: return String(localized: "Difference preview cancelled. Try again when the photos are available.")
-        default: return String(localized: "Cannot read or verify these previews. Return to the group and check access before trying again.")
+            return L10n.text("app_a_local_preview_is_unavailable_download_and_rescan_from_the_group_menu_before_comparing_again")
+        case is CancellationError: return L10n.text("app_difference_preview_cancelled_try_again_when_the_photos_are_available")
+        default: return L10n.text("app_cannot_read_or_verify_these_previews_return_to_the_group_and_check_access_before_trying_again")
         }
     }
 }

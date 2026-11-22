@@ -16,7 +16,7 @@ final class PhotoDifferenceUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
                                "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", size]
-        app.launch()
+        app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15))
         scan.tap()

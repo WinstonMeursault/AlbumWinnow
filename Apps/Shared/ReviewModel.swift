@@ -198,7 +198,7 @@ struct CloudDownloadProgress {
         do {
             state.decisions[try group.reviewSignature()] = ReviewDecision(status: .confirmed,
                 keepID: selection.keepID, removals: selection.selected, deleteAll: selection.deleteAll, members: assets, sceneAlgorithm: group.sceneAlgorithm)
-        } catch { errorMessage = error.localizedDescription; return false }
+        } catch { errorMessage = L10n.error(error); return false }
         guard saveState(state) else { selections.removeValue(forKey: group.id); return false }
         return true
     }
@@ -210,11 +210,11 @@ struct CloudDownloadProgress {
         } catch is CancellationError {
             return nil
         } catch AssetAccessError.inaccessible {
-            return "At least one photo cannot be moved from its source."
+            return L10n.text("app_at_least_one_photo_cannot_be_moved_from_its_source")
         } catch AssetAccessError.changedDuringScan {
-            return CleanupError.changedAsset.localizedDescription
+            return L10n.error(CleanupError.changedAsset)
         } catch {
-            return error.localizedDescription
+            return L10n.error(error)
         }
     }
 
@@ -229,13 +229,13 @@ struct CloudDownloadProgress {
             protectionAvailable = true
             restoreRequested = (!saved.decisions.isEmpty || saved.anchor != nil) && saved.scanCancelledByUser != true
         } catch {
-            errorMessage = "Protection could not be loaded. Cleanup is disabled. \(error.localizedDescription)"
+            errorMessage = L10n.text("app_protection_could_not_be_loaded_cleanup_is_disabled_arg1", L10n.error(error))
         }
         do {
             engine = try ScanEngine(cacheURL: data.appending(path: "scan.sqlite"))
         } catch {
             engine = nil
-            errorMessage = error.localizedDescription
+            errorMessage = L10n.error(error)
         }
         do {
             for name in ["cleanup.sqlite", "cleanup.sqlite-wal", "cleanup.sqlite-shm"] {
@@ -245,7 +245,7 @@ struct CloudDownloadProgress {
                 }
             }
         } catch {
-            errorMessage = error.localizedDescription
+            errorMessage = L10n.error(error)
         }
         let defaults = UserDefaults.standard
         skipCloudPhotos = defaults.object(forKey: Self.skipCloudKey) as? Bool ?? true
@@ -256,7 +256,7 @@ struct CloudDownloadProgress {
                 let folder = try FolderScope(bookmark: bookmark)
                 if !folders.contains(where: { $0.id == folder.id }) { folders.append(folder) }
             } catch {
-                errorMessage = "A saved folder is unavailable. Select it again to restore access."
+                errorMessage = L10n.text("app_a_saved_folder_is_unavailable_select_it_again_to_restore_access")
             }
         }
         if !bookmarks.isEmpty { saveFolders() }
@@ -272,7 +272,7 @@ struct CloudDownloadProgress {
             saveFolders()
             invalidateResults()
         } catch {
-            sourceErrorMessage = error.localizedDescription
+            sourceErrorMessage = L10n.error(error)
         }
     }
 
@@ -293,7 +293,7 @@ struct CloudDownloadProgress {
         guard canEditSources else { return }
         photosEnabled = enabled && allowsPhotos
         if enabled && !allowsPhotos {
-            sourceErrorMessage = "Allow access to Photos in System Settings to include the photo library."
+            sourceErrorMessage = L10n.text("app_allow_access_to_photos_in_system_settings_to_include_the_photo_library")
         }
         UserDefaults.standard.set(photosEnabled, forKey: Self.photosKey)
         invalidateResults()
@@ -344,9 +344,9 @@ struct CloudDownloadProgress {
             invalidateResults()
             lastCleanup = nil
             downloadProgress = nil
-            cacheStatus = "Scan cache cleared. The next scan will read all photos again."
+            cacheStatus = L10n.text("app_scan_cache_cleared_the_next_scan_will_read_all_photos_again")
         } catch {
-            sourceErrorMessage = error.localizedDescription
+            sourceErrorMessage = L10n.error(error)
         }
     }
 
@@ -444,7 +444,7 @@ struct CloudDownloadProgress {
                 restoreDecisions(next.groups)
                 downloadIssues = next.issues
                 resultsStale = libraryChangedDuringScan
-                if resultsStale { errorMessage = "The photo library changed during the scan. Scan again before cleanup." }
+                if resultsStale { errorMessage = L10n.text("app_the_photo_library_changed_during_the_scan_scan_again_before_cleanup") }
                 clearInterruptedScan()
             } catch is CancellationError {
                 scanCancelled = true
@@ -453,7 +453,7 @@ struct CloudDownloadProgress {
             } catch {
                 clearInterruptedScan()
                 resultsStale = result != nil
-                errorMessage = error.localizedDescription
+                errorMessage = L10n.error(error)
             }
             accountContinuation.finish()
             await accountObserver.value
@@ -462,7 +462,7 @@ struct CloudDownloadProgress {
             downloadProgress?.reconcile(issues: downloadIssues, requested: downloads)
             downloadProgress?.end(cancelled: Task.isCancelled)
             if let download = downloadProgress, !download.cancelled, download.needsRetry, errorMessage == nil {
-                errorMessage = "Some iCloud photos are still unavailable for this scan. Open Scan Issues to review the results and retry."
+                errorMessage = L10n.text("app_some_icloud_photos_are_still_unavailable_for_this_scan_open_scan_issues_to_review_the_results_and_retry")
             }
         }
     }
@@ -512,7 +512,7 @@ struct CloudDownloadProgress {
             else { invalidateResults() }
         } catch {
             invalidateResults()
-            errorMessage = error.localizedDescription
+            errorMessage = L10n.error(error)
         }
     }
 
@@ -584,8 +584,8 @@ struct CloudDownloadProgress {
     }
 
     func sourceLabel(_ id: String) -> String {
-        if id == photoSource.id { return "Photos" }
-        return folders.first(where: { $0.id == id })?.name ?? "Folder"
+        if id == photoSource.id { return L10n.text("app_photos") }
+        return folders.first(where: { $0.id == id })?.name ?? L10n.text("app_folder")
     }
 
     private var sources: [any AssetSource] {
@@ -659,7 +659,7 @@ struct CloudDownloadProgress {
             return true
         } catch {
             protectionAvailable = false
-            errorMessage = "This decision was not saved. Cleanup is disabled. \(error.localizedDescription)"
+            errorMessage = L10n.text("app_this_decision_was_not_saved_cleanup_is_disabled_arg1", L10n.error(error))
             return false
         }
     }
@@ -748,7 +748,7 @@ struct CloudDownloadProgress {
         }
         if state != reviewState {
             guard saveState(state) else { return }
-            reviewNotice = "Photos or group evidence changed. Affected decisions need review again; locks remain protected."
+            reviewNotice = L10n.text("app_photos_or_group_evidence_changed_affected_decisions_need_review_again_locks_remain_protected")
         }
         for group in groups {
             guard let signature = reviewSignature(for: group), let decision = reviewState.decisions[signature],
@@ -802,7 +802,7 @@ struct CloudDownloadProgress {
             var state = reviewState
             state.photoScope = scope
             if saveState(state) { invalidateResults() }
-        } catch { sourceErrorMessage = "Choose a valid capture-date range." }
+        } catch { sourceErrorMessage = L10n.text("app_choose_a_valid_capture_date_range") }
     }
 
     func setComparisonSides(_ sides: ComparisonSides?) {
@@ -812,7 +812,7 @@ struct CloudDownloadProgress {
             var state = reviewState
             state.comparisonSides = sides
             if saveState(state) { invalidateResults() }
-        } catch { sourceErrorMessage = "Choose two different available sources." }
+        } catch { sourceErrorMessage = L10n.text("app_choose_two_different_available_sources") }
     }
 
     func setPreferredSource(_ source: String?) {
@@ -833,7 +833,7 @@ struct CloudDownloadProgress {
         state.readOnlyRevisions = state.readOnlyRevisions ?? [:]
         guard saveState(state) else { return }
         do { try await refreshReadOnlyRevisions() }
-        catch { resultsStale = result != nil; sourceErrorMessage = "Read-only protection needs a successful rescan. " + error.localizedDescription }
+        catch { resultsStale = result != nil; sourceErrorMessage = L10n.text("app_read_only_protection_needs_a_successful_rescan") + L10n.error(error) }
         trimProtectedDecisions()
     }
 
@@ -869,10 +869,10 @@ struct CloudDownloadProgress {
 extension ReviewStatus {
     var title: String {
         switch self {
-        case .pending: String(localized: "Needs Review")
-        case .deferred: String(localized: "Later")
-        case .confirmed: String(localized: "Confirmed")
-        case .kept: String(localized: "Entire Group Kept")
+        case .pending: L10n.text("app_needs_review")
+        case .deferred: L10n.text("app_later")
+        case .confirmed: L10n.text("app_confirmed")
+        case .kept: L10n.text("app_entire_group_kept")
         }
     }
 }

@@ -8,7 +8,7 @@ final class SourcePolicyUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         XCTAssertTrue(app.buttons["start-scan"].waitForExistence(timeout: 15))
         app.buttons["start-scan"].tap()
         let cover = app.buttons["duplicate-group-gallery-landscape-a.png"]

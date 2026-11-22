@@ -15,7 +15,7 @@ final class ReviewPersistenceUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", animation, "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15))
         scan.tap()
@@ -35,7 +35,7 @@ final class ReviewPersistenceUITests: XCTestCase {
         app.terminate()
 
         app.launchArguments.append("--preserve-review-state")
-        app.launch()
+        app.launchInEnglish()
         XCTAssertTrue(app.staticTexts["Scan Complete"].waitForExistence(timeout: 90))
         XCTAssertTrue(app.buttons["review-batch-cleanup"].exists, "Relaunch should restore the plan without executing it")
         XCTAssertTrue(cover.waitForExistence(timeout: 10))

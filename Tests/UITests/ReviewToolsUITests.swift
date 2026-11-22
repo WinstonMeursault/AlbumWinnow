@@ -8,7 +8,7 @@ final class ReviewToolsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15))
         scan.tap()
@@ -45,7 +45,7 @@ final class ReviewToolsUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15))
         scan.tap()

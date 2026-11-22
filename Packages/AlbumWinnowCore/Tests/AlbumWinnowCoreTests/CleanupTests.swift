@@ -65,6 +65,7 @@ private let root = TestFiles.root
     try files.removeItem(at: folder.appending(path: keep.name))
     let run = try await service.apply([CleanupPair(keep: keep, remove: copy)], sources: [source], protection: CleanupProtection())
     #expect(run.map(\.status) == [.failed])
+    #expect(run.first?.failureReason == .inaccessible)
     #expect(files.fileExists(atPath: copy.id.item))
 }
 

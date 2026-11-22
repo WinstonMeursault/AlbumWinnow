@@ -8,7 +8,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "slide",
                                "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
 
         XCTAssertFalse(app.buttons["Cleanup History"].exists)
         let confirm = app.buttons["review-confirm"]
@@ -55,7 +55,7 @@ final class PhotoFirstReviewTests: XCTestCase {
 
         configureHand("Left Hand")
         app.terminate()
-        app.launch()
+        app.launchInEnglish()
         configureHand("Left Hand", change: false)
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
         scan.tap()
@@ -204,7 +204,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         app.buttons["Settings"].tap()
         let clear = app.buttons["clear-scan-cache"]
         for _ in 0..<5 {
@@ -232,7 +232,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO",
                                "--cleanup-outcome-fixture", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         XCTAssertTrue(app.staticTexts["No Photos Moved"].waitForExistence(timeout: 90), app.debugDescription)
         XCTAssertTrue(app.staticTexts["Photos Not Moved"].exists)
         XCTAssertTrue(app.staticTexts["Failed"].exists)
@@ -252,7 +252,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
         scan.tap()
@@ -297,7 +297,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
-        app.launch()
+        app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
         scan.tap()
@@ -349,7 +349,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
-        app.launch()
+        app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
         scan.tap()

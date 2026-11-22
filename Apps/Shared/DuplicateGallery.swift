@@ -199,8 +199,8 @@ private struct GalleryCard: View {
 
     private var hasVisualMatch: Bool { group.match != .exactDuplicate }
 
-    private var matchDescription: Text {
-        group.match == .sceneSimilar ? Text("Burst / Similar Scene") : group.match == .similarPhoto ? Text("Similar photos") : Text("Possible same image")
+    private var matchDescription: String {
+        group.match == .sceneSimilar ? L10n.text("app_burst_similar_scene") : group.match == .similarPhoto ? L10n.text("app_similar_photos") : L10n.text("app_possible_same_image")
     }
 
     var body: some View {
@@ -240,7 +240,7 @@ private struct GalleryCard: View {
                     if model.status(for: group) != .pending {
                         Text(model.status(for: group).title).foregroundStyle(.secondary)
                     } else if hasVisualMatch {
-                        matchDescription.foregroundStyle(.secondary)
+                        Text(matchDescription).foregroundStyle(.secondary)
                     }
                 }
                 .font(.caption)
@@ -259,9 +259,9 @@ private struct GalleryCard: View {
             .contentShape(.rect(cornerRadius: 14))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("\(count) photos"))
+        .accessibilityLabel(Text(L10n.text("photo_count", Int64(count))))
         .accessibilityValue(accessibilityStatus(selected: selected))
-        .accessibilityHint(Text("Opens the duplicate group for review"))
+        .accessibilityHint(Text(L10n.text("app_opens_the_duplicate_group_for_review")))
         .accessibilityIdentifier("duplicate-group-\(group.preferred.name)")
         .task(id: key) {
             thumbnail = nil
@@ -281,21 +281,21 @@ private struct GalleryCard: View {
     }
 
     @ViewBuilder private func counts(total: Int, selected: Int) -> some View {
-        Text("\(total) photos").fontWeight(.semibold)
+        Text(L10n.text("photo_count", Int64(total))).fontWeight(.semibold)
         if selected > 0 {
-            Text("\(selected) selected")
+            Text(L10n.text("cleanup_pending_count", Int64(selected)))
                 .foregroundStyle(.tint)
         }
     }
 
     private func accessibilityStatus(selected: Int) -> Text {
         if failed && selected > 0 {
-            return hasVisualMatch ? Text("\(selected) selected, \(matchDescription), preview unavailable") : Text("\(selected) selected, preview unavailable")
+            return hasVisualMatch ? Text(L10n.text("app_arg1_selected_arg2_preview_unavailable", Int64(selected), matchDescription)) : Text(L10n.text("app_arg1_selected_preview_unavailable", Int64(selected)))
         }
-        if failed { return hasVisualMatch ? Text("\(matchDescription), preview unavailable") : Text("Preview unavailable") }
+        if failed { return hasVisualMatch ? Text(L10n.text("app_arg1_preview_unavailable", matchDescription)) : Text(L10n.text("app_preview_unavailable")) }
         if selected > 0 {
-            return hasVisualMatch ? Text("\(selected) selected, \(matchDescription)") : Text("\(selected) selected")
+            return hasVisualMatch ? Text(L10n.text("app_arg1_selected_arg2", Int64(selected), matchDescription)) : Text(L10n.text("cleanup_pending_count", Int64(selected)))
         }
-        return hasVisualMatch ? matchDescription : Text("")
+        return hasVisualMatch ? Text(matchDescription) : Text("")
     }
 }

@@ -26,6 +26,7 @@ import SwiftUI
     var body: some Scene {
         WindowGroup {
             LibraryView(model: model)
+                .preferredColorScheme(ProcessInfo.processInfo.arguments.contains("--dark-appearance") ? .dark : nil)
                 .task {
                     model.sceneChanged(scenePhase)
                     if ProcessInfo.processInfo.arguments.contains("--cleanup-outcome-fixture") {

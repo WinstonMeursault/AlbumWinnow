@@ -40,7 +40,7 @@ struct ReviewZoomPhoto: View {
                         .position(x: geometry.size.width / 2 + offset.width,
                                   y: geometry.size.height / 2 + offset.height)
                 } else if preview != nil {
-                    Label("Preview unavailable", systemImage: "photo.badge.exclamationmark").font(.caption)
+                    Label(L10n.text("app_preview_unavailable"), systemImage: "photo.badge.exclamationmark").font(.caption)
                 } else { ProgressView() }
             }
             .contentShape(.rect)
@@ -95,9 +95,9 @@ struct ReviewZoomPhoto: View {
     }
 
     private func detailStatus(limit: CGFloat) -> String {
-        if !detailFinished { return String(localized: "Loading detail preview…") }
-        if detail == nil { return String(localized: "Detail not loaded") }
-        if zoom.scale > limit + 0.01 { return String(localized: "Detail limited to \(Double(limit).formatted(.number.precision(.fractionLength(1))))×") }
-        return String(localized: "\(Double(zoom.scale).formatted(.number.precision(.fractionLength(1))))× · Relative position")
+        if !detailFinished { return L10n.text("app_loading_detail_preview") }
+        if detail == nil { return L10n.text("app_detail_not_loaded") }
+        if zoom.scale > limit + 0.01 { return L10n.text("app_detail_limited_to_arg1", Double(limit).formatted(.number.precision(.fractionLength(1)))) }
+        return L10n.text("app_arg1_relative_position", Double(zoom.scale).formatted(.number.precision(.fractionLength(1))))
     }
 }

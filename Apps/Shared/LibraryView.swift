@@ -43,13 +43,13 @@ struct LibraryView: View {
                     if closed && !wide { selectedGroup = nil }
                 }
             }
-            .navigationTitle("Duplicates")
+            .navigationTitle(L10n.text("app_duplicates"))
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
-                    settingsButton("Settings", systemImage: "gearshape")
+                    settingsButton(L10n.text("app_settings"), systemImage: "gearshape")
                         .labelStyle(.iconOnly)
-                        .help("Settings")
+                        .help(L10n.text("app_settings"))
                 }
             }
             .navigationDestination(for: AssetID.self) { _ in
@@ -79,7 +79,8 @@ struct LibraryView: View {
                 ScanSourcesView(model: model)
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { showingSettings = false }
+                            Button(L10n.text("app_done")) { showingSettings = false }
+                                .accessibilityIdentifier("settings-done")
                         }
                     }
             }
@@ -89,7 +90,7 @@ struct LibraryView: View {
             get: { model.errorMessage != nil },
             set: { if !$0 { model.errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) { model.errorMessage = nil }
+            Button(L10n.text("app_ok"), role: .cancel) { model.errorMessage = nil }
         } message: {
             Text(model.errorMessage ?? "")
         }
@@ -108,15 +109,15 @@ struct LibraryView: View {
     private var reviewTitle: Text {
         let groups = reviewQueue.isEmpty ? model.visibleGroups : reviewQueue
         if let index = groups.firstIndex(where: { $0.id == selectedGroup }) {
-            return Text("Group \(index + 1) of \(groups.count)")
+            return Text(L10n.text("app_group_arg1_of_arg2", Int64(index + 1), Int64(groups.count)))
         }
-        return Text("Review Group")
+        return Text(L10n.text("app_review_group"))
     }
 
     private func finishReview() {
         if !reviewQueue.isEmpty {
             let completed = reviewQueue.filter { model.status(for: $0) == .confirmed || model.status(for: $0) == .kept }.count
-            batchSummary = "\(completed) of \(reviewQueue.count) groups decided."
+            batchSummary = L10n.text("app_arg1_of_arg2_groups_decided", Int64(completed), Int64(reviewQueue.count))
         }
         reviewQueue.removeAll()
         galleryBottomRequest += 1
@@ -129,9 +130,10 @@ struct LibraryView: View {
             HStack {
                 reviewTitle.font(.headline)
                 Spacer()
-                Button("Close Review", systemImage: "xmark") { selectedGroup = nil }
+                Button(L10n.text("app_close_review"), systemImage: "xmark") { selectedGroup = nil }
                     .labelStyle(.iconOnly)
-                    .help("Close Review")
+                    .help(L10n.text("app_close_review"))
+                    .accessibilityIdentifier("close-review")
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
@@ -140,11 +142,13 @@ struct LibraryView: View {
         }
     }
 
-    private func settingsButton(_ title: LocalizedStringKey, systemImage: String) -> some View {
+    private func settingsButton(_ title: String, systemImage: String) -> some View {
         #if os(macOS)
         SettingsLink { Label(title, systemImage: systemImage) }
+            .accessibilityIdentifier("open-settings")
         #else
         Button { showingSettings = true } label: { Label(title, systemImage: systemImage) }
+            .accessibilityIdentifier("open-settings")
         #endif
     }
 
@@ -153,26 +157,26 @@ struct LibraryView: View {
             if let download = model.downloadProgress { downloadStatus(download) }
             if model.running || model.scanCancelled {
                 if let counts = model.scanAccounting {
-                    Text("\(counts.processed) processed · \(counts.skipped) skipped · \(counts.failed) failed · \(counts.unfinished) unfinished")
+                    Text(L10n.text("app_arg1_processed_arg2_skipped_arg3_failed_arg4_unfinished", Int64(counts.processed), Int64(counts.skipped), Int64(counts.failed), Int64(counts.unfinished)))
                         .font(.caption).foregroundStyle(.secondary)
                 } else if model.scanCancelled {
-                    Text("Scan cancelled before enumeration finished. Remaining count unknown.")
+                    Text(L10n.text("app_scan_cancelled_before_enumeration_finished_remaining_count_unknown"))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }
             if let progress = model.progress {
                 progressView(progress)
             } else if model.running && model.downloadProgress == nil {
-                ProgressView("Preparing scan…")
+                ProgressView(L10n.text("app_preparing_scan"))
             }
             HStack(spacing: 8) {
                 if model.running, let download = model.downloadProgress, download.remaining > 0, !download.ended {
-                    Button("Cancel Download") { model.cancelScan() }
+                    Button(L10n.text("app_cancel_download")) { model.cancelScan() }
                 } else if model.running {
-                    Button("Cancel Scan") { model.cancelScan() }
+                    Button(L10n.text("app_cancel_scan")) { model.cancelScan() }
                 } else {
                     Button { model.scan() } label: {
-                        Label(model.lastCleanup == nil ? "Scan" : "Scan Again", systemImage: "magnifyingglass")
+                        Label(model.lastCleanup == nil ? L10n.text("app_scan") : L10n.text("app_scan_again"), systemImage: "magnifyingglass")
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -183,7 +187,7 @@ struct LibraryView: View {
                 Spacer(minLength: 0)
                 if model.selectedCount > 0 {
                     Button { confirmingCleanup = true } label: {
-                        Text("Confirm Cleanup (\(model.selectedCount))")
+                        Text(L10n.text("app_confirm_cleanup_arg1", Int64(model.selectedCount)))
                             .lineLimit(1)
                             .minimumScaleFactor(0.75)
                     }
@@ -200,12 +204,12 @@ struct LibraryView: View {
     private func groups(wide: Bool, narrowed: Bool) -> some View {
         VStack(spacing: 0) {
             if model.cleaning {
-                ContentUnavailableView("Moving Selected Photos", systemImage: "trash")
+                ContentUnavailableView(L10n.text("app_moving_selected_photos"), systemImage: "trash")
             } else if model.running {
                 ContentUnavailableView(
-                    model.downloadProgress == nil ? "Scanning Photos" : "Updating Scan Results",
+                    model.downloadProgress == nil ? L10n.text("app_scanning_photos") : L10n.text("app_updating_scan_results"),
                     systemImage: "magnifyingglass",
-                    description: Text("Duplicates will be ready to review when the scan finishes.")
+                    description: Text(L10n.text("app_duplicates_will_be_ready_to_review_when_the_scan_finishes"))
                 )
             } else if let cleanup = model.lastCleanup {
                 CleanupOutcomeView(items: cleanup, model: model)
@@ -213,18 +217,18 @@ struct LibraryView: View {
                 scanResults(result, wide: wide, narrowed: narrowed)
             } else if !model.hasScanSources {
                 ContentUnavailableView {
-                    Label("Choose Scan Sources", systemImage: "photo.stack")
+                    Label(L10n.text("app_choose_scan_sources"), systemImage: "photo.stack")
                 } description: {
-                    Text("Enable Photos or add a folder to start scanning.")
+                    Text(L10n.text("app_enable_photos_or_add_a_folder_to_start_scanning"))
                 } actions: {
-                    settingsButton("Configure Scan Sources", systemImage: "gearshape")
+                    settingsButton(L10n.text("app_configure_scan_sources"), systemImage: "gearshape")
                         .buttonStyle(.glass)
                 }
             } else if model.resultsStale {
-                ContentUnavailableView("Scan Again", systemImage: "arrow.clockwise",
-                                       description: Text("The selected sources or their contents changed."))
+                ContentUnavailableView(L10n.text("app_scan_again"), systemImage: "arrow.clockwise",
+                                       description: Text(L10n.text("app_the_selected_sources_or_their_contents_changed")))
             } else {
-                ContentUnavailableView("Ready to Scan", systemImage: "photo.stack")
+                ContentUnavailableView(L10n.text("app_ready_to_scan"), systemImage: "photo.stack")
             }
         }
     }
@@ -234,7 +238,7 @@ struct LibraryView: View {
             if result.groups.isEmpty {
                 VStack(spacing: 0) {
                     scanSummaryCard(result)
-                    ContentUnavailableView(model.reviewCollection == .similarScenes ? "No Similar Photos Found" : "No Duplicates Found", systemImage: "checkmark.circle")
+                    ContentUnavailableView(model.reviewCollection == .similarScenes ? L10n.text("app_no_similar_photos_found") : L10n.text("app_no_duplicates_found"), systemImage: "checkmark.circle")
                 }
             } else {
                 DuplicateGallery(groups: model.visibleGroups, model: model, selectedGroup: selectedGroup,
@@ -250,7 +254,7 @@ struct LibraryView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !result.issues.isEmpty {
-                Button(result.issues.count == 1 ? "Review 1 Scan Issue" : "Review \(result.issues.count) Scan Issues") {
+                Button(result.issues.count == 1 ? L10n.text("app_review_1_scan_issue") : L10n.text("app_review_arg1_scan_issues", Int64(result.issues.count))) {
                     showingIssues = true
                 }
                 .padding(10)
@@ -263,41 +267,41 @@ struct LibraryView: View {
     private func scanSummaryCard(_ result: ScanResult) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             scanSummary(result)
-            Picker("Review Collection", selection: Binding(get: { model.reviewCollection }, set: { model.setReviewCollection($0) })) {
-                Text("Duplicates").tag(ReviewCollection.duplicates)
-                Text("Similar Photos").tag(ReviewCollection.similarScenes)
+            Picker(L10n.text("app_review_collection"), selection: Binding(get: { model.reviewCollection }, set: { model.setReviewCollection($0) })) {
+                Text(L10n.text("app_duplicates")).tag(ReviewCollection.duplicates)
+                Text(L10n.text("app_similar_photos_caption")).tag(ReviewCollection.similarScenes)
             }
             .pickerStyle(.segmented)
             .disabled(!model.canEditSources)
             .accessibilityIdentifier("review-collection")
             if model.reviewCollection == .similarScenes && !model.similarScenesEnabled {
-                Text("Find burst frames and similar scenes in a separate review queue. All cleanup requires your confirmation.")
+                Text(L10n.text("app_find_burst_frames_and_similar_scenes_in_a_separate_review_queue_all_cleanup_requires_your_confirmation"))
                     .font(.caption)
-                Button("Scan Similar Photos") { model.setSimilarScenesEnabled(true); model.scan() }
+                Button(L10n.text("app_scan_similar_photos")) { model.setSimilarScenesEnabled(true); model.scan() }
                     .disabled(!model.canScan)
             }
             if !model.protectionAvailable {
-                Label("Protection unavailable · Cleanup disabled", systemImage: "lock.trianglebadge.exclamationmark")
+                Label(L10n.text("app_protection_unavailable_cleanup_disabled"), systemImage: "lock.trianglebadge.exclamationmark")
             }
-            Text("\(model.visibleGroups.count) of \(result.groups.count) groups shown · \(model.resultQuery.sort.title)")
+            Text(L10n.text("app_arg1_of_arg2_groups_shown_arg3", Int64(model.visibleGroups.count), Int64(result.groups.count), model.resultQuery.sort.title))
                 .font(.caption).foregroundStyle(.secondary)
             if let notice = model.reviewNotice { Text(notice).font(.caption).foregroundStyle(.secondary) }
             if let batchSummary { Text(batchSummary).font(.caption) }
             if model.visibleGroups.isEmpty, !result.groups.isEmpty {
                 if model.collectionGroups.isEmpty {
-                    Text(model.reviewCollection == .similarScenes ? "No similar scenes found in this scan." : "No duplicates found in this scan.")
+                    Text(model.reviewCollection == .similarScenes ? L10n.text("app_no_similar_scenes_found_in_this_scan") : L10n.text("app_no_duplicates_found_in_this_scan"))
                         .font(.subheadline)
                 } else {
-                    Text("No groups match these filters.").font(.subheadline)
-                    Button("Clear Filters") { model.clearResultFilters() }
+                    Text(L10n.text("app_no_groups_match_these_filters")).font(.subheadline)
+                    Button(L10n.text("app_clear_filters")) { model.clearResultFilters() }
                 }
             }
             HStack {
-                Button("Continue Review") { openSession(result, limit: nil) }
+                Button(L10n.text("app_continue_review")) { openSession(result, limit: nil) }
                     .disabled(model.resumeGroup == nil || !model.canClean)
-                Menu("Review Options", systemImage: "ellipsis.circle") {
-                    Button("Review Ten Groups") { openSession(result, limit: 10) }
-                    Button("Filter and Sort") { showingFilters = true }
+                Menu(L10n.text("app_review_options"), systemImage: "ellipsis.circle") {
+                    Button(L10n.text("app_review_ten_groups")) { openSession(result, limit: 10) }
+                    Button(L10n.text("app_filter_and_sort")) { showingFilters = true }
                 }
                 .disabled(!model.canClean)
             }
@@ -329,18 +333,18 @@ struct LibraryView: View {
             .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(model.resultsStale ? "Scan Again" : "Scan Complete")
+                Text(model.resultsStale ? L10n.text("app_scan_again") : L10n.text("app_scan_complete"))
                     .font(.headline)
                     .foregroundStyle(.primary)
                     .accessibilityAddTraits(.isHeader)
-                Text("\(result.scanned + result.reused) processed · \(result.issues.filter { $0.reason == .cloudSkipped }.count) skipped · \(result.issues.filter { $0.reason != .cloudSkipped }.count) failed · 0 unfinished")
+                Text(L10n.text("app_arg1_processed_arg2_skipped_arg3_failed_0_unfinished", Int64(result.scanned + result.reused), Int64(result.issues.filter { $0.reason == .cloudSkipped }.count), Int64(result.issues.filter { $0.reason != .cloudSkipped }.count)))
                     .font(.caption)
                 if model.resultsStale {
-                    Text("The photo library changed. Scan again before cleanup.")
+                    Text(L10n.text("app_the_photo_library_changed_scan_again_before_cleanup"))
                 } else if result.groups.isEmpty {
-                    Text("\(result.scanned + result.reused) photos checked")
+                    Text(L10n.text("app_arg1_photos_checked", Int64(result.scanned + result.reused)))
                 } else {
-                    Text(result.groups.count == 1 ? "1 duplicate group to review" : "\(result.groups.count) duplicate groups to review")
+                    Text(result.groups.count == 1 ? L10n.text("app_1_duplicate_group_to_review") : L10n.text("app_arg1_duplicate_groups_to_review", Int64(result.groups.count)))
                 }
             }
             .font(.subheadline)
@@ -361,9 +365,9 @@ struct LibraryView: View {
         let complete: Int
         let total: Int
         switch progress {
-        case .fingerprinting(let done, let count): (title, complete, total) = ("Reading photos", done, count)
-        case .comparing(let done, let count): (title, complete, total) = ("Comparing photos", done, count)
-        case .similarity(let done, let count): (title, complete, total) = ("Finding similar scenes", done, count)
+        case .fingerprinting(let done, let count): (title, complete, total) = (L10n.text("app_reading_photos"), done, count)
+        case .comparing(let done, let count): (title, complete, total) = (L10n.text("app_comparing_photos"), done, count)
+        case .similarity(let done, let count): (title, complete, total) = (L10n.text("app_finding_similar_scenes"), done, count)
         }
         return ProgressView(value: Double(complete), total: Double(max(1, total))) {
             Text("\(title) · \(complete)/\(total)").font(.caption)
@@ -375,20 +379,20 @@ struct LibraryView: View {
             if !download.ended && download.remaining > 0 {
                 let percent = Int(download.processed * 100 / Double(download.total))
                 ProgressView(value: download.processed, total: Double(download.total)) {
-                    Label("Downloading from iCloud", systemImage: "icloud.and.arrow.down")
+                    Label(L10n.text("app_downloading_from_icloud"), systemImage: "icloud.and.arrow.down")
                 } currentValueLabel: {
                     Text("\(percent)%").monospacedDigit()
                 }
                 .accessibilityIdentifier("icloud-download-progress")
             } else if download.cancelled {
-                Label("iCloud Download Cancelled", systemImage: "icloud")
+                Label(L10n.text("app_icloud_download_cancelled"), systemImage: "icloud")
             } else if download.needsRetry {
-                Label("iCloud Download Incomplete", systemImage: "exclamationmark.icloud")
+                Label(L10n.text("app_icloud_download_incomplete"), systemImage: "exclamationmark.icloud")
                     .foregroundStyle(.orange)
             } else {
-                Label("iCloud Download Finished", systemImage: "icloud")
+                Label(L10n.text("app_icloud_download_finished"), systemImage: "icloud")
             }
-            Text("\(download.available) available · \(download.failed) failed · \(download.remaining) pending")
+            Text(L10n.text("app_arg1_available_arg2_failed_arg3_pending", Int64(download.available), Int64(download.failed), Int64(download.remaining)))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
@@ -405,7 +409,7 @@ struct LibraryView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 24) {
                         if hiddenCount > 0 {
-                            Text("\(hiddenCount) pending photos are outside the current filters. All confirmed candidates are shown here.")
+                            Text(L10n.text("app_arg1_pending_photos_are_outside_the_current_filters_all_confirmed_candidates_are_shown_here", Int64(hiddenCount)))
                                 .font(.subheadline)
                         }
                         ForEach(groups) { group in
@@ -416,14 +420,15 @@ struct LibraryView: View {
                     .padding()
                 }
             }
-            .navigationTitle("Confirm Cleanup")
+            .navigationTitle(L10n.text("app_confirm_cleanup"))
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { confirmingCleanup = false }
+                    Button(L10n.text("app_cancel")) { confirmingCleanup = false }
+                        .accessibilityIdentifier("cleanup-cancel")
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Move Selected", role: .destructive) {
+                    Button(L10n.text("app_move_selected"), role: .destructive) {
                         confirmingCleanup = false
                         Task { await model.applyCleanup(pairs) }
                     }
@@ -446,32 +451,32 @@ struct LibraryView: View {
                         model.downloadPendingPhotos()
                     } label: {
                         VStack(alignment: .leading, spacing: 4) {
-                            Label("Download Pending Photos from iCloud", systemImage: "icloud.and.arrow.down")
-                            Text("\(model.pendingDownloadCount) photos pending")
+                            Label(L10n.text("app_download_pending_photos_from_icloud"), systemImage: "icloud.and.arrow.down")
+                            Text(L10n.text("app_arg1_photos_pending", Int64(model.pendingDownloadCount)))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
                     .disabled(!model.canScan)
                 }
-                Section("Skipped Photos") {
+                Section(L10n.text("app_skipped_photos")) {
                     ForEach((model.result?.issues ?? []).filter { $0.reason == .cloudSkipped }, id: \.id) { _ in
-                        Label("iCloud photo skipped by policy", systemImage: "icloud.slash")
+                        Label(L10n.text("app_icloud_photo_skipped_by_policy"), systemImage: "icloud.slash")
                     }
                 }
                 ForEach(Array((model.result?.issues ?? []).filter { $0.reason != .cloudSkipped }.enumerated()), id: \.offset) { _, issue in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(issue.id.source.hasPrefix("folder:") ? URL(fileURLWithPath: issue.id.item).lastPathComponent : "Photos")
+                        Text(issue.id.source.hasPrefix("folder:") ? URL(fileURLWithPath: issue.id.item).lastPathComponent : L10n.text("app_photos"))
                         Text(issue.reason.label).font(.caption).foregroundStyle(.secondary)
                         if let detail = issue.detail {
-                            Text(detail).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                            Text(L10n.text("diagnostic_original_detail", detail)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                         }
                     }
                 }
             }
-            .navigationTitle("Scan Issues")
+            .navigationTitle(L10n.text("app_scan_issues"))
             .toolbarTitleDisplayMode(.inline)
-            .toolbar { Button("Done") { showingIssues = false } }
+            .toolbar { Button(L10n.text("app_done")) { showingIssues = false } }
         }
         #if os(macOS)
         .frame(minWidth: 480, minHeight: 380)
@@ -482,14 +487,14 @@ struct LibraryView: View {
 private extension AssetIssueReason {
     var label: String {
         switch self {
-        case .inaccessible: "Unavailable"
-        case .changedDuringScan: "Changed during scan"
-        case .unreadableImage: "Unreadable image"
-        case .unsupportedImage: "Unsupported image"
-        case .cloudSkipped: "Skipped by iCloud policy"
-        case .cloudDownloadRequired: "iCloud download required"
-        case .cloudDownloadFailed: "iCloud download failed"
-        case .sceneAnalysisFailed: "Scene analysis could not finish"
+        case .inaccessible: L10n.text("app_unavailable")
+        case .changedDuringScan: L10n.text("app_changed_during_scan")
+        case .unreadableImage: L10n.text("app_unreadable_image")
+        case .unsupportedImage: L10n.text("app_unsupported_image")
+        case .cloudSkipped: L10n.text("app_skipped_by_icloud_policy")
+        case .cloudDownloadRequired: L10n.text("app_icloud_download_required")
+        case .cloudDownloadFailed: L10n.text("app_icloud_download_failed")
+        case .sceneAnalysisFailed: L10n.text("app_scene_analysis_could_not_finish")
         }
     }
 }
@@ -507,18 +512,18 @@ private struct CleanupGroupPreview: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             if group.keep != nil {
-                Text("Will Remove (\(group.pairs.count))").font(.headline)
+                Text(L10n.text("app_will_remove_arg1", Int64(group.pairs.count))).font(.headline)
             } else {
-                Label("Delete entire group · \(group.pairs.count) photos", systemImage: "trash")
+                Label(L10n.text("app_delete_entire_group_arg1_photos", Int64(group.pairs.count)), systemImage: "trash")
                     .font(.headline)
                     .foregroundStyle(.red)
             }
             if group.match == .similarPhoto {
-                Text("Similar photos · Check differences before confirming.")
+                Text(L10n.text("app_similar_photos_check_differences_before_confirming"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if group.match == .visualDuplicate {
-                Text("Possible same image · Check differences before confirming.")
+                Text(L10n.text("app_possible_same_image_check_differences_before_confirming"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -632,19 +637,19 @@ private struct CleanupPhotoPreview: View {
     var body: some View {
         Button(action: open) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(removing ? "Will Remove" : "Keep")
+                Text(removing ? L10n.text("app_will_remove") : L10n.text("app_keep"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(removing ? Color.red : Color.primary)
                 ZStack {
                     RoundedRectangle(cornerRadius: 12).fill(.quaternary)
                     if let image = preview?.image {
-                        Image(image, scale: 1, label: Text("Preview"))
+                        Image(image, scale: 1, label: Text(L10n.text("app_preview")))
                             .resizable()
                             .scaledToFit()
                             .padding(2)
                     } else if preview != nil {
                         Image(systemName: "photo.badge.exclamationmark")
-                            .accessibilityLabel("Preview unavailable")
+                            .accessibilityLabel(L10n.text("app_preview_unavailable"))
                     } else {
                         ProgressView()
                     }
@@ -658,7 +663,7 @@ private struct CleanupPhotoPreview: View {
                 PhotoMetadataView(preview: preview)
                 if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
                 let source = model.sourceLabel(asset.id.source)
-                let destination = asset.id.source == "photos-library" ? "Recently Deleted" : "Trash"
+                let destination = asset.id.source == "photos-library" ? L10n.text("app_recently_deleted") : L10n.text("app_trash")
                 Text(removing ? "\(source) → \(destination)" : source)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -667,7 +672,7 @@ private struct CleanupPhotoPreview: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("\(removing ? String(localized: "Will Remove") : String(localized: "Keep")), \(preview?.details ?? String(localized: "Photo details unavailable"))"))
+        .accessibilityLabel(Text("\(removing ? L10n.text("app_will_remove") : L10n.text("app_keep")), \(preview?.details ?? L10n.text("app_photo_details_unavailable"))"))
         .accessibilityIdentifier("cleanup-\(removing ? "remove" : "keep")-\(asset.name)")
         .task(id: asset) {
             if let loaded = try? await model.preview(for: asset) {
@@ -700,11 +705,11 @@ private struct CleanupPhotoDetail: View {
         NavigationStack {
             VStack(spacing: 12) {
                 if let image {
-                    Image(image, scale: 1, label: Text("Preview"))
+                    Image(image, scale: 1, label: Text(L10n.text("app_preview")))
                         .resizable()
                         .scaledToFit()
                 } else if finished {
-                    ContentUnavailableView("Preview unavailable", systemImage: "photo.badge.exclamationmark")
+                    ContentUnavailableView(L10n.text("app_preview_unavailable"), systemImage: "photo.badge.exclamationmark")
                 } else {
                     ProgressView()
                 }
@@ -712,11 +717,11 @@ private struct CleanupPhotoDetail: View {
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Photo")
+            .navigationTitle(L10n.text("app_photo"))
             .toolbarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(L10n.text("app_done")) { dismiss() }
                 }
             }
         }
@@ -740,15 +745,15 @@ struct CleanupOutcomeView: View {
     var body: some View {
         List {
             Section {
-                Label(incomplete.isEmpty ? "Cleanup Finished" : moved == 0 ? "No Photos Moved" : "Cleanup Partially Completed",
+                Label(incomplete.isEmpty ? L10n.text("app_cleanup_finished") : moved == 0 ? L10n.text("app_no_photos_moved") : L10n.text("app_cleanup_partially_completed"),
                       systemImage: incomplete.isEmpty ? "checkmark.circle" : "exclamationmark.triangle")
                     .font(.headline)
                     .foregroundStyle(incomplete.isEmpty ? Color.primary : .orange)
-                Text("\(moved) moved · \(items.filter { $0.status == .skipped }.count) skipped · \(items.filter { $0.status == .failed }.count) failed")
+                Text(L10n.text("app_arg1_moved_arg2_skipped_arg3_failed", Int64(moved), Int64(items.filter { $0.status == .skipped }.count), Int64(items.filter { $0.status == .failed }.count)))
                     .foregroundStyle(.secondary)
             }
             if !incomplete.isEmpty {
-                Section("Photos Not Moved") {
+                Section(L10n.text("app_photos_not_moved")) {
                     ForEach(Array(incomplete.enumerated()), id: \.element.id) { index, item in
                         CleanupIssueRow(item: item, number: index + 1, model: model)
                     }
@@ -779,14 +784,20 @@ private struct CleanupIssueRow: View {
                 .frame(width: 72, height: 72)
                 .clipShape(.rect(cornerRadius: 8))
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Photo preview")
+                .accessibilityLabel(L10n.text("app_photo_preview"))
                 .accessibilityIdentifier("cleanup-issue-preview-\(item.pair.remove.name)")
             VStack(alignment: .leading, spacing: 4) {
                 if showFilename { Text(item.pair.remove.name).lineLimit(2) }
-                else { Text("Photo \(number)") }
-                Text(item.status == .skipped ? "Skipped" : "Failed").fontWeight(.medium)
-                Text(item.detail ?? String(localized: "The photo could not be moved. Scan again to retry."))
-                    .textSelection(.enabled)
+                else { Text(L10n.text("app_photo_arg1", Int64(number))) }
+                Text(item.status == .skipped ? L10n.text("app_skipped") : L10n.text("app_failed")).fontWeight(.medium)
+                if let reason = item.failureReason {
+                    Text(L10n.cleanupFailure(reason)).textSelection(.enabled)
+                } else {
+                    Text(L10n.text("app_the_photo_could_not_be_moved_scan_again_to_retry"))
+                    if let detail = item.detail {
+                        Text(L10n.text("diagnostic_original_detail", detail)).textSelection(.enabled)
+                    }
+                }
                 Text(model.sourceLabel(item.pair.remove.id.source)).foregroundStyle(.secondary)
             }
             .font(.subheadline)
