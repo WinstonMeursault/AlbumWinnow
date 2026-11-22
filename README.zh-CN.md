@@ -6,7 +6,7 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。应�
 
 ## 项目状态
 
-AlbumWinnow v1.4.0 新增默认关闭的连拍及相似场景分析、独立核对队列和可测质量辅助，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow v1.5.0 新增默认关闭的两图差异预览及保守的对齐校验，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
 
 上一个 GitHub 正式版本 v1.0.0 可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
 
@@ -35,6 +35,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 生成的测试工程放在 `.local`，预期版本号直接读取应用构建配置。测试不使用实机或 iCloud 账户。
 
 可选的 Photos 相册范围用例需要在专用模拟器上设置 `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` 才会运行，请求模拟器照片权限，并在其中保留生成的照片与相册样本；默认回归跳过该用例。
+
+## v1.5 差异预览
+
+在 **Review Evidence → Show Differences** 中明确选择参照照片和对照照片，再点击 **Show Differences**。可切换 **Original / Differences** 并调节覆盖层透明度，原始预览始终保留。参照照片只用于比较，不会改变选定保留项、推荐、重复分类或清理计划。
+
+使用重新读取并校正方向的预览，最长边上限 512 像素；补偿压缩、缩放及全局色彩平衡后，标出近似局部变化。支持构图稳定、尺寸比例一致的照片；裁剪、视角变化、细节不足或对齐不可靠时提示 **Cannot reliably show differences**。细小变化仍可能遗漏，可返回组内同步放大核对；没有覆盖层不代表原图完全相同。
+
+更换照片、退出页面或切到后台会清除临时结果，返回后需明确重新比较。Photos 预览不会授权 iCloud 下载；读取前后重新检查资源版本与当前范围，发现资源改变或不可访问时，旧结果必须重扫才能清理。生成样本校准覆盖压缩、尺寸、色彩、方向、局部数字和表情形状变化，不代表自然照片或真实表情识别准确率。
 
 ## v1.4 连拍与相似场景
 

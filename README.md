@@ -6,7 +6,7 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds dup
 
 ## Project status
 
-AlbumWinnow v1.4.0 adds an optional, separate review queue for burst frames and visually similar scenes, with measured quality aids. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+AlbumWinnow v1.5.0 adds optional pairwise difference previews with conservative alignment checks. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
 
 The previous formal v1.0.0 release remains available on the [GitHub Releases page](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
 
@@ -33,6 +33,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 ```
 
 Generated test projects stay under `.local`. The expected version is read from the app build settings. These tests do not use physical devices or an iCloud account. The optional Photos album-scope test requires `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` on a dedicated simulator; it requests simulated Photos access and leaves generated photo/album fixtures there. Default regressions skip that test.
+
+## v1.5 difference previews
+
+Open **Review Evidence → Show Differences**, explicitly choose a reference and comparison, then select **Show Differences**. The original previews remain available through **Original / Differences**, with adjustable highlight opacity. Reference photos are comparison inputs and do not change your selected keeper, recommendation, duplicate category or cleanup plan.
+
+The comparison uses fresh, orientation-corrected previews up to 512 pixels and compensates for compression, resizing and global color balance before marking approximate local changes. It supports stable framing and matching proportions. Crops, changed viewpoints, insufficient detail or inconsistent alignment produce **Cannot reliably show differences**. Small details can be missed; return to the group for synchronized zoom. An empty overlay is not proof that two originals are identical.
+
+Changing the pair, leaving the view or backgrounding clears the temporary result. Returning requires an explicit comparison. Photos previews never authorize iCloud downloads. Source revisions and active scope are checked again; a changed or inaccessible resource blocks stale cleanup until rescan. Generated calibration covers compression, size, color, orientation, local digit and expression-shape changes; it does not establish natural-photo or real-expression accuracy.
 
 ## v1.4 burst and similar scenes
 

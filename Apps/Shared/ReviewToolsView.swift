@@ -147,6 +147,16 @@ struct GroupInformationView: View {
                     Text("This is not a promise of immediately released device storage. iCloud optimization and Recently Deleted affect actual free space.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                Section("Difference Preview") {
+                    NavigationLink {
+                        PhotoDifferenceView(model: model, group: group)
+                    } label: {
+                        Label("Show Differences", systemImage: "square.on.square")
+                    }
+                    .accessibilityIdentifier("show-differences")
+                    Text("Choose a reference and comparison photo. Differences are shown only when their previews can be reliably aligned.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Section("Zoom") {
                     Text("Double-tap or double-click a photo to zoom or reset. Use the group menu for Zoom In, Reset Zoom and Sync Zoom. Dragging while zoomed pans the image instead of changing groups.")
                     Text("Photos are linked by relative image position, not pixel alignment. Crops and different viewpoints may show different objects. Detail previews are limited to available pixels and do not silently download from iCloud.")

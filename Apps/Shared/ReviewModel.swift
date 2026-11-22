@@ -540,6 +540,31 @@ struct CloudDownloadProgress {
         }
     }
 
+    func difference(reference: PhotoAsset, comparison: PhotoAsset) async throws -> PhotoDifference {
+        guard !running, !cleaning, !resultsStale else { throw AssetAccessError.changedDuringScan }
+        guard result?.groups.contains(where: { group in
+            group.assets.contains(reference) && group.assets.contains(comparison)
+        }) == true else { throw PhotoDifferenceError.invalidPair }
+        guard let first = sources.first(where: { $0.id == reference.id.source }),
+              let second = sources.first(where: { $0.id == comparison.id.source }) else {
+            invalidateResults()
+            throw CleanupError.unavailableSource
+        }
+        let access = folders
+        defer { withExtendedLifetime(access) {} }
+        do { return try await PhotoDifference.compare(reference, source: first, comparison, source: second) }
+        catch let error as AssetAccessError {
+            switch error {
+            case .changedDuringScan, .inaccessible: invalidateResults()
+            default: break
+            }
+            throw error
+        } catch ScopeError.unavailableAlbum {
+            invalidateResults()
+            throw ScopeError.unavailableAlbum
+        }
+    }
+
     func thumbnail(for asset: PhotoAsset, pixelSize: Int) async throws -> CGImage {
         let key = GalleryThumbnailKey(asset: asset, pixelSize: pixelSize)
         if asset.id.source == photoSource.id, photosEnabled, allowsPhotos {
