@@ -46,6 +46,17 @@ struct ScanCache: Sendable {
         migrator.registerMigration("fingerprintsOnly") { db in
             try db.drop(table: "scans")
         }
+        migrator.registerMigration("sceneFeaturesV1") { db in
+            try db.create(table: "scene_features", options: .withoutRowID) { table in
+                table.column("source", .text).notNull()
+                table.column("item", .text).notNull()
+                table.column("revision", .text).notNull()
+                table.column("configuration", .text).notNull()
+                table.column("archive", .blob).notNull()
+                table.column("quality", .blob).notNull()
+                table.primaryKey(["source", "item"])
+            }
+        }
         try migrator.migrate(database)
         return database
     }
@@ -126,27 +137,57 @@ struct ScanCache: Sendable {
         }
     }
 
+    func sceneFeature(for asset: PhotoAsset) throws -> SceneFeature? {
+        let record = try database.read { db -> (Data, Data)? in
+            guard let row = try Row.fetchOne(db, sql: """
+                SELECT archive, quality FROM scene_features WHERE source = ? AND item = ? AND revision = ? AND configuration = ?
+                """, arguments: [asset.id.source, asset.id.item, asset.revision, SceneFeature.version]) else { return nil }
+            return (row["archive"], row["quality"])
+        }
+        guard let record else { return nil }
+        if let quality = try? JSONDecoder().decode(SceneQuality.self, from: record.1),
+           let feature = try? autoreleasepool(invoking: { try SceneFeature(archive: record.0, quality: quality) }) { return feature }
+        try database.write { db in
+            try db.execute(sql: "DELETE FROM scene_features WHERE source = ? AND item = ?", arguments: [asset.id.source, asset.id.item])
+        }
+        return nil
+    }
+
+    func storeSceneFeature(_ feature: SceneFeature, for asset: PhotoAsset) throws {
+        let archive = try autoreleasepool { try feature.archive() }
+        let quality = try JSONEncoder().encode(feature.quality)
+        try database.write { db in
+            try db.execute(sql: """
+                INSERT INTO scene_features (source, item, revision, configuration, archive, quality) VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT (source, item) DO UPDATE SET revision = excluded.revision,
+                    configuration = excluded.configuration, archive = excluded.archive, quality = excluded.quality
+                """, arguments: [asset.id.source, asset.id.item, asset.revision, SceneFeature.version, archive, quality])
+        }
+    }
+
     func finish(assetIDs: Set<AssetID>, sources: [String]) throws {
         try database.write { db in
             let placeholders = sources.map { _ in "?" }.joined(separator: ",")
-            if sources.isEmpty {
-                try db.execute(sql: "DELETE FROM fingerprints")
-            } else {
-                try db.execute(sql: "DELETE FROM fingerprints WHERE source NOT IN (\(placeholders))",
-                               arguments: StatementArguments(sources))
-            }
-            let delete = try db.cachedStatement(sql: "DELETE FROM fingerprints WHERE source = ? AND item = ?")
-            for source in sources {
-                let cachedIDs = try String.fetchAll(db, sql: "SELECT item FROM fingerprints WHERE source = ?", arguments: [source])
-                for item in cachedIDs where !assetIDs.contains(AssetID(source: source, item: item)) {
-                    try delete.execute(arguments: [source, item])
+            for table in ["fingerprints", "scene_features"] {
+                if sources.isEmpty { try db.execute(sql: "DELETE FROM \(table)") }
+                else {
+                    try db.execute(sql: "DELETE FROM \(table) WHERE source NOT IN (\(placeholders))", arguments: StatementArguments(sources))
+                }
+                let delete = try db.cachedStatement(sql: "DELETE FROM \(table) WHERE source = ? AND item = ?")
+                let cached = try Row.fetchAll(db, sql: "SELECT source, item FROM \(table)")
+                for row in cached {
+                    let id = AssetID(source: row["source"], item: row["item"])
+                    if !assetIDs.contains(id) { try delete.execute(arguments: [id.source, id.item]) }
                 }
             }
         }
     }
 
     func clear() throws {
-        try database.write { db in try db.execute(sql: "DELETE FROM fingerprints") }
+        try database.write { db in
+            try db.execute(sql: "DELETE FROM fingerprints")
+            try db.execute(sql: "DELETE FROM scene_features")
+        }
         try database.vacuum()
     }
 }

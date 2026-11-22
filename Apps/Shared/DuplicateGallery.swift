@@ -200,7 +200,7 @@ private struct GalleryCard: View {
     private var hasVisualMatch: Bool { group.match != .exactDuplicate }
 
     private var matchDescription: Text {
-        group.match == .similarPhoto ? Text("Similar photos") : Text("Possible same image")
+        group.match == .sceneSimilar ? Text("Burst / Similar Scene") : group.match == .similarPhoto ? Text("Similar photos") : Text("Possible same image")
     }
 
     var body: some View {

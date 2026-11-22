@@ -72,7 +72,7 @@ struct PreparedImage: Sendable {
         return try render(image, width: size, height: size)
     }
 
-    private static func orientedImage(
+    static func orientedImage(
         _ source: CGImageSource, longestSide: Int, override: CGImagePropertyOrientation?
     ) throws -> CGImage {
         let options: [CFString: Any] = [
@@ -113,7 +113,7 @@ struct PreparedImage: Sendable {
         return total / 900
     }
 
-    private static func render(_ image: CGImage, width: Int, height: Int) throws -> [UInt8] {
+    static func render(_ image: CGImage, width: Int, height: Int) throws -> [UInt8] {
         var pixels = [UInt8](repeating: 0, count: width * height * 4)
         try pixels.withUnsafeMutableBytes { buffer in
             guard let context = CGContext(

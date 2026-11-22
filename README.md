@@ -6,7 +6,7 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds dup
 
 ## Project status
 
-AlbumWinnow v1.3.0 adds album/date scopes, cross-source comparison, quality-tied source preferences and read-only source protection. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+AlbumWinnow v1.4.0 adds an optional, separate review queue for burst frames and visually similar scenes, with measured quality aids. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
 
 The previous formal v1.0.0 release remains available on the [GitHub Releases page](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
 
@@ -33,6 +33,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 ```
 
 Generated test projects stay under `.local`. The expected version is read from the app build settings. These tests do not use physical devices or an iCloud account. The optional Photos album-scope test requires `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` on a dedicated simulator; it requests simulated Photos access and leaves generated photo/album fixtures there. Default regressions skip that test.
+
+## v1.4 burst and similar scenes
+
+Enable **Find Burst and Similar Scenes** in Settings, or choose **Similar Photos → Scan Similar Photos** after a scan. Analysis is off by default. **Duplicates** retains the existing duplicate matcher; stronger duplicate groups take priority over the separate **Similar Photos** queue. Confirmed cleanup candidates remain global across both queues. Valid manual choices survive analysis being disabled, cache clearing and reopening, but must be revalidated against current resources before cleanup.
+
+Vision feature distances supply similarity evidence, not a confidence percentage or proof of identical content. Real burst identifiers and known capture dates help retrieve candidates; dates alone never establish a match. Retrieval is capped at 64 candidates per photo. Groups require every member to agree with every other member and have at most 24 photos, so similarity chains and large scenes can split. Low-texture scenes may be omitted. Feature caches are isolated by algorithm configuration, operating system and architecture.
+
+Measured thumbnail focus and exposure signals may suggest a keeper only when the measured advantage is clear; otherwise there is no recommendation. These signals do not judge expressions, artistic blur or aesthetic merit. This release has not been evaluated against an annotated natural-photo benchmark; natural precision and recall are unmeasured. Review all differences manually. Cleanup rereads the actual retained/removal pair, rechecks scene similarity and applies the existing resource, lock and source protections. Active Photos album membership, album identity and date bounds are checked again before deletion.
 
 ## v1.3 sources and scope
 

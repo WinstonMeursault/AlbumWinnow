@@ -30,9 +30,25 @@ jobs:
           xcodebuild -version
           swift --version
       - name: Run core regression tests
+        env:
+          NSUnbufferedIO: 'YES'
         run: |
           mkdir -p "$HOME/.Trash"
-          swift test --package-path Packages/AlbumWinnowCore -c release
+          swift build --package-path Packages/AlbumWinnowCore -c release --build-tests -Xswiftc -enable-testing
+          swift test --package-path Packages/AlbumWinnowCore -c release --skip-build &
+          test_pid=$!
+          (
+            for attempt in 1 2 3 4; do sleep 30; done
+            mkdir -p .local
+            for stalled_pid in $(pgrep -x swiftpm-testing || true); do
+              sample "$stalled_pid" 1 -file ".local/core-stall-$stalled_pid.txt" || true
+              cat ".local/core-stall-$stalled_pid.txt" || true
+            done
+            kill -TERM "$test_pid" 2>/dev/null || true
+          ) &
+          watchdog_pid=$!
+          trap 'kill "$watchdog_pid" 2>/dev/null || true' EXIT
+          wait "$test_pid"
 
   app-builds:
     name: Apple app builds

@@ -81,6 +81,10 @@ struct ScanSourcesView: View {
             ScanPolicySettings(model: model)
 
             Section("Review") {
+                Toggle("Find Burst and Similar Scenes", isOn: Binding(get: { model.similarScenesEnabled }, set: { model.setSimilarScenesEnabled($0) }))
+                    .disabled(!model.canEditSources)
+                Text("Adds a separate Similar Photos queue and includes accessible burst members. Natural-photo accuracy has not been measured. Duplicate checks and cleanup confirmation remain separate.")
+                    .font(.caption).foregroundStyle(.secondary)
                 Toggle("Show Filenames in Review", isOn: $showReviewFilenames)
                     .accessibilityIdentifier("show-review-filenames")
             }

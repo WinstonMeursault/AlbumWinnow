@@ -2,6 +2,7 @@ import Foundation
 import ImageIO
 
 public enum DuplicateMatch: String, Codable, Sendable {
+    case sceneSimilar
     case exactDuplicate
     case similarPhoto
     case visualDuplicate

@@ -153,7 +153,12 @@ struct CloudDownloadProgress {
         if let selection = selections[group.id] {
             return Set(group.assets.filter { selection.selected.contains($0.id) && !isProtected($0) }.map(\.id))
         }
+        guard group.hasQualityRecommendation != false else { return [] }
         return Set(group.removalPairs(keeping: group.recommendation.id, protection: protection).map { $0.remove.id })
+    }
+
+    var collectionGroups: [DuplicateGroup] {
+        (result?.groups ?? []).filter { reviewCollection == .similarScenes ? $0.match == .sceneSimilar : $0.match != .sceneSimilar }
     }
 
     var visibleGroups: [DuplicateGroup] {
@@ -192,7 +197,7 @@ struct CloudDownloadProgress {
         var state = reviewState
         do {
             state.decisions[try group.reviewSignature()] = ReviewDecision(status: .confirmed,
-                keepID: selection.keepID, removals: selection.selected, deleteAll: selection.deleteAll, members: assets)
+                keepID: selection.keepID, removals: selection.selected, deleteAll: selection.deleteAll, members: assets, sceneAlgorithm: group.sceneAlgorithm)
         } catch { errorMessage = error.localizedDescription; return false }
         guard saveState(state) else { selections.removeValue(forKey: group.id); return false }
         return true
@@ -373,7 +378,7 @@ struct CloudDownloadProgress {
         let (downloadUpdates, downloadContinuation) = AsyncStream.makeStream(of: PhotoLibrarySource.DownloadUpdate.self)
         let selectedSources = sources.map { source -> any AssetSource in
             guard source.id == photoSource.id else { return source }
-            return PhotoLibrarySource(scope: reviewState.photoScope ?? PhotoScope(), downloads: downloads, allowsDownloads: allowsDownloads) { update in downloadContinuation.yield(update) }
+            return PhotoLibrarySource(scope: reviewState.photoScope ?? PhotoScope(), includeBurstMembers: similarScenesEnabled, downloads: downloads, allowsDownloads: allowsDownloads) { update in downloadContinuation.yield(update) }
         }
         #if os(iOS)
         UserDefaults.standard.set(allowsDownloads, forKey: Self.interruptedCloudPolicyKey)
@@ -432,7 +437,7 @@ struct CloudDownloadProgress {
                 try await refreshReadOnlyRevisions()
                 try Task.checkCancellation()
                 let next = try await engine.scan(selectedSources, refreshing: downloads,
-                    comparisonSides: reviewState.comparisonSides, preferredSource: reviewState.preferredSource, progress: { continuation.yield($0) }, accounting: { accountContinuation.yield($0) })
+                    comparisonSides: reviewState.comparisonSides, preferredSource: reviewState.preferredSource, includeSimilarScenes: similarScenesEnabled, progress: { continuation.yield($0) }, accounting: { accountContinuation.yield($0) })
                 try Task.checkCancellation()
                 groupSignatures = Dictionary(uniqueKeysWithValues: try next.groups.map { ($0.id, try $0.reviewSignature()) })
                 result = next
@@ -560,7 +565,7 @@ struct CloudDownloadProgress {
 
     private var sources: [any AssetSource] {
         var selected: [any AssetSource] = folders.map(\.source)
-        if photosEnabled && allowsPhotos { selected.append(photoSource) }
+        if photosEnabled && allowsPhotos { selected.append(PhotoLibrarySource(scope: photoScope, includeBurstMembers: similarScenesEnabled)) }
         return selected
     }
 
@@ -670,6 +675,7 @@ struct CloudDownloadProgress {
         var state = reviewState
         var decision = state.decisions[signature].flatMap { $0.invalidated == true ? nil : $0 } ?? ReviewDecision(status: status)
         decision.status = status
+        decision.sceneAlgorithm = group.sceneAlgorithm
         let assets = [group.preferred] + group.duplicates.map(\.asset)
         if status == .kept || status == .pending { decision = ReviewDecision(status: status) }
         decision.members = assets
@@ -695,7 +701,7 @@ struct CloudDownloadProgress {
     }
 
     var resumeGroup: DuplicateGroup? {
-        let groups = result?.groups ?? []
+        let groups = visibleGroups
         if let anchor = groups.first(where: { reviewSignature(for: $0) == reviewState.anchor && status(for: $0) != .kept }) {
             return anchor
         }
@@ -710,6 +716,7 @@ struct CloudDownloadProgress {
         let currentIDs = Set(groups.flatMap { [$0.preferred.id] + $0.duplicates.map(\.id) })
         var state = reviewState
         for (signature, decision) in state.decisions where !signatures.contains(signature) && decision.invalidated != true {
+            if decision.sceneAlgorithm != nil && !similarScenesEnabled { continue }
             if let members = decision.members, members.contains(where: { currentIDs.contains($0.id) }) {
                 state.decisions[signature]?.invalidated = true
             }
@@ -733,6 +740,29 @@ struct CloudDownloadProgress {
             let removals = Set(assets.filter { valid.contains($0.id) && decision.removals.contains($0.id) && !isProtected($0) }.map(\.id))
             selections[group.id] = GroupSelection(keepID: decision.keepID, selected: removals, deleteAll: decision.deleteAll)
         }
+    }
+
+    var similarScenesEnabled: Bool { reviewState.similarScenesEnabled == true }
+    var reviewCollection: ReviewCollection { resultQuery.collection ?? .duplicates }
+
+    func setSimilarScenesEnabled(_ enabled: Bool) {
+        guard canEditSources, enabled != similarScenesEnabled else { return }
+        var state = reviewState
+        state.similarScenesEnabled = enabled
+        if saveState(state) { invalidateResults() }
+    }
+
+    func setReviewCollection(_ collection: ReviewCollection) {
+        var query = resultQuery
+        query.collection = collection
+        query.match = nil
+        setResultQuery(query)
+    }
+
+    func clearResultFilters() {
+        var query = ReviewResultQuery()
+        query.collection = resultQuery.collection
+        setResultQuery(query)
     }
 
     var photoScope: PhotoScope { reviewState.photoScope ?? PhotoScope() }

@@ -39,6 +39,7 @@ public actor ScanEngine {
         refreshing: Set<AssetID> = [],
         comparisonSides: ComparisonSides? = nil,
         preferredSource: String? = nil,
+        includeSimilarScenes: Bool = false,
         progress: @Sendable (ScanProgress) -> Void = { _ in },
         accounting: @Sendable (ScanAccounting) -> Void = { _ in }
     ) async throws -> ScanResult {
@@ -126,14 +127,30 @@ public actor ScanEngine {
 
         try Task.checkCancellation()
         var (groups, comparisonIssues) = try await findGroups(indexed, sources: sources, sides: comparisonSides, progress: progress)
+        if includeSimilarScenes {
+            let excluded = Set(groups.flatMap { $0.assets.map(\.id) })
+            let (scenes, sceneIssues) = try await findScenes(indexed.filter { !excluded.contains($0.asset.id) }, sources: sources,
+                refreshing: refreshing, sides: comparisonSides, progress: progress)
+            groups.append(contentsOf: scenes)
+            issues.append(contentsOf: sceneIssues)
+        }
         if let preferredSource {
             let byID = Dictionary(uniqueKeysWithValues: indexed.map { ($0.asset.id, $0) })
             for index in groups.indices {
                 let reference = byID[groups[index].preferred.id]!
-                groups[index].recommendedID = groups[index].assets.first { asset in
+                if groups[index].hasQualityRecommendation == true { continue }
+                let candidate = groups[index].assets.first { asset in
                     guard asset.id.source == preferredSource, let other = byID[asset.id] else { return false }
-                    return Self.qualityTied(reference, other)
-                }?.id
+                    return Self.qualityTied(reference, other) && (groups[index].sceneAlgorithm == nil ||
+                        groups[index].sceneQuality?[asset.id] == groups[index].sceneQuality?[reference.asset.id])
+                }
+                if let candidate {
+                    groups[index].recommendedID = candidate.id
+                    if groups[index].sceneAlgorithm != nil {
+                        groups[index].hasQualityRecommendation = true
+                        groups[index].sceneRecommendationReason = .sourcePreference
+                    }
+                }
             }
         }
         issues.append(contentsOf: comparisonIssues)
@@ -292,6 +309,38 @@ public actor ScanEngine {
             }
         }
         progress(.comparing(completed: ordered.count, total: ordered.count))
+        return (groups, issues)
+    }
+
+    private func findScenes(_ assets: [IndexedAsset], sources: [any AssetSource], refreshing: Set<AssetID>,
+                            sides: ComparisonSides?, progress: (ScanProgress) -> Void) async throws -> ([DuplicateGroup], [AssetIssue]) {
+        let sources = Dictionary(uniqueKeysWithValues: sources.map { ($0.id, $0) })
+        var items: [SceneItem] = []
+        var issues: [AssetIssue] = []
+        for (position, indexed) in assets.enumerated() {
+            try Task.checkCancellation()
+            progress(.similarity(completed: position, total: assets.count * 2))
+            guard let source = sources[indexed.asset.id.source] else { throw ScanError.invalidSourceSnapshot }
+            do {
+                let cached = refreshing.contains(indexed.asset.id) ? nil : try cache.sceneFeature(for: indexed.asset)
+                let feature: SceneFeature
+                if let cached { feature = cached }
+                else {
+                    let input = try await source.imageInput(for: indexed.asset)
+                    feature = try autoreleasepool { try SceneFeature(input: input) }
+                    try source.validateImage(for: indexed.asset)
+                    try cache.storeSceneFeature(feature, for: indexed.asset)
+                }
+                try source.validateImage(for: indexed.asset)
+                items.append(SceneItem(asset: indexed.asset, evidence: indexed.evidence, feature: feature))
+            } catch is CancellationError { throw CancellationError() }
+            catch {
+                let issue = Self.issue(for: indexed.asset.id, error: error, source: source)
+                let reason: AssetIssueReason = [AssetIssueReason.cloudSkipped, .cloudDownloadRequired, .cloudDownloadFailed, .changedDuringScan].contains(issue.reason) ? issue.reason : .sceneAnalysisFailed
+                issues.append(AssetIssue(id: issue.id, reason: reason, detail: issue.detail ?? error.localizedDescription))
+            }
+        }
+        let groups = try SceneGrouping.groups(items, sides: sides) { progress(.similarity(completed: assets.count + $0, total: assets.count + items.count)) }
         return (groups, issues)
     }
 

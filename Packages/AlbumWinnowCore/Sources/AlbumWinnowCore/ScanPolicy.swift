@@ -100,7 +100,7 @@ public extension DuplicateGroup {
         var pairs: [CleanupPair] = []
         for asset in assets where asset.id != keepID && retained[asset.id] == nil {
             if let keep = (adjacent[asset.id] ?? []).lazy.compactMap({ retained[$0] }).first {
-                pairs.append(CleanupPair(keep: keep, remove: asset))
+                pairs.append(CleanupPair(keep: keep, remove: asset, sceneAlgorithm: sceneAlgorithm))
             } else { retained[asset.id] = asset }
         }
         return pairs

@@ -6,7 +6,7 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。应�
 
 ## 项目状态
 
-AlbumWinnow v1.3.0 新增相册和日期范围、两侧比较、质量相当时的来源偏好及来源只读保护，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow v1.4.0 新增默认关闭的连拍及相似场景分析、独立核对队列和可测质量辅助，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
 
 上一个 GitHub 正式版本 v1.0.0 可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
 
@@ -35,6 +35,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 生成的测试工程放在 `.local`，预期版本号直接读取应用构建配置。测试不使用实机或 iCloud 账户。
 
 可选的 Photos 相册范围用例需要在专用模拟器上设置 `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` 才会运行，请求模拟器照片权限，并在其中保留生成的照片与相册样本；默认回归跳过该用例。
+
+## v1.4 连拍与相似场景
+
+在设置中开启 **Find Burst and Similar Scenes**，或扫描后选择 **Similar Photos → Scan Similar Photos**。分析默认关闭；**Duplicates** 沿用既有重复判定，证据更强的重复组优先，相似结果进入独立的 **Similar Photos** 队列。两个队列的已确认清理候选统一进入 Confirm Cleanup。关闭分析、清缓存及重启不会抹除有效人工决定，恢复清理前仍需以当前资源重新验证。
+
+Vision 特征距离是相似依据，不代表置信百分比或内容相同。真实连拍标识和已知拍摄日期仅用于检索，日期接近不能建立匹配。每张照片最多检索 64 个候选，组内任意两张都必须满足相似要求，每组上限 24 张；相似链条和大场景可能拆组，低纹理场景可能遗漏。特征缓存按算法配置、系统和架构隔离。
+
+缩略图清晰度及曝光指标仅在可测差异明确时推荐保留，否则不提供推荐；它们不评价表情、艺术性虚焦或审美。本版尚未通过自然照片标注集评估，自然照片精确率与召回率尚未测得，请人工核对差异。最终清理会重读实际保留项与删除项、重新验证相似度，并执行资源、锁定及来源保护。Photos 所选相册的成员关系、身份和日期范围也会在删除前再次检查。
 
 ## v1.3 来源与范围
 

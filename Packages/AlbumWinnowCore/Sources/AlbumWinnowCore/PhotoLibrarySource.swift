@@ -21,13 +21,15 @@ public struct PhotoLibrarySource: AssetSource {
 
     public let id = "photos-library"
     public let scope: PhotoScope
+    private let includeBurstMembers: Bool
     private let allowsDownloads: Bool
     public func skipsCloudAsset(_ id: AssetID) -> Bool { !permitsDownload(for: id) }
     private let downloads: Set<AssetID>
     private let downloadUpdate: @Sendable (DownloadUpdate) -> Void
 
-    public init(scope: PhotoScope = PhotoScope(), downloads: Set<AssetID> = [], allowsDownloads: Bool = false, downloadUpdate: @escaping @Sendable (DownloadUpdate) -> Void = { _ in }) {
+    public init(scope: PhotoScope = PhotoScope(), includeBurstMembers: Bool = false, downloads: Set<AssetID> = [], allowsDownloads: Bool = false, downloadUpdate: @escaping @Sendable (DownloadUpdate) -> Void = { _ in }) {
         self.scope = scope
+        self.includeBurstMembers = includeBurstMembers
         self.allowsDownloads = allowsDownloads
         self.downloads = downloads
         self.downloadUpdate = downloadUpdate
@@ -46,6 +48,7 @@ public struct PhotoLibrarySource: AssetSource {
         try checkAuthorization()
         var fetches: [PHFetchResult<PHAsset>] = []
         let options = PHFetchOptions()
+        options.includeAllBurstAssets = includeBurstMembers
         options.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
         if let albums = scope.albums {
             guard Self.authorizationStatus() == .authorized else { throw ScopeError.unavailableAlbum }
@@ -57,7 +60,7 @@ public struct PhotoLibrarySource: AssetSource {
                 fetches.append(PHAsset.fetchAssets(in: collection, options: options))
             }
         } else {
-            fetches = [PHAsset.fetchAssets(with: .image, options: nil)]
+            fetches = [PHAsset.fetchAssets(with: .image, options: options)]
         }
         var assets = [PhotoAsset]()
         var seen = Set<AssetID>()
@@ -221,8 +224,27 @@ public struct PhotoLibrarySource: AssetSource {
               current.mediaType == .image else {
             throw AssetAccessError.inaccessible
         }
-        guard Self.describe(current).revision == asset.revision else { throw AssetAccessError.changedDuringScan }
+        guard Self.describe(current).revision == asset.revision && current.burstIdentifier == asset.burstIdentifier else { throw AssetAccessError.changedDuringScan }
+        try validateScope(current)
         return current
+    }
+
+    private func validateScope(_ asset: PHAsset) throws {
+        if let dates = scope.dates, try !dates.contains(asset.creationDate) { throw AssetAccessError.changedDuringScan }
+        guard let albums = scope.albums else { return }
+        guard Self.authorizationStatus() == .authorized else { throw ScopeError.unavailableAlbum }
+        let collections = PHAssetCollection.fetchAssetCollections(withLocalIdentifiers: Array(albums.keys), options: nil)
+        guard collections.count == albums.count else { throw ScopeError.unavailableAlbum }
+        let options = PHFetchOptions()
+        options.includeAllBurstAssets = includeBurstMembers
+        options.predicate = NSPredicate(format: "localIdentifier == %@", asset.localIdentifier)
+        var included = false
+        for index in 0..<collections.count {
+            let collection = collections.object(at: index)
+            guard (collection.localizedTitle ?? "") == albums[collection.localIdentifier] else { throw ScopeError.unavailableAlbum }
+            included = included || PHAsset.fetchAssets(in: collection, options: options).count > 0
+        }
+        guard included else { throw AssetAccessError.changedDuringScan }
     }
 
     func removableAsset(for asset: PhotoAsset) throws -> PHAsset {
@@ -259,7 +281,7 @@ public struct PhotoLibrarySource: AssetSource {
             id: AssetID(source: "photos-library", item: asset.localIdentifier),
             name: resources.first { $0.type == .photo }?.originalFilename ?? asset.localIdentifier,
             revision: "\(version):\(asset.pixelWidth):\(asset.pixelHeight):\(asset.mediaSubtypes.rawValue):\(resourceSignature)",
-            photoProperties: properties, captureDate: asset.creationDate
+            photoProperties: properties, captureDate: asset.creationDate, burstIdentifier: asset.burstIdentifier
         )
     }
 

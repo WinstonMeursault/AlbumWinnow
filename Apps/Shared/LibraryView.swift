@@ -234,7 +234,7 @@ struct LibraryView: View {
             if result.groups.isEmpty {
                 VStack(spacing: 0) {
                     scanSummaryCard(result)
-                    ContentUnavailableView("No Duplicates Found", systemImage: "checkmark.circle")
+                    ContentUnavailableView(model.reviewCollection == .similarScenes ? "No Similar Photos Found" : "No Duplicates Found", systemImage: "checkmark.circle")
                 }
             } else {
                 DuplicateGallery(groups: model.visibleGroups, model: model, selectedGroup: selectedGroup,
@@ -263,6 +263,19 @@ struct LibraryView: View {
     private func scanSummaryCard(_ result: ScanResult) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             scanSummary(result)
+            Picker("Review Collection", selection: Binding(get: { model.reviewCollection }, set: { model.setReviewCollection($0) })) {
+                Text("Duplicates").tag(ReviewCollection.duplicates)
+                Text("Similar Photos").tag(ReviewCollection.similarScenes)
+            }
+            .pickerStyle(.segmented)
+            .disabled(!model.canEditSources)
+            .accessibilityIdentifier("review-collection")
+            if model.reviewCollection == .similarScenes && !model.similarScenesEnabled {
+                Text("Find burst frames and similar scenes in a separate review queue. All cleanup requires your confirmation.")
+                    .font(.caption)
+                Button("Scan Similar Photos") { model.setSimilarScenesEnabled(true); model.scan() }
+                    .disabled(!model.canScan)
+            }
             if !model.protectionAvailable {
                 Label("Protection unavailable · Cleanup disabled", systemImage: "lock.trianglebadge.exclamationmark")
             }
@@ -271,8 +284,13 @@ struct LibraryView: View {
             if let notice = model.reviewNotice { Text(notice).font(.caption).foregroundStyle(.secondary) }
             if let batchSummary { Text(batchSummary).font(.caption) }
             if model.visibleGroups.isEmpty, !result.groups.isEmpty {
-                Text("No groups match these filters.").font(.subheadline)
-                Button("Clear Filters") { model.setResultQuery(ReviewResultQuery()) }
+                if model.collectionGroups.isEmpty {
+                    Text(model.reviewCollection == .similarScenes ? "No similar scenes found in this scan." : "No duplicates found in this scan.")
+                        .font(.subheadline)
+                } else {
+                    Text("No groups match these filters.").font(.subheadline)
+                    Button("Clear Filters") { model.clearResultFilters() }
+                }
             }
             HStack {
                 Button("Continue Review") { openSession(result, limit: nil) }
@@ -345,6 +363,7 @@ struct LibraryView: View {
         switch progress {
         case .fingerprinting(let done, let count): (title, complete, total) = ("Reading photos", done, count)
         case .comparing(let done, let count): (title, complete, total) = ("Comparing photos", done, count)
+        case .similarity(let done, let count): (title, complete, total) = ("Finding similar scenes", done, count)
         }
         return ProgressView(value: Double(complete), total: Double(max(1, total))) {
             Text("\(title) · \(complete)/\(total)").font(.caption)
@@ -470,6 +489,7 @@ private extension AssetIssueReason {
         case .cloudSkipped: "Skipped by iCloud policy"
         case .cloudDownloadRequired: "iCloud download required"
         case .cloudDownloadFailed: "iCloud download failed"
+        case .sceneAnalysisFailed: "Scene analysis could not finish"
         }
     }
 }

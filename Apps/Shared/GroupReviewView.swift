@@ -142,7 +142,7 @@ struct GroupReviewView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            if group.match == .similarPhoto {
+            if group.match == .similarPhoto || group.match == .sceneSimilar {
                 Text("Similar photos · Check differences before confirming.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -211,8 +211,9 @@ struct GroupReviewView: View {
 
     private func actionTitle(_ title: LocalizedStringKey) -> some View {
         Text(title)
-            .lineLimit(1)
+            .lineLimit(2)
             .minimumScaleFactor(0.65)
+            .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, minHeight: 32)
     }
 
@@ -265,7 +266,7 @@ struct GroupReviewView: View {
     }
 
     private func card(_ asset: PhotoAsset, number: Int) -> some View {
-        let recommended = !deletingAll && asset.id == group.recommendation.id
+        let recommended = !deletingAll && asset.id == group.recommendation.id && group.hasQualityRecommendation != false
         let selected = !deletingAll && keepID == asset.id
         let title = showFilenames ? Text(asset.name) : Text("Photo \(number)")
         let accessibleTitle = recommended ? Text("\(title), recommended to keep") : title
@@ -365,7 +366,7 @@ struct ReviewPreviewLayout: Layout {
         let gap = aspects.count == 2 ? spacing : 0
         let availableHeight = max(100, height - captions.reduce(0, +) - gap)
         let scale = min(1, availableHeight / max(1, idealHeights.reduce(0, +)))
-        let stackedImages = idealHeights.map { $0 * scale }
+        let stackedImages = idealHeights.map { min($0, max(128, $0 * scale)) }
         let first = CGRect(x: 0, y: 0, width: width, height: captions[0] + stackedImages[0])
 
         guard aspects.count == 2 else { return [first] }
@@ -444,8 +445,13 @@ private struct PreviewCard: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
             .contentShape(shape)
-            PhotoMetadataView(preview: preview)
-            if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
+            VStack(alignment: .leading, spacing: 6) {
+                PhotoMetadataView(preview: preview)
+                if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: select)
         }
     }
 }

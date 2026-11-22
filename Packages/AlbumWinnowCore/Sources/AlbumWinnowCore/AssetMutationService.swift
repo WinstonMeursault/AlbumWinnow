@@ -91,7 +91,13 @@ public actor AssetMutationService {
             throw CleanupError.sameFile
         }
         try validate(retained, sources: sources)
-        guard try await DuplicateDetector.compare(retained, source: keep, pair.remove, source: remove) != .distinct else {
+        let verified: Bool
+        if let algorithm = pair.sceneAlgorithm {
+            verified = try await SceneFeature.verify(retained, source: keep, pair.remove, source: remove, algorithm: algorithm)
+        } else {
+            verified = try await DuplicateDetector.compare(retained, source: keep, pair.remove, source: remove) != .distinct
+        }
+        guard verified else {
             throw CleanupError.noLongerDuplicate
         }
     }

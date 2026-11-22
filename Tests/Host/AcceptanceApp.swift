@@ -10,7 +10,7 @@ import SwiftUI
 
     init() {
         do { try Self.prepareFixtures() } catch { fatalError("Test fixture setup failed: \(error)") }
-        let folder = URL.documentsDirectory.appending(path: "AppTestFixtures", directoryHint: .isDirectory)
+        let folder = Self.fixtureFolder
         if FileManager.default.fileExists(atPath: folder.path), let scope = try? FolderScope(url: folder) {
             UserDefaults.standard.set([scope.bookmark], forKey: "AlbumWinnow.folderBookmarks")
         }
@@ -18,7 +18,9 @@ import SwiftUI
         if !ProcessInfo.processInfo.arguments.contains("--preserve-review-state") {
             try? FileManager.default.removeItem(at: testState)
         }
-        _model = State(initialValue: ReviewModel(dataDirectory: testState))
+        let model = ReviewModel(dataDirectory: testState)
+        if ProcessInfo.processInfo.arguments.contains("--scene-fixture") { model.setSimilarScenesEnabled(true) }
+        _model = State(initialValue: model)
     }
 
     var body: some Scene {
@@ -64,9 +66,26 @@ import SwiftUI
         return value
     }
 
+    private static var fixtureFolder: URL {
+        URL.documentsDirectory.appending(path: ProcessInfo.processInfo.arguments.contains("--scene-fixture") ? "SceneUITestFixtures" : "AppTestFixtures", directoryHint: .isDirectory)
+    }
+
     private static func prepareFixtures() throws {
-        let folder = URL.documentsDirectory.appending(path: "AppTestFixtures", directoryHint: .isDirectory)
+        let folder = fixtureFolder
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        if ProcessInfo.processInfo.arguments.contains("--scene-fixture") {
+            let bytes = try Data(contentsOf: require(Bundle.main.resourceURL).appending(path: "Fixtures/scene.png"))
+            try bytes.write(to: folder.appending(path: "scene-a.png"))
+            let source = try require(CGImageSourceCreateWithData(bytes as CFData, nil))
+            let image = try require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+            let cropped = try require(image.cropping(to: CGRect(x: Double(image.width) * 0.04, y: 0,
+                width: Double(image.width) * 0.92, height: Double(image.height))))
+            let encoded = NSMutableData()
+            let destination = try require(CGImageDestinationCreateWithData(encoded, "public.png" as CFString, 1, nil))
+            CGImageDestinationAddImage(destination, cropped, nil)
+            guard CGImageDestinationFinalize(destination) else { throw CocoaError(.fileWriteUnknown) }
+            try (encoded as Data).write(to: folder.appending(path: "scene-b.png"))
+        }
         if FileManager.default.fileExists(atPath: folder.appending(path: "review-detail-b.png").path) { return }
         for (name, width, height, red, green, blue) in [
             ("landscape", 1600, 900, 0.2, 0.5, 0.9),

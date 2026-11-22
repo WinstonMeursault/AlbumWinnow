@@ -14,7 +14,7 @@ struct ResultFiltersView: View {
                 .accessibilityIdentifier("result-status-filter")
                 Picker("Match Category", selection: binding(\.match)) {
                     Text("All Categories").tag(nil as DuplicateMatch?)
-                    ForEach([DuplicateMatch.exactDuplicate, .visualDuplicate, .similarPhoto], id: \.self) {
+                    ForEach(model.reviewCollection == .similarScenes ? [DuplicateMatch.sceneSimilar] : [DuplicateMatch.exactDuplicate, .visualDuplicate, .similarPhoto], id: \.self) {
                         Text($0.title).tag(Optional($0))
                     }
                 }
@@ -33,7 +33,7 @@ struct ResultFiltersView: View {
                 .accessibilityIdentifier("result-sort")
                 Text("Dates use the latest known capture metadata in each group. Unknown dates stay last in either direction. Size sorting uses known candidate bytes; partial sizes are lower bounds.")
                     .font(.caption).foregroundStyle(.secondary)
-                Button("Clear Filters") { model.setResultQuery(ReviewResultQuery()) }
+                Button("Clear Filters") { model.clearResultFilters() }
                 Text("Filtering never clears confirmed cleanup candidates. A review session keeps its current order until you return to the overview.")
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -94,6 +94,24 @@ struct GroupInformationView: View {
                     Text("Reference: \(showFilenames ? group.preferred.name : String(localized: "Photo 1"))")
                         .font(.caption).foregroundStyle(.secondary)
                 }
+                if group.sceneAlgorithm != nil {
+                    Section("Scene Similarity Evidence") {
+                        Text("Visual features agree within this group. A shared burst identifier and capture-time proximity are candidate hints, not proof of identical content.")
+                        Text("Groups require every member to agree with the representative and the other members, with at most 24 photos. Larger scenes and similarity chains can be split. Low-texture photos may be omitted.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Text("Natural-photo precision and recall have not been measured. Inspect content differences before deciding what to keep.")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Text("\(group.sceneEvidence?.count ?? 0) actual pair comparisons")
+                        DisclosureGroup("Pair Details") {
+                            ForEach(Array((group.sceneEvidence ?? []).enumerated()), id: \.offset) { index, evidence in
+                                Text("Pair \(index + 1): feature distance \(Double(evidence.featureDistance).formatted(.number.precision(.fractionLength(3))))")
+                                if evidence.sharedBurst { Text("Shared Photos burst identifier") }
+                            }
+                        }
+                        Text("Feature distance is not a confidence percentage. Smaller values mean closer representations, not guaranteed duplicates.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
                 Section("Photo Metadata") {
                     ForEach(Array(group.assets.enumerated()), id: \.element.id) { index, asset in
                         VStack(alignment: .leading, spacing: 4) {
@@ -107,6 +125,12 @@ struct GroupInformationView: View {
                             Text(asset.byteCount.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? String(localized: "Size unknown"))
                             let date = asset.captureDate ?? evidence?.captureDate
                             Text(date.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? String(localized: "Capture date unknown"))
+                            if let quality = group.sceneQuality?[asset.id] {
+                                Text("Thumbnail focus energy: \(quality.focusEnergy.formatted(.number.precision(.fractionLength(4))))")
+                                Text("Clipped shadows: \(quality.darkClipping.formatted(.percent.precision(.fractionLength(1)))); clipped highlights: \(quality.brightClipping.formatted(.percent.precision(.fractionLength(1))))")
+                                Text("These measured thumbnail signals do not establish subject focus, artistic intent or aesthetic quality.")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
                             if model.isLocked(asset) { Label("Locked", systemImage: "lock.fill") }
                             if model.isReadOnly(asset) { Label("Read-only Source", systemImage: "hand.raised.fill") }
                         }
@@ -114,7 +138,12 @@ struct GroupInformationView: View {
                     }
                 }
                 Section("Candidate Resource Size") {
-                    Text(group.sizeEstimate(removing: model.estimatedRemovals(for: group)).summary)
+                    if group.hasQualityRecommendation == false, model.selection(for: group.id).keepID == nil,
+                       !model.selection(for: group.id).deleteAll {
+                        Text("Choose and confirm a keeper before estimating candidate size.")
+                    } else {
+                        Text(group.sizeEstimate(removing: model.estimatedRemovals(for: group)).summary)
+                    }
                     Text("This is not a promise of immediately released device storage. iCloud optimization and Recently Deleted affect actual free space.")
                         .font(.caption).foregroundStyle(.secondary)
                 }
@@ -136,6 +165,8 @@ struct GroupInformationView: View {
     private func reason(_ reason: RecommendationReason) -> String {
         let evidence = group.evidence?[group.recommendation.id]
         switch reason {
+        case .focusSignal: return String(localized: "More measured thumbnail edge energy at the same image dimensions and comparable exposure. Check subject focus manually; intentional blur can be appropriate.")
+        case .exposureSignal: return String(localized: "Less measured shadow/highlight clipping at the same image dimensions. Exposure can be intentional; inspect the original appearance.")
         case .sourcePreference: return String(localized: "Quality-ranking signals are tied; the configured source preference is used.")
         case .associatedResources: return String(localized: "Associated resource flags are present. Cleanup protection applies.")
         case .higherResolution:
@@ -179,6 +210,7 @@ extension ReviewSort {
 extension DuplicateMatch {
     var title: String {
         switch self {
+        case .sceneSimilar: String(localized: "Burst / Similar Scene")
         case .exactDuplicate: String(localized: "Exact Duplicate")
         case .visualDuplicate: String(localized: "Possible Same Image")
         case .similarPhoto: String(localized: "Highly Similar · Review Differences")
@@ -188,6 +220,7 @@ extension DuplicateMatch {
 
     var explanation: String {
         switch self {
+        case .sceneSimilar: String(localized: "Visual scene features are close. Frames may contain different expressions, movement or objects; this is not duplicate proof.")
         case .exactDuplicate: String(localized: "File bytes and effective orientation agree.")
         case .visualDuplicate: String(localized: "Multi-scale image checks agree. Size, format or compression may differ.")
         case .similarPhoto: String(localized: "The overall image is close, but higher-resolution checks found local differences. Manual review is required.")

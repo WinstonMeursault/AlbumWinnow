@@ -18,10 +18,12 @@ public struct PhotoAsset: Codable, Equatable, Sendable, Identifiable {
     public let photoProperties: PhotoProperties?
     public let byteCount: Int64?
     public let captureDate: Date?
+    public let burstIdentifier: String?
 
     public init(id: AssetID, name: String, revision: String, photoProperties: PhotoProperties? = nil,
-                byteCount: Int64? = nil, captureDate: Date? = nil) {
+                byteCount: Int64? = nil, captureDate: Date? = nil, burstIdentifier: String? = nil) {
         self.id = id
+        self.burstIdentifier = burstIdentifier
         self.name = name
         self.revision = revision
         self.photoProperties = photoProperties
@@ -49,6 +51,7 @@ public struct AssetImage: Sendable {
 }
 
 public enum AssetIssueReason: String, Codable, Sendable {
+    case sceneAnalysisFailed
     case inaccessible
     case changedDuringScan
     case unreadableImage

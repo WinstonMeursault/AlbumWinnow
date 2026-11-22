@@ -7,6 +7,7 @@ public enum ReviewStatus: String, Codable, Sendable, CaseIterable {
 }
 
 public struct ReviewDecision: Codable, Equatable, Sendable {
+    public var sceneAlgorithm: String? = nil
     public var status: ReviewStatus
     public var keepID: AssetID?
     public var removals: Set<AssetID>
@@ -14,7 +15,8 @@ public struct ReviewDecision: Codable, Equatable, Sendable {
     public var members: [PhotoAsset]?
     public var invalidated: Bool?
 
-    public init(status: ReviewStatus, keepID: AssetID? = nil, removals: Set<AssetID> = [], deleteAll: Bool = false, members: [PhotoAsset]? = nil) {
+    public init(status: ReviewStatus, keepID: AssetID? = nil, removals: Set<AssetID> = [], deleteAll: Bool = false, members: [PhotoAsset]? = nil, sceneAlgorithm: String? = nil) {
+        self.sceneAlgorithm = sceneAlgorithm
         self.status = status
         self.keepID = keepID
         self.removals = removals
@@ -32,6 +34,7 @@ public struct ReviewState: Codable, Equatable, Sendable {
     public var anchorIndex: Int?
     public var resultQuery: ReviewResultQuery?
     public var scanCancelledByUser: Bool?
+    public var similarScenesEnabled: Bool?
     public var photoScope: PhotoScope?
     public var comparisonSides: ComparisonSides?
     public var preferredSource: String?
@@ -107,7 +110,7 @@ public extension DuplicateGroup {
     func reviewSignature() throws -> String {
         struct Member: Encodable { let id: AssetID; let revision: String; let properties: PhotoProperties? }
         struct Edge: Encodable { let ends: [AssetID]; let match: DuplicateMatch }
-        struct Evidence: Encodable { let version: Int; let members: [Member]; let edges: [Edge]; let sides: ComparisonSides? }
+        struct Evidence: Encodable { let version: Int; let members: [Member]; let edges: [Edge]; let sides: ComparisonSides?; let scene: String? }
         func precedes(_ a: AssetID, _ b: AssetID) -> Bool {
             a.source == b.source ? a.item < b.item : a.source < b.source
         }
@@ -120,7 +123,7 @@ public extension DuplicateGroup {
             }
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
-        return SHA256.hash(data: try encoder.encode(Evidence(version: comparisonSides == nil ? 1 : 2, members: members, edges: comparisonSides == nil && duplicates.allSatisfy { $0.match == .exactDuplicate } ? [] : edges, sides: comparisonSides)))
+        return SHA256.hash(data: try encoder.encode(Evidence(version: comparisonSides == nil ? 1 : 2, members: members, edges: comparisonSides == nil && duplicates.allSatisfy { $0.match == .exactDuplicate } ? [] : edges, sides: comparisonSides, scene: sceneAlgorithm)))
             .map { String(format: "%02x", $0) }.joined()
     }
 }

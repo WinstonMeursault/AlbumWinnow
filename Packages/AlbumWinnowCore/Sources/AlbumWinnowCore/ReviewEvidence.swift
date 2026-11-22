@@ -16,7 +16,7 @@ public struct PhotoEvidence: Codable, Equatable, Sendable {
 }
 
 public enum RecommendationReason: String, Codable, Sendable {
-    case sourcePreference, associatedResources, higherResolution, higherBitDepth, wideColor, edgeContrast, noQualityAdvantage
+    case focusSignal, exposureSignal, sourcePreference, associatedResources, higherResolution, higherBitDepth, wideColor, edgeContrast, noQualityAdvantage
 }
 
 public struct SizeEstimate: Equatable, Sendable {
@@ -50,6 +50,7 @@ public extension DuplicateGroup {
     }
 
     var recommendationReasons: [RecommendationReason] {
+        if sceneAlgorithm != nil { return sceneRecommendationReason.map { [$0] } ?? [.noQualityAdvantage] }
         let preferred = recommendation
         let others = assets.filter { $0.id != preferred.id }
         var reasons: [RecommendationReason] = recommendedID == nil ? [] : [.sourcePreference]
@@ -97,7 +98,12 @@ public enum ReviewSort: String, Codable, Sendable, CaseIterable {
     case stable, newest, oldest, count, bytes
 }
 
+public enum ReviewCollection: String, Codable, CaseIterable, Sendable {
+    case duplicates, similarScenes
+}
+
 public struct ReviewResultQuery: Codable, Equatable, Sendable {
+    public var collection: ReviewCollection? = nil
     public var status = ReviewStatusFilter.active
     public var match: DuplicateMatch?
     public var source: String?
@@ -108,7 +114,8 @@ public struct ReviewResultQuery: Codable, Equatable, Sendable {
     public func apply(to groups: [DuplicateGroup], statuses: [AssetID: ReviewStatus] = [:],
                       removals: [AssetID: Set<AssetID>] = [:]) -> [DuplicateGroup] {
         groups.enumerated().filter { _, group in
-            status.includes(statuses[group.id] ?? .pending) && (match == nil || group.match == match) &&
+            ((collection ?? .duplicates) == .similarScenes ? group.match == .sceneSimilar : group.match != .sceneSimilar) &&
+                status.includes(statuses[group.id] ?? .pending) && (match == nil || group.match == match) &&
                 (source == nil || group.assets.contains { $0.id.source == source })
         }.sorted { lhs, rhs in
             let a = lhs.element, b = rhs.element
@@ -124,8 +131,8 @@ public struct ReviewResultQuery: Codable, Equatable, Sendable {
             case .count:
                 if a.assets.count != b.assets.count { return a.assets.count > b.assets.count }
             case .bytes:
-                let left = a.sizeEstimate(removing: removals[a.id] ?? Set(a.removalPairs(keeping: a.recommendation.id, protection: CleanupProtection()).map { $0.remove.id }))
-                let right = b.sizeEstimate(removing: removals[b.id] ?? Set(b.removalPairs(keeping: b.recommendation.id, protection: CleanupProtection()).map { $0.remove.id }))
+                let left = a.sizeEstimate(removing: removals[a.id] ?? (a.hasQualityRecommendation == false ? [] : Set(a.removalPairs(keeping: a.recommendation.id, protection: CleanupProtection()).map { $0.remove.id })))
+                let right = b.sizeEstimate(removing: removals[b.id] ?? (b.hasQualityRecommendation == false ? [] : Set(b.removalPairs(keeping: b.recommendation.id, protection: CleanupProtection()).map { $0.remove.id })))
                 if left.hasKnownAmount != right.hasKnownAmount { return left.hasKnownAmount }
                 if left.knownBytes != right.knownBytes { return left.knownBytes > right.knownBytes }
             }
