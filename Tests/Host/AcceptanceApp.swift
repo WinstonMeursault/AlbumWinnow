@@ -14,7 +14,11 @@ import SwiftUI
         if FileManager.default.fileExists(atPath: folder.path), let scope = try? FolderScope(url: folder) {
             UserDefaults.standard.set([scope.bookmark], forKey: "AlbumWinnow.folderBookmarks")
         }
-        let testState = URL.applicationSupportDirectory.appending(path: "AcceptanceReview")
+        if ProcessInfo.processInfo.arguments.contains("--unavailable-folder-fixture") {
+            let bookmarks = UserDefaults.standard.array(forKey: "AlbumWinnow.folderBookmarks") as? [Data] ?? []
+            UserDefaults.standard.set(bookmarks + [Data("unavailable test bookmark".utf8)], forKey: "AlbumWinnow.folderBookmarks")
+        }
+        let testState = URL.acceptanceDocumentsDirectory.appending(path: "AcceptanceReview")
         if !ProcessInfo.processInfo.arguments.contains("--preserve-review-state") {
             try? FileManager.default.removeItem(at: testState)
         }
@@ -35,13 +39,16 @@ import SwiftUI
                 }
                 .onChange(of: scenePhase) { _, phase in model.sceneChanged(phase) }
         }
+        #if os(macOS)
+        Settings { ScanSourcesView(model: model).frame(minWidth: 560, minHeight: 600) }
+        #endif
     }
 
     @MainActor
     private func prepareCleanupOutcome() async {
         do {
             for folder in model.folders { model.removeFolder(folder.id) }
-            let folder = URL.documentsDirectory.appending(path: "CleanupOutcomeFixture")
+            let folder = URL.acceptanceDocumentsDirectory.appending(path: "CleanupOutcomeFixture")
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             for name in ["missing.png", "protected.png.AAE"] {
                 try? FileManager.default.removeItem(at: folder.appending(path: name))
@@ -68,7 +75,7 @@ import SwiftUI
     }
 
     private static var fixtureFolder: URL {
-        URL.documentsDirectory.appending(path: ProcessInfo.processInfo.arguments.contains("--scene-fixture") ? "SceneUITestFixtures" : "AppTestFixtures", directoryHint: .isDirectory)
+        URL.acceptanceDocumentsDirectory.appending(path: ProcessInfo.processInfo.arguments.contains("--scene-fixture") ? "SceneUITestFixtures" : "AppTestFixtures", directoryHint: .isDirectory)
     }
 
     private static func prepareFixtures() throws {

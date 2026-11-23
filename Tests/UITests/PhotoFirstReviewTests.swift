@@ -26,8 +26,8 @@ final class PhotoFirstReviewTests: XCTestCase {
         func configureHand(_ label: String, change: Bool = true) {
             app.buttons["Settings"].tap()
             let picker = app.buttons["review-hand"]
-            for _ in 0..<3 {
-                if picker.isHittable { break }
+            for _ in 0..<12 {
+                if picker.isHittable && picker.frame.midY < app.frame.maxY - 200 { break }
                 app.swipeUp()
             }
             XCTAssertTrue(picker.isHittable, app.debugDescription)
@@ -35,7 +35,8 @@ final class PhotoFirstReviewTests: XCTestCase {
                 picker.tap()
                 app.buttons[label].firstMatch.tap()
             }
-            XCTAssertTrue(picker.label.contains(label), app.debugDescription)
+            let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", label), object: picker)
+            XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed, app.debugDescription)
             app.navigationBars["Settings"].buttons["Done"].tap()
         }
 

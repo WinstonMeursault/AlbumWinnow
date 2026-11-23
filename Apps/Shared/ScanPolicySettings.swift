@@ -50,12 +50,12 @@ struct ScanPolicySettings: View {
                 Text(L10n.text("app_quality_first")).tag("")
                 ForEach(sources, id: \.id) { Text($0.name).tag($0.id) }
                 if let preferred = model.preferredSource, !sources.contains(where: { $0.id == preferred }) {
-                    Text(L10n.text("app_unavailable_source")).tag(preferred)
+                    Text(model.sourceLabel(preferred)).tag(preferred)
                 }
             }
             ForEach(sources, id: \.id) { source in readOnlyToggle(source.id, name: source.name) }
             ForEach(model.readOnlySources.filter { id in !sources.contains { $0.id == id } }.sorted(), id: \.self) { id in
-                readOnlyToggle(id, name: L10n.text("app_unavailable_source"))
+                readOnlyToggle(id, name: model.sourceLabel(id))
             }
             Text(L10n.text("app_read_only_sources_participate_in_comparison_but_cannot_be_cleaned_locks_and_associated_resources_remain_protected_hardlinked_files_may_be_kept_conservatively_while_a_folder_is_read_only"))
                 .font(.caption).foregroundStyle(.secondary)
@@ -69,7 +69,7 @@ struct ScanPolicySettings: View {
             ForEach(sources, id: \.id) { Text($0.name).tag($0.id) }
             if let sides = model.comparisonSides {
                 ForEach([sides.first, sides.second].filter { id in !sources.contains { $0.id == id } }, id: \.self) { id in
-                    Text(L10n.text("app_unavailable_source")).tag(id)
+                    Text(model.sourceLabel(id)).tag(id)
                 }
             }
         }

@@ -53,6 +53,16 @@ class ExportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             export.validate_usage(data, ['Text(L10n.text("pending_cout", Int64(2)))'])
         export.validate_usage(data, ['L10n.text("pending_count", Int64(2))'])
+    def test_argument_count_and_error_helper_ids_are_checked(self):
+        data = self.sample()
+        for source in ['L10n.text("pending_count")', 'L10n.text("pending_count", 2, "extra")',
+                       'enum L10n { static func error() { text("missing_error") } }']:
+            with self.subTest(source=source), self.assertRaises(ValueError):
+                export.validate_usage(data, [source])
+        export.validate_usage(data, ['L10n.text("pending_count", Int64(max(1, 2)))'])
+        export.validate_usage(data, ['// L10n.text("missing")\nL10n.text("pending_count", values[0])'])
+        export.validate_usage(data, ['enum L10n { static func error() { text("pending_count", Int64(2)) } }'])
+
     def test_duplicate_json_members_are_not_silently_overwritten(self):
         with self.assertRaises(ValueError):export.load_json('{"a":1,"a":2}')
     def test_info_plist_is_plain_text_not_a_printf_template(self):

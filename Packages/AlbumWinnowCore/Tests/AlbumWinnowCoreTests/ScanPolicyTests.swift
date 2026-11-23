@@ -62,7 +62,9 @@ private struct SideFixture: AssetSource {
     let database = try DatabaseQueue(path: url.path)
     try database.write { db in
         try db.execute(sql: "UPDATE review_state SET schema = 1")
-        try db.execute(sql: "DELETE FROM grdb_migrations WHERE identifier = 'reviewStateV2'")
+        try db.execute(sql: "DELETE FROM grdb_migrations WHERE identifier IN ('reviewStateV2', 'reviewStateV3')")
+        try db.execute(sql: "DROP TABLE review_decisions")
+        try db.execute(sql: "DROP TABLE review_position")
     }
     #expect(try ReviewStateStore(url: url).load().locked == state.locked)
     try database.write { db in try db.execute(sql: "UPDATE review_state SET schema = 999") }
@@ -143,6 +145,10 @@ private struct UnselectedSource: AssetSource {
     let id = AssetID(source: "folder:/fixture", item: "/fixture/a.png")
     state.readOnlySources = [id.source]
     state.readOnlyRevisions = [id: "corrupt-identity"]
-    try store.save(state)
+    #expect(throws: CleanupError.self) { try store.save(state) }
+    let database = try DatabaseQueue(path: scratch.appending(path: "review.sqlite").path)
+    try database.write { db in
+        try db.execute(sql: "INSERT OR REPLACE INTO review_state VALUES (1, 3, ?)", arguments: [try JSONEncoder().encode(state)])
+    }
     #expect(throws: CleanupError.self) { try store.load() }
 }

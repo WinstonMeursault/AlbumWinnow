@@ -9,7 +9,7 @@ final class ReviewPersistenceTests: XCTestCase {
         let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled", "AlbumWinnow.interruptedScan"]
         let previous = keys.map { defaults.object(forKey: $0) }
         keys.forEach { defaults.removeObject(forKey: $0) }
-        let root = URL.documentsDirectory.appending(path: UUID().uuidString)
+        let root = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
         let folder = root.appending(path: "photos")
         let state = root.appending(path: "state")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -82,7 +82,7 @@ final class ReviewPersistenceTests: XCTestCase {
 
     @MainActor
     func testCorruptProtectionStoreDisablesCleanup() throws {
-        let root = URL.documentsDirectory.appending(path: UUID().uuidString)
+        let root = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
         try Data("corrupt".utf8).write(to: root.appending(path: "review.sqlite"))

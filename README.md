@@ -6,7 +6,7 @@ AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds dup
 
 ## Project status
 
-AlbumWinnow v1.6.0 adds English, Simplified Chinese and Japanese localization, including review, cleanup, settings, accessibility labels and Photos permission descriptions. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
+AlbumWinnow v1.7.0 hardens saved protection, source recovery and cross-source error reporting, and reduces review-state write costs. English, Simplified Chinese and Japanese remain supported. It targets macOS 26, iOS 26, and iPadOS 26 or later. The app scans authorized photo libraries and folders, groups duplicates, and supports review and recoverable cleanup.
 
 The previous formal v1.0.0 release remains available on the [GitHub Releases page](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
 
@@ -33,6 +33,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 ```
 
 Generated test projects stay under `.local`. The expected version is read from the app build settings. These tests do not use physical devices or an iCloud account. The optional Photos album-scope test requires `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` on a dedicated simulator; it requests simulated Photos access and leaves generated photo/album fixtures there. Default regressions skip that test.
+
+## v1.7 reliability and release tooling
+
+Unavailable folder records survive relaunch. Settings offers retry, reselect and explicit removal; these actions preserve existing locks and read-only policies. Saved Protection lists individual lock records, including paths outside current results. Unlocking an inherited file lock requires confirmation of the affected paths. Removing protection never reinstates cancelled cleanup candidates. Invalidated decisions can be explicitly removed without clearing valid choices or protection.
+
+Malformed stored file identities disable cleanup. Review-state schema 3 migrates decisions transactionally into separate rows and stores navigation independently; older apps cannot open the new schema. Keep a backup before downgrading. Matching behavior and existing valid review signatures are unchanged; the signature version contract is separate from scan-cache versions.
+
+Run native macOS regressions with `Tests/run-macos-tests.sh`. Simulator regressions support standard iPhone and iPad. Packaging and atomic IPAes upload/download verification are versioned under [Tools/Release](Tools/Release/README.md). A release build does not imply a notarized macOS app or a signed IPA.
 
 ## v1.6 languages
 

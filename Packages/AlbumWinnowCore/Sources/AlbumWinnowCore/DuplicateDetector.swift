@@ -10,6 +10,9 @@ public enum DuplicateMatch: String, Codable, Sendable {
 }
 
 public struct DuplicateDetector: Sendable {
+    // Increment by two when matching semantics change: normal/cross-side decisions use adjacent versions.
+    // Fingerprint cache versions are independent and do not invalidate manual decisions.
+    static let reviewSignatureVersion = 1
     static let perceptualRadius = 12
     static let differenceRadius = 10
     private static let maximumMeanError = 0.018

@@ -14,7 +14,9 @@ public struct CleanupProtection: Sendable {
         self.readOnlySources = readOnlySources
         self.readOnlyIdentities = Set(readOnlyRevisions.filter { readOnlySources.contains($0.key.source) }.values.map { $0.split(separator: ":").prefix(2).joined(separator: ":") })
         self.locked = locked
-        self.available = available
+        self.available = available && locked.allSatisfy { id in
+            !id.source.hasPrefix("folder:") || lockedRevisions[id].map(FileSystemSource.isValidRevision) != false
+        } && readOnlyRevisions.values.allSatisfy(FileSystemSource.isValidRevision)
         self.lockedRevisions = lockedRevisions
     }
 
@@ -56,18 +58,29 @@ public struct CleanupProtection: Sendable {
     func validate(_ asset: PhotoAsset) throws {
         guard available else { throw CleanupError.unavailableProtection }
         try validateReadOnly(asset)
-        guard !locked.contains(asset.id) else { throw CleanupError.userProtected }
-        guard asset.id.source.hasPrefix("folder:") else { return }
+        guard try lockingIDs(for: asset).isEmpty else { throw CleanupError.userProtected }
+    }
+
+    public func lockingIDs(for asset: PhotoAsset) throws -> Set<AssetID> {
+        guard available else { throw CleanupError.unavailableProtection }
+        var owners: Set<AssetID> = locked.contains(asset.id) ? [asset.id] : []
+        guard asset.id.source.hasPrefix("folder:") else { return owners }
         let url = URL(fileURLWithPath: asset.id.item)
         for id in locked where id.source.hasPrefix("folder:") {
             if let revision = lockedRevisions[id],
                revision.split(separator: ":").prefix(2) == asset.revision.split(separator: ":").prefix(2) {
-                throw CleanupError.userProtected
+                owners.insert(id)
+                continue
             }
             let protectedURL = URL(fileURLWithPath: id.item)
-            if protectedURL.standardizedFileURL == url.standardizedFileURL { throw CleanupError.userProtected }
-            if FileManager.default.fileExists(atPath: protectedURL.path),
-               try FileSystemSource.referToSameFile(protectedURL, url) { throw CleanupError.userProtected }
+            if protectedURL.standardizedFileURL == url.standardizedFileURL {
+                owners.insert(id)
+            } else if FileManager.default.fileExists(atPath: protectedURL.path) {
+                if try FileSystemSource.referToSameFile(protectedURL, url) { owners.insert(id) }
+            } else if lockedRevisions[id] == nil {
+                throw CleanupError.unavailableProtection
+            }
         }
+        return owners
     }
 }

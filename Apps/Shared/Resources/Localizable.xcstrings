@@ -3745,6 +3745,30 @@
         }
       }
     },
+    "app_invalid_decisions_confirmation": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removes only decisions invalidated by changed photos or group evidence. Valid choices, locks and read-only protection remain. No photos are deleted."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真やグループの根拠が変わったため無効になった判断のみ削除します。有効な選択、ロック、読み取り専用の保護は保持されます。写真は削除されません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅移除因照片或分组依据变化而失效的决定。有效选择、锁定和只读保护保留，不删除照片。"
+          }
+        }
+      }
+    },
     "app_keep": {
       "comment": "LibraryView.swift: Keep",
       "extractionState": "manual",
@@ -5809,6 +5833,30 @@
         }
       }
     },
+    "app_reconnect_folder": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Folder Again…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォルダを再選択…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新选择文件夹…"
+          }
+        }
+      }
+    },
     "app_reference": {
       "comment": "PhotoDifferenceView.swift: Reference",
       "extractionState": "manual",
@@ -5901,6 +5949,78 @@
           "stringUnit": {
             "state": "translated",
             "value": "从扫描来源移除 %1$@"
+          }
+        }
+      }
+    },
+    "app_remove_invalid_decisions": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Invalid Decisions (%1$lld)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無効な判断を削除（%1$lld）"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除失效决定（%1$lld）"
+          }
+        }
+      }
+    },
+    "app_remove_saved_lock": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove This Saved Lock"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このロック記録を削除"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除此锁定记录"
+          }
+        }
+      }
+    },
+    "app_remove_source_record": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove Record"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "記録を削除"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除记录"
           }
         }
       }
@@ -6069,6 +6189,30 @@
           "stringUnit": {
             "state": "translated",
             "value": "分辨率未知"
+          }
+        }
+      }
+    },
+    "app_retry_saved_folders": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry Saved Folders"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存済みフォルダを再試行"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重试已保存文件夹"
           }
         }
       }
@@ -6357,6 +6501,78 @@
           "stringUnit": {
             "state": "translated",
             "value": "右手布局"
+          }
+        }
+      }
+    },
+    "app_saved_lock_confirmation": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the saved lock for %1$@? Other locks remain. No cleanup candidates are restored and no photos are deleted."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ のロック記録を削除しますか？他のロックは保持されます。削除候補は復元されず、写真も削除されません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "移除 %1$@ 的锁定记录？其他锁定保留，不会恢复清理候选，也不会删除照片。"
+          }
+        }
+      }
+    },
+    "app_saved_protection": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved Protection"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存済みの保護"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存的保护"
+          }
+        }
+      }
+    },
+    "app_saved_protection_explanation": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved locks also protect linked paths, including photos outside current results. Remove a lock only if you intend to release its protection."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存済みのロックは、現在の結果に含まれない写真のリンク先も保護します。保護を解除する場合にのみ削除してください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已保存的锁定也保护关联路径，包括当前结果以外的照片。仅在确定要解除保护时移除。"
           }
         }
       }
@@ -7777,6 +7993,54 @@
         }
       }
     },
+    "app_unavailable_folder_explanation": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable folders are kept for retry and are not scanned. Removing or reconnecting a source does not remove its saved locks or read-only protection."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用できないフォルダは再試行用に保持され、スキャンされません。削除や再選択をしても、保存済みのロックや読み取り専用の保護は解除されません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不可用文件夹会保留供重试，不参与扫描。移除或重新选择来源不会移除原有锁定或只读保护。"
+          }
+        }
+      }
+    },
+    "app_unavailable_folder_number": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable folder %1$lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用できないフォルダ %1$lld"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不可用文件夹 %1$lld"
+          }
+        }
+      }
+    },
     "app_unavailable_source": {
       "comment": "ReviewToolsView.swift: Unavailable Source",
       "extractionState": "manual",
@@ -7845,6 +8109,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "格式未知"
+          }
+        }
+      }
+    },
+    "app_unlock_linked_confirmation": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This photo inherits protection from these saved paths:\n%1$@\nRemove their locks? Other locks remain. Cleanup candidates are not restored."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この写真は次の保存済みパスの保護を継承しています：\n%1$@\nこれらのロックを解除しますか？他のロックは保持され、削除候補は復元されません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此照片继承以下已保存路径的保护：\n%1$@\n移除这些锁定？其他锁定保留，不会恢复清理候选。"
+          }
+        }
+      }
+    },
+    "app_unlock_linked_photo": {
+      "comment": "Source recovery and saved protection management; no automatic cleanup.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock Linked Photo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リンクされた写真のロックを解除"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解锁关联照片"
           }
         }
       }

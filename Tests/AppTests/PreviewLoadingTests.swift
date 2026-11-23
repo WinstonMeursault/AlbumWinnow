@@ -12,7 +12,7 @@ private actor LoadCounter {
 
 final class PreviewLoadingTests: XCTestCase {
     func testLargeFilePreviewReadsMetadataAndBoundsDecodedDimensions() async throws {
-        let url = URL.documentsDirectory.appending(path: "large-preview-\(UUID()).png")
+        let url = URL.acceptanceDocumentsDirectory.appending(path: "large-preview-\(UUID()).png")
         defer { try? FileManager.default.removeItem(at: url) }
         let fixture = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/48mp.png")
         try FileManager.default.copyItem(at: fixture, to: url)

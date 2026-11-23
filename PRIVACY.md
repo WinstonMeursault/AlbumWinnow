@@ -42,3 +42,5 @@ AlbumWinnow は Winston Meursault が開発し、端末上で写真を処理し�
 - **外部リンク。** ソースコード、プライバシーポリシー、サポートを開くと GitHub に移動します。GitHub のプライバシーポリシーが適用されます。
 
 お問い合わせは [AlbumWinnow リポジトリ](https://github.com/WinstonMeursault/AlbumWinnow/issues)へ。公開の Issue に写真、ファイルパス、個人情報を投稿しないでください。
+
+Unavailable folder bookmarks remain stored locally until you explicitly remove or reconnect them. Saved locks and read-only policies survive source removal. Settings can remove individual lock records and invalidated review decisions; these actions never delete photos or restore cancelled cleanup candidates. Review-state schema 3 stores decisions and navigation separately in the same local database.

@@ -4,12 +4,13 @@ import XCTest
 @testable import AlbumWinnowAcceptance
 
 final class ScanLifecycleTests: XCTestCase {
-    private let dataDirectory = URL.documentsDirectory.appending(path: UUID().uuidString)
+    private let dataDirectory = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
 
     override func tearDownWithError() throws {
         try? FileManager.default.removeItem(at: dataDirectory)
     }
 
+    #if os(iOS)
     @MainActor
     func testRelaunchResumesFolderScanFromPersistedSelection() async throws {
         let defaults = UserDefaults.standard
@@ -27,7 +28,7 @@ final class ScanLifecycleTests: XCTestCase {
         defaults.removeObject(forKey: folderKey)
         defaults.removeObject(forKey: scanKey)
         defaults.set(false, forKey: photoKey)
-        let base = URL.documentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let base = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: base) }
         let png = try XCTUnwrap(Data(base64Encoded:
@@ -53,6 +54,8 @@ final class ScanLifecycleTests: XCTestCase {
         XCTAssertFalse(defaults.bool(forKey: scanKey))
     }
 
+    #endif
+
     @MainActor
     func testLibraryChangeDoesNotCancelActiveScanButRequiresRescan() async throws {
         let defaults = UserDefaults.standard
@@ -62,7 +65,7 @@ final class ScanLifecycleTests: XCTestCase {
         let savedPhotos = defaults.object(forKey: photoKey)
         defaults.removeObject(forKey: folderKey)
         defaults.set(false, forKey: photoKey)
-        let base = URL.documentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let base = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         defer {
             defaults.set(savedFolders, forKey: folderKey)
@@ -90,6 +93,7 @@ final class ScanLifecycleTests: XCTestCase {
         XCTAssertFalse(model.canClean)
     }
 
+    #if os(iOS)
     @MainActor
     func testBackgroundPreservesDownloadConsentAndUserCancellationClearsIt() async throws {
         let defaults = UserDefaults.standard
@@ -97,7 +101,7 @@ final class ScanLifecycleTests: XCTestCase {
                     "AlbumWinnow.interruptedScan", "AlbumWinnow.interruptedDownloads"]
         let saved = keys.map { defaults.object(forKey: $0) }
         for key in keys { defaults.removeObject(forKey: key) }
-        let base = URL.documentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let base = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         defer {
             for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
@@ -119,6 +123,8 @@ final class ScanLifecycleTests: XCTestCase {
         XCTAssertFalse(model.running)
     }
 
+    #endif
+
     @MainActor
     func testRetryAndCancellationPreserveStaleResultsUntilSuccessfulScan() async throws {
         let defaults = UserDefaults.standard
@@ -126,7 +132,7 @@ final class ScanLifecycleTests: XCTestCase {
                     "AlbumWinnow.interruptedScan", "AlbumWinnow.interruptedDownloads"]
         let saved = keys.map { defaults.object(forKey: $0) }
         for key in keys { defaults.removeObject(forKey: key) }
-        let folder = URL.documentsDirectory.appending(path: UUID().uuidString)
+        let folder = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer {
             for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
@@ -164,7 +170,7 @@ final class ScanLifecycleTests: XCTestCase {
                     "AlbumWinnow.interruptedScan", "AlbumWinnow.interruptedDownloads"]
         let saved = keys.map { defaults.object(forKey: $0) }
         for key in keys { defaults.removeObject(forKey: key) }
-        let folder = URL.documentsDirectory.appending(path: UUID().uuidString)
+        let folder = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer {
             for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
@@ -194,7 +200,7 @@ final class ScanLifecycleTests: XCTestCase {
 
     @MainActor
     func testFolderCleanupIsRecoverableOrLeavesBothOriginals() async throws {
-        let base = URL.documentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let base = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: base) }
         let png = try XCTUnwrap(Data(base64Encoded:

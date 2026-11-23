@@ -366,8 +366,15 @@ public actor ScanEngine {
         var issues: [AssetIssue] = []
         func appendEdge(_ a: Int, _ b: Int, match: DuplicateMatch) throws {
             let left = ordered[a].asset, right = ordered[b].asset
-            if let first = sources[left.id.source] as? FileSystemSource, let second = sources[right.id.source] as? FileSystemSource,
-               try FileSystemSource.referToSameFile(first.currentURL(for: left), second.currentURL(for: right)) { return }
+            if let first = sources[left.id.source] as? FileSystemSource, let second = sources[right.id.source] as? FileSystemSource {
+                func identity(_ source: FileSystemSource, _ asset: PhotoAsset) throws -> String {
+                    do {
+                        _ = try source.currentURL(for: asset)
+                        return asset.revision.split(separator: ":").prefix(2).joined(separator: ":")
+                    } catch { throw ComparisonReadError(assetID: asset.id, underlying: error) }
+                }
+                if try identity(first, left) == identity(second, right) { return }
+            }
             edgeIndices[a, default: []].insert(edges.count)
             edgeIndices[b, default: []].insert(edges.count)
             edges.append(MatchEdge(first: left.id, second: right.id, match: match))

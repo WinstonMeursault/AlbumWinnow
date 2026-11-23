@@ -13,7 +13,8 @@ final class PhotoScopeTests: XCTestCase {
             _ = await PhotoLibrarySource.requestAuthorization()
         }
         guard PhotoLibrarySource.authorizationStatus() == .authorized else {
-            throw XCTSkip("Requires Photos access for \(Bundle.main.bundleIdentifier ?? "unknown host") (status \(PhotoLibrarySource.authorizationStatus().rawValue)); full simulator access was not granted")
+            XCTFail("Opted-in simulator Photos fixture requires full access; permission setup did not succeed")
+            return
         }
         let ids = OSAllocatedUnfairLock(initialState: [String]())
         let prefix = "AlbumWinnow scope fixture \(UUID())"
@@ -62,7 +63,7 @@ final class PhotoScopeTests: XCTestCase {
         } catch AssetAccessError.changedDuringScan {}
         let savedPhotos = UserDefaults.standard.object(forKey: "AlbumWinnow.photosEnabled")
         defer { UserDefaults.standard.set(savedPhotos, forKey: "AlbumWinnow.photosEnabled") }
-        let modelData = URL.documentsDirectory.appending(path: "ScopeModel-\(UUID())")
+        let modelData = URL.acceptanceDocumentsDirectory.appending(path: "ScopeModel-\(UUID())")
         defer { try? FileManager.default.removeItem(at: modelData) }
         let model = await ReviewModel(dataDirectory: modelData)
         await model.setPhotosEnabled(true)

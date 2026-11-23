@@ -24,3 +24,5 @@ python3 Tools/Localization/export.py --check
 ```
 
 Commit the source table and both generated catalogs together. Do not hand-edit generated catalogs. Checks reject duplicate IDs, missing languages, invalid parameters, malformed plurals and unknown Swift message references. Application tests verify that compiled native bundles resolve every applicable message and permission purpose in all three languages, including literal user text, plural counts and parameter reordering. UI tests cover language-specific review flows and restored decisions across language changes.
+
+The exporter also checks static Swift message IDs and argument counts, including unqualified calls inside the error helper. This lexical check complements compiled resource tests; it does not validate every dynamic expression type or rendered glyph.

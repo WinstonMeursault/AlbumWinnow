@@ -28,6 +28,7 @@ struct GroupReviewView: View {
     @State private var synchronizedZoom = true
     @State private var lastZoomedID: AssetID?
     @State private var showingInformation = false
+    @State private var unlocking: PhotoAsset?
     @State private var keepDraft = KeepDraft.unchanged
     @State private var deleteAllDraft: Bool?
     @State private var deleteAllUnavailable: String?
@@ -102,6 +103,14 @@ struct GroupReviewView: View {
             .padding(.horizontal).padding(.vertical, 6).background(.bar)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { controls }
+        .confirmationDialog(L10n.text("app_unlock_linked_photo"), isPresented: Binding(get: { unlocking != nil }, set: { if !$0 { unlocking = nil } }), titleVisibility: .visible) {
+            Button(L10n.text("app_unlock_linked_photo"), role: .destructive) {
+                if let unlocking { model.setLocked(unlocking, locked: false) }
+                unlocking = nil
+            }
+        } message: {
+            Text(L10n.text("app_unlock_linked_confirmation", unlocking.map { model.lockOwners(for: $0).map(\.item).joined(separator: "\n") } ?? ""))
+        }
         .sheet(isPresented: $showingInformation) { GroupInformationView(model: model, group: group) }
         .task(id: isActive && model.canClean) {
             checkedRemovability = false
@@ -294,9 +303,11 @@ struct GroupReviewView: View {
                 .disabled(!model.canScan)
             }
             Button(model.isLocked(asset) ? L10n.text("app_unlock_photo") : L10n.text("app_lock_photo"), systemImage: model.isLocked(asset) ? "lock.open" : "lock") {
-                model.setLocked(asset, locked: !model.isLocked(asset))
+                let owners = model.lockOwners(for: asset)
+                if model.isLocked(asset), owners != [asset.id] { unlocking = asset }
+                else { model.setLocked(asset, locked: !model.isLocked(asset)) }
             }
-            .disabled(!model.canEditSources)
+            .disabled(!model.canEditSources || !model.protectionAvailable)
         }
         .allowsHitTesting(active)
         .disabled(!active)

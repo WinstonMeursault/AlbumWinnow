@@ -14,6 +14,7 @@ struct ScanSourcesView: View {
     @AppStorage(ReviewHand.defaultsKey) private var reviewHand = ReviewHand.right.rawValue
     @State private var resettingReview = false
     @State private var showingAbout = false
+    @State private var reconnectingFolder: Data?
     #if os(iOS)
     @State private var importing = false
     #endif
@@ -71,7 +72,26 @@ struct ScanSourcesView: View {
                         .disabled(!model.canEditSources)
                     }
                 }
-                Button(action: pickFolder) {
+                ForEach(Array(model.unavailableFolders.enumerated()), id: \.element) { index, bookmark in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label(L10n.text("app_unavailable_folder_number", Int64(index + 1)), systemImage: "externaldrive.badge.exclamationmark")
+                        HStack {
+                            Button(L10n.text("app_reconnect_folder")) {
+                                reconnectingFolder = bookmark
+                                pickFolder()
+                            }
+                            Button(L10n.text("app_remove_source_record"), role: .destructive) { model.removeUnavailableFolder(bookmark) }
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                    .disabled(!model.canEditSources)
+                }
+                if !model.unavailableFolders.isEmpty {
+                    Button(L10n.text("app_retry_saved_folders")) { model.retryFolders() }
+                        .disabled(!model.canEditSources)
+                    Text(L10n.text("app_unavailable_folder_explanation")).font(.caption).foregroundStyle(.secondary)
+                }
+                Button(action: { reconnectingFolder = nil; pickFolder() }) {
                     Label(L10n.text("app_add_folder"), systemImage: "plus")
                 }
                 .disabled(!model.canEditSources)
@@ -79,6 +99,7 @@ struct ScanSourcesView: View {
             }
 
             ScanPolicySettings(model: model)
+            SavedProtectionSettings(model: model)
 
             Section(L10n.text("app_review")) {
                 Toggle(L10n.text("app_find_burst_and_similar_scenes"), isOn: Binding(get: { model.similarScenesEnabled }, set: { model.setSimilarScenesEnabled($0) }))
@@ -151,7 +172,7 @@ struct ScanSourcesView: View {
         .toolbarTitleDisplayMode(.inline)
         .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
             switch result {
-            case .success(let url): model.addFolder(url)
+            case .success(let url): acceptFolder(url)
             case .failure(let error): model.sourceErrorMessage = L10n.error(error)
             }
         }
@@ -173,11 +194,17 @@ struct ScanSourcesView: View {
         panel.canChooseFiles = false
         panel.prompt = L10n.text("app_add_folder_caption")
         panel.begin { response in
-            if response == .OK, let url = panel.url { model.addFolder(url) }
+            if response == .OK, let url = panel.url { acceptFolder(url) }
         }
         #else
         importing = true
         #endif
+    }
+
+    private func acceptFolder(_ url: URL) {
+        if let reconnectingFolder { model.reconnectFolder(reconnectingFolder, to: url) }
+        else { model.addFolder(url) }
+        reconnectingFolder = nil
     }
 
     #if os(iOS)

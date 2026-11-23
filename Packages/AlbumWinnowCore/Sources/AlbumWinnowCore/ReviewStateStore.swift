@@ -67,6 +67,20 @@ public struct ReviewStateStore: Sendable {
         migrator.registerMigration("reviewStateV2") { db in
             try db.execute(sql: "UPDATE review_state SET schema = 2 WHERE schema = 1")
         }
+        migrator.registerMigration("reviewStateV3") { db in
+            try db.execute(sql: "CREATE TABLE review_decisions (signature TEXT PRIMARY KEY NOT NULL, payload BLOB NOT NULL)")
+            try db.execute(sql: "CREATE TABLE review_position (id INTEGER PRIMARY KEY, anchor TEXT, position INTEGER)")
+            if let row = try Row.fetchOne(db, sql: "SELECT schema, payload FROM review_state WHERE id = 1") {
+                guard (row["schema"] as Int) == 2 else { throw CleanupError.unavailableProtection }
+                var state = try JSONDecoder().decode(ReviewState.self, from: row["payload"] as Data)
+                try Self.validate(state)
+                for (signature, decision) in state.decisions {
+                    try db.execute(sql: "INSERT INTO review_decisions VALUES (?, ?)", arguments: [signature, try JSONEncoder().encode(decision)])
+                }
+                state.decisions = [:]
+                try db.execute(sql: "UPDATE review_state SET schema = 3, payload = ? WHERE id = 1", arguments: [try JSONEncoder().encode(state)])
+            }
+        }
         try migrator.migrate(database)
     }
 
@@ -75,35 +89,63 @@ public struct ReviewStateStore: Sendable {
             guard let row = try Row.fetchOne(db, sql: "SELECT schema, payload FROM review_state WHERE id = 1") else {
                 return ReviewState()
             }
-            guard (row["schema"] as Int) == 2 else { throw CleanupError.unavailableProtection }
-            let state = try JSONDecoder().decode(ReviewState.self, from: row["payload"] as Data)
-            guard state.locked.allSatisfy({ !$0.source.hasPrefix("folder:") || state.lockedRevisions?[$0] != nil }) else {
-                throw CleanupError.unavailableProtection
+            guard (row["schema"] as Int) == 3 else { throw CleanupError.unavailableProtection }
+            var state = try JSONDecoder().decode(ReviewState.self, from: row["payload"] as Data)
+            try Self.validate(state)
+            for row in try Row.fetchAll(db, sql: "SELECT signature, payload FROM review_decisions") {
+                state.decisions[row["signature"]] = try JSONDecoder().decode(ReviewDecision.self, from: row["payload"] as Data)
             }
-            guard state.readOnlySources?.isEmpty != false || state.readOnlyRevisions != nil else {
-                throw CleanupError.unavailableProtection
+            if let position = try Row.fetchOne(db, sql: "SELECT anchor, position FROM review_position WHERE id = 1") {
+                state.anchor = position["anchor"]
+                state.anchorIndex = position["position"]
             }
-            guard (state.readOnlyRevisions ?? [:]).values.allSatisfy({ revision in
-                let fields = revision.split(separator: ":", omittingEmptySubsequences: false)
-                guard fields.count == 7 else { return false }
-                return Int32(fields[0]) != nil && UInt64(fields[1]) != nil &&
-                    Int64(fields[2]).map { $0 >= 0 } == true && Int64(fields[3]) != nil &&
-                    Int64(fields[4]).map { (0..<1_000_000_000).contains($0) } == true && Int64(fields[5]) != nil &&
-                    Int64(fields[6]).map { (0..<1_000_000_000).contains($0) } == true
-            }) else { throw CleanupError.unavailableProtection }
             return state
         }
     }
 
-    public func save(_ state: ReviewState) throws {
-        let payload = try JSONEncoder().encode(state)
-        try database.write { db in
-            try db.execute(sql: """
-                INSERT INTO review_state (id, schema, payload) VALUES (1, 2, ?)
-                ON CONFLICT (id) DO UPDATE SET payload = excluded.payload
-                """, arguments: [payload])
+    private static func validate(_ state: ReviewState) throws {
+        guard state.locked.allSatisfy({ id in
+            !id.source.hasPrefix("folder:") || state.lockedRevisions?[id].map(FileSystemSource.isValidRevision) == true
+        }), state.readOnlySources?.isEmpty != false || state.readOnlyRevisions != nil,
+        (state.readOnlyRevisions ?? [:]).values.allSatisfy(FileSystemSource.isValidRevision) else {
+            throw CleanupError.unavailableProtection
         }
     }
+
+    // previous is the caller's last committed snapshot. Omitting it replaces all decisions.
+    public func save(_ state: ReviewState, replacing previous: ReviewState? = nil) throws {
+        try Self.validate(state)
+        var metadata = state
+        metadata.decisions = [:]
+        let payload = try JSONEncoder().encode(metadata)
+        try database.write { db in
+            try db.execute(sql: """
+                INSERT INTO review_state (id, schema, payload) VALUES (1, 3, ?)
+                ON CONFLICT (id) DO UPDATE SET schema = excluded.schema, payload = excluded.payload
+                """, arguments: [payload])
+            if let previous {
+                for signature in previous.decisions.keys where state.decisions[signature] == nil {
+                    try db.execute(sql: "DELETE FROM review_decisions WHERE signature = ?", arguments: [signature])
+                }
+            } else {
+                try db.execute(sql: "DELETE FROM review_decisions")
+            }
+            for (signature, decision) in state.decisions where previous?.decisions[signature] != decision {
+                try db.execute(sql: "INSERT OR REPLACE INTO review_decisions VALUES (?, ?)", arguments: [signature, try JSONEncoder().encode(decision)])
+            }
+            try db.execute(sql: "DELETE FROM review_position")
+        }
+    }
+
+    public func savePosition(anchor: String, index: Int?) throws {
+        try database.write { db in
+            // A position cannot create or repair a missing/corrupt protection state.
+            guard let row = try Row.fetchOne(db, sql: "SELECT schema FROM review_state WHERE id = 1"),
+                  (row["schema"] as Int) == 3 else { throw CleanupError.unavailableProtection }
+            try db.execute(sql: "INSERT OR REPLACE INTO review_position VALUES (1, ?, ?)", arguments: [anchor, index])
+        }
+    }
+
 }
 
 public extension DuplicateGroup {
@@ -123,7 +165,7 @@ public extension DuplicateGroup {
             }
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
-        return SHA256.hash(data: try encoder.encode(Evidence(version: comparisonSides == nil ? 1 : 2, members: members, edges: comparisonSides == nil && duplicates.allSatisfy { $0.match == .exactDuplicate } ? [] : edges, sides: comparisonSides, scene: sceneAlgorithm)))
+        return SHA256.hash(data: try encoder.encode(Evidence(version: DuplicateDetector.reviewSignatureVersion + (comparisonSides == nil ? 0 : 1), members: members, edges: comparisonSides == nil && duplicates.allSatisfy { $0.match == .exactDuplicate } ? [] : edges, sides: comparisonSides, scene: sceneAlgorithm)))
             .map { String(format: "%02x", $0) }.joined()
     }
 }

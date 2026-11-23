@@ -141,6 +141,16 @@ public struct FileSystemSource: AssetSource {
         AssetID(source: id, item: url.standardizedFileURL.path)
     }
 
+    static func isValidRevision(_ revision: String) -> Bool {
+        let fields = revision.split(separator: ":", omittingEmptySubsequences: false)
+        guard fields.count == 7, let device = Int32(fields[0]), let inode = UInt64(fields[1]),
+              let size = Int64(fields[2]), let modified = Int64(fields[3]), let modifiedNS = Int64(fields[4]),
+              let changed = Int64(fields[5]), let changedNS = Int64(fields[6]) else { return false }
+        // Persisted identity comparisons use the canonical decimal representation emitted by revision(of:).
+        return size >= 0 && (0..<1_000_000_000).contains(modifiedNS) && (0..<1_000_000_000).contains(changedNS) &&
+            revision == "\(device):\(inode):\(size):\(modified):\(modifiedNS):\(changed):\(changedNS)"
+    }
+
     static func referToSameFile(_ first: URL, _ second: URL) throws -> Bool {
         let a = try metadata(of: first)
         let b = try metadata(of: second)

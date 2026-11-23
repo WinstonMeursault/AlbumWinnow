@@ -5,7 +5,7 @@ import XCTest
 final class RemovalPreflightTests: XCTestCase {
     @MainActor
     func testLargePreflightLetsMainActorContinue() async throws {
-        let folder = URL.documentsDirectory.appending(path: "PreflightTest", directoryHint: .isDirectory)
+        let folder = URL.acceptanceDocumentsDirectory.appending(path: "PreflightTest", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }
         try Data([0]).write(to: folder.appending(path: "test.png"))

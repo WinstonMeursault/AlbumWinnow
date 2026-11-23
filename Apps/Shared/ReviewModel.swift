@@ -76,6 +76,8 @@ struct CloudDownloadProgress {
     private static let interruptedDownloadsKey = "AlbumWinnow.interruptedDownloads"
 
     private(set) var folders: [FolderScope] = []
+    private var savedBookmarks: [Data] = []
+    private(set) var unavailableFolders: [Data] = []
     private(set) var photosEnabled = false
     private(set) var authorization = PhotoLibrarySource.authorizationStatus()
     private(set) var result: ScanResult?
@@ -250,16 +252,11 @@ struct CloudDownloadProgress {
         let defaults = UserDefaults.standard
         skipCloudPhotos = defaults.object(forKey: Self.skipCloudKey) as? Bool ?? true
         photosEnabled = defaults.bool(forKey: Self.photosKey)
-        let bookmarks = defaults.array(forKey: Self.folderKey) as? [Data] ?? []
-        for bookmark in bookmarks {
-            do {
-                let folder = try FolderScope(bookmark: bookmark)
-                if !folders.contains(where: { $0.id == folder.id }) { folders.append(folder) }
-            } catch {
-                errorMessage = L10n.text("app_a_saved_folder_is_unavailable_select_it_again_to_restore_access")
-            }
+        savedBookmarks = defaults.array(forKey: Self.folderKey) as? [Data] ?? []
+        restoreFolders()
+        if !unavailableFolders.isEmpty, errorMessage == nil {
+            errorMessage = L10n.text("app_a_saved_folder_is_unavailable_select_it_again_to_restore_access")
         }
-        if !bookmarks.isEmpty { saveFolders() }
         watchLibrary()
     }
 
@@ -269,6 +266,7 @@ struct CloudDownloadProgress {
             let folder = try FolderScope(url: url)
             guard !folders.contains(where: { $0.id == folder.id }) else { return }
             folders.append(folder)
+            savedBookmarks.append(folder.bookmark)
             saveFolders()
             invalidateResults()
         } catch {
@@ -278,7 +276,9 @@ struct CloudDownloadProgress {
 
     func removeFolder(_ id: String) {
         guard canEditSources else { return }
+        let removed = Set(folders.filter { $0.id == id }.map(\.bookmark))
         folders.removeAll { $0.id == id }
+        savedBookmarks.removeAll { removed.contains($0) }
         saveFolders()
         invalidateResults()
     }
@@ -585,7 +585,7 @@ struct CloudDownloadProgress {
 
     func sourceLabel(_ id: String) -> String {
         if id == photoSource.id { return L10n.text("app_photos") }
-        return folders.first(where: { $0.id == id })?.name ?? L10n.text("app_folder")
+        return folders.first(where: { $0.id == id })?.name ?? (id.hasPrefix("folder:") ? String(id.dropFirst(7)) : L10n.text("app_unavailable_source"))
     }
 
     private var sources: [any AssetSource] {
@@ -653,7 +653,7 @@ struct CloudDownloadProgress {
     private func saveState(_ state: ReviewState) -> Bool {
         do {
             guard let stateStore else { throw CleanupError.unavailableProtection }
-            try stateStore.save(state)
+            try stateStore.save(state, replacing: reviewState)
             reviewState = state
             currentProtection = Self.makeProtection(state)
             return true
@@ -668,30 +668,22 @@ struct CloudDownloadProgress {
         guard canEditSources, protectionAvailable else { return }
         var state = reviewState
         var revisions = state.lockedRevisions ?? [:]
+        if !locked { trimProtectedDecisions(in: &state, protection: currentProtection) }
         if locked {
             state.locked.insert(asset.id)
             revisions[asset.id] = asset.revision
         } else {
-            state.locked.remove(asset.id)
-            revisions.removeValue(forKey: asset.id)
+            do {
+                for owner in try currentProtection.lockingIDs(for: asset) {
+                    state.locked.remove(owner)
+                    revisions.removeValue(forKey: owner)
+                }
+            } catch { errorMessage = L10n.error(error); return }
         }
         state.lockedRevisions = revisions
         let nextProtection = CleanupProtection(locked: state.locked, lockedRevisions: revisions,
             readOnlySources: state.readOnlySources ?? [], readOnlyRevisions: state.readOnlyRevisions ?? [:], comparisonSides: state.comparisonSides)
-        if locked, let groups = result?.groups {
-            for group in groups {
-                let assets = [group.preferred] + group.duplicates.map(\.asset)
-                guard let signature = reviewSignature(for: group), var decision = state.decisions[signature] else { continue }
-                if decision.deleteAll, assets.contains(where: { !nextProtection.validateForReview($0) }) {
-                    decision = ReviewDecision(status: .pending)
-                } else {
-                    decision.removals = Set(assets.filter {
-                        decision.removals.contains($0.id) && nextProtection.validateForReview($0)
-                    }.map(\.id))
-                }
-                state.decisions[signature] = decision
-            }
-        }
+        if locked { trimProtectedDecisions(in: &state, protection: nextProtection) }
         if saveState(state) { restoreDecisions(result?.groups ?? []) }
     }
 
@@ -722,7 +714,14 @@ struct CloudDownloadProgress {
         var state = reviewState
         state.anchor = signature
         state.anchorIndex = result?.groups.firstIndex { $0.id == group.id }
-        _ = saveState(state)
+        do {
+            guard let stateStore else { throw CleanupError.unavailableProtection }
+            try stateStore.savePosition(anchor: signature, index: state.anchorIndex)
+            reviewState = state
+        } catch {
+            protectionAvailable = false
+            errorMessage = L10n.error(error)
+        }
     }
 
     var resumeGroup: DuplicateGroup? {
@@ -828,9 +827,10 @@ struct CloudDownloadProgress {
         defer { updatingPolicy = false }
         var state = reviewState
         var protected = state.readOnlySources ?? []
+        if !enabled { trimProtectedDecisions(in: &state, protection: currentProtection) }
         if enabled { protected.insert(source) } else { protected.remove(source) }
         state.readOnlySources = protected
-        state.readOnlyRevisions = state.readOnlyRevisions ?? [:]
+        state.readOnlyRevisions = (state.readOnlyRevisions ?? [:]).filter { protected.contains($0.key.source) }
         guard saveState(state) else { return }
         do { try await refreshReadOnlyRevisions() }
         catch { resultsStale = result != nil; sourceErrorMessage = L10n.text("app_read_only_protection_needs_a_successful_rescan") + L10n.error(error) }
@@ -849,19 +849,100 @@ struct CloudDownloadProgress {
         guard saveState(state) else { throw CleanupError.unavailableProtection }
     }
 
-    private func trimProtectedDecisions() {
-        var state = reviewState
-        for group in result?.groups ?? [] {
-            guard let signature = reviewSignature(for: group), var decision = state.decisions[signature] else { continue }
-            if decision.deleteAll && group.assets.contains(where: isProtected) { decision = ReviewDecision(status: .pending) }
-            else { decision.removals = Set(group.assets.filter { decision.removals.contains($0.id) && !isProtected($0) }.map(\.id)) }
+    private func trimProtectedDecisions(in state: inout ReviewState, protection: CleanupProtection) {
+        for (signature, var decision) in state.decisions where !decision.removals.isEmpty {
+            guard let assets = decision.members else {
+                state.decisions[signature]?.invalidated = true
+                continue
+            }
+            if decision.deleteAll && assets.contains(where: { !protection.validateForReview($0) || $0.photoProperties?.hasAssociatedResources == true }) {
+                decision = ReviewDecision(status: .pending, members: assets, sceneAlgorithm: decision.sceneAlgorithm)
+            } else {
+                decision.removals = Set(assets.filter {
+                    decision.removals.contains($0.id) && protection.validateForReview($0) && $0.photoProperties?.hasAssociatedResources != true
+                }.map(\.id))
+            }
             state.decisions[signature] = decision
         }
+    }
+
+    private func trimProtectedDecisions() {
+        var state = reviewState
+        trimProtectedDecisions(in: &state, protection: protection)
         if saveState(state) { restoreDecisions(result?.groups ?? []) }
     }
 
+    private func restoreFolders() {
+        var restored: [FolderScope] = []
+        unavailableFolders = []
+        for index in savedBookmarks.indices {
+            do {
+                let folder = try FolderScope(bookmark: savedBookmarks[index])
+                guard FileManager.default.isReadableFile(atPath: folder.source.directory.path),
+                      try folder.source.directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+                    throw AssetAccessError.inaccessible
+                }
+                if !restored.contains(where: { $0.id == folder.id }) { restored.append(folder) }
+                savedBookmarks[index] = folder.bookmark
+            } catch { unavailableFolders.append(savedBookmarks[index]) }
+        }
+        folders = restored
+        saveFolders()
+    }
+
+    func retryFolders() {
+        guard canEditSources else { return }
+        restoreFolders()
+        if !unavailableFolders.isEmpty {
+            sourceErrorMessage = L10n.text("app_a_saved_folder_is_unavailable_select_it_again_to_restore_access")
+        }
+        invalidateResults()
+    }
+
+    func reconnectFolder(_ bookmark: Data, to url: URL) {
+        guard canEditSources, let index = savedBookmarks.firstIndex(of: bookmark), unavailableFolders.contains(bookmark) else { return }
+        do {
+            let folder = try FolderScope(url: url)
+            guard FileManager.default.isReadableFile(atPath: folder.source.directory.path),
+                  try folder.source.directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else { throw AssetAccessError.inaccessible }
+            savedBookmarks[index] = folder.bookmark
+            restoreFolders()
+            invalidateResults()
+        } catch { sourceErrorMessage = L10n.error(error) }
+    }
+
+    func removeUnavailableFolder(_ bookmark: Data) {
+        guard canEditSources, unavailableFolders.contains(bookmark) else { return }
+        savedBookmarks.removeAll { $0 == bookmark }
+        unavailableFolders.removeAll { $0 == bookmark }
+        saveFolders()
+        invalidateResults()
+    }
+
+    func lockOwners(for asset: PhotoAsset) -> [AssetID] {
+        (try? currentProtection.lockingIDs(for: asset))?.sorted { $0.item < $1.item } ?? []
+    }
+
+    func removeSavedLock(_ id: AssetID) {
+        guard canEditSources, protectionAvailable else { return }
+        var state = reviewState
+        trimProtectedDecisions(in: &state, protection: currentProtection)
+        state.locked.remove(id)
+        state.lockedRevisions?.removeValue(forKey: id)
+        if saveState(state) { restoreDecisions(result?.groups ?? []) }
+    }
+
+    var invalidDecisionCount: Int { reviewState.decisions.values.filter { $0.invalidated == true }.count }
+
+    func removeInvalidDecisions() {
+        guard canEditSources, protectionAvailable else { return }
+        var state = reviewState
+        state.decisions = state.decisions.filter { $0.value.invalidated != true }
+        _ = saveState(state)
+    }
+
     private func saveFolders() {
-        UserDefaults.standard.set(folders.map(\.bookmark), forKey: Self.folderKey)
+        UserDefaults.standard.set(savedBookmarks, forKey: Self.folderKey)
     }
 }
 

@@ -6,7 +6,7 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。应�
 
 ## 项目状态
 
-AlbumWinnow v1.6.0 新增英文、简体中文、日语，覆盖核对、清理、设置、辅助功能标签与照片权限说明，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow v1.7.0 修复保护记录异常、不可用来源恢复、关联路径解锁及跨来源错误归因，并减少核对状态写入成本。继续支持英文、简体中文、日语，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
 
 上一个 GitHub 正式版本 v1.0.0 可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
 
@@ -35,6 +35,14 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 生成的测试工程放在 `.local`，预期版本号直接读取应用构建配置。测试不使用实机或 iCloud 账户。
 
 可选的 Photos 相册范围用例需要在专用模拟器上设置 `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` 才会运行，请求模拟器照片权限，并在其中保留生成的照片与相册样本；默认回归跳过该用例。
+
+## v1.7 可靠性与发布工具
+
+不可用文件夹记录在重启后保留；设置提供重试、重新选择与明确移除，均保留原有锁定和只读策略。「已保存的保护」可管理当前结果之外的独立锁记录；解锁继承保护时先确认关联路径范围。解除保护不会恢复已取消的清理候选。可明确移除失效决定，有效选择及保护不受影响。
+
+文件身份记录损坏会禁用清理。核对状态数据库升级到 schema 3，以事务迁移决定为独立记录，导航位置单独保存；旧版应用不能读取新结构，降级前请备份。匹配行为和有效旧签名不变；决定签名版本与扫描缓存版本分别管理。
+
+macOS 原生回归入口为 `Tests/run-macos-tests.sh`，模拟器回归支持标准 iPhone/iPad。通用打包、IPAes 临时上传/原子发布及实际下载校验已纳入 [Tools/Release](Tools/Release/README.md)。构建成功不代表 macOS 已公证或 IPA 已签名。
 
 ## v1.6 多语言
 

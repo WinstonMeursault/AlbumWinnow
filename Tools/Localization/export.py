@@ -95,12 +95,35 @@ def catalogs(data):
     return output
 
 def validate_usage(data, sources):
-    keys = {m['id'] for m in data['messages'] if 'apple' in m['platforms'] and m.get('table', 'Localizable') == 'Localizable'}
-    used = set()
+    messages = {m['id']: m for m in data['messages'] if 'apple' in m['platforms'] and m.get('table', 'Localizable') == 'Localizable'}
+    # A small lexical check for static calls, including unqualified calls inside L10n.error.
+    tokens = re.compile(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|[A-Za-z_][A-Za-z_0-9]*|[^\s]', re.S)
     for source in sources:
-        used.update(re.findall(r'L10n\.text\("([a-z0-9_]+)"', source))
-    if used - keys:
-        raise ValueError('Unknown message IDs: ' + ', '.join(sorted(used - keys)))
+        parts = [m.group() for m in tokens.finditer(source) if not m.group().startswith(('//', '/*'))]
+        for i, part in enumerate(parts):
+            qualified = i >= 2 and parts[i-2:i] == ['L10n', '.']
+            helper = 'enum L10n' in source and (i == 0 or parts[i-1] not in ['func', '.'])
+            if part != 'text' or not (qualified or helper) or parts[i+1:i+2] != ['(']:
+                continue
+            key = parts[i+2] if i+2 < len(parts) else ''
+            if not re.fullmatch(r'"[a-z0-9_]+"', key):
+                raise ValueError('Localization calls require a static message ID')
+            key = key[1:-1]
+            if key not in messages:
+                raise ValueError('Unknown message ID: ' + key)
+            depth = 0
+            arguments = 0
+            for token in parts[i+3:]:
+                if token == ')' and depth == 0:
+                    break
+                if token in ['(', '[', '{']:
+                    depth += 1
+                elif token in [')', ']', '}']:
+                    depth -= 1
+                elif token == ',' and depth == 0:
+                    arguments += 1
+            if arguments != len(messages[key].get('parameters', [])):
+                raise ValueError('Argument count does not match message: ' + key)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)

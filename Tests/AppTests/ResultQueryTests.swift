@@ -9,7 +9,7 @@ final class ResultQueryTests: XCTestCase {
         let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled", "AlbumWinnow.interruptedScan"]
         let saved = keys.map { defaults.object(forKey: $0) }
         keys.forEach { defaults.removeObject(forKey: $0) }
-        let root = URL.documentsDirectory.appending(path: UUID().uuidString)
+        let root = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
         let folder = root.appending(path: "photos"), data = root.appending(path: "state")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer {

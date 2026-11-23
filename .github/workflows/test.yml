@@ -28,6 +28,7 @@ jobs:
       - name: Validate localization sources and generated catalogs
         run: |
           python3 -m unittest discover -s Tests/Localization
+          python3 -m unittest discover -s Tests/Release
           python3 Tools/Localization/export.py --check
       - name: Show toolchain
         run: |
@@ -66,24 +67,67 @@ jobs:
         run: xcodebuild -project AlbumWinnow.xcodeproj -scheme AlbumWinnowMobile -configuration Release -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 
   app-tests:
-    name: Simulator regression tests
+    name: Simulator regression tests (${{ matrix.family }})
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [iPhone, iPad]
     runs-on: macos-26
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - name: Prepare test generator
         run: command -v xcodegen || brew install xcodegen
-      - name: Select a standard iPhone simulator
+      - name: Select a standard simulator
+        env:
+          SIMULATOR_FAMILY: ${{ matrix.family }}
         run: |
           python3 - <<'PY'
           import json, os, subprocess
           devices = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', 'available', '--json']))
           candidates = [device for runtime, rows in devices['devices'].items()
                         if '.iOS-26-' in runtime for device in rows
-                        if device['name'].startswith('iPhone') and 'Duo' not in device['name']]
-          assert candidates, 'An iOS 26 iPhone simulator is required'
+                        if device['name'].startswith(os.environ['SIMULATOR_FAMILY']) and 'Duo' not in device['name']]
+          assert candidates, 'An iOS 26 standard simulator is required'
           with open(os.environ['GITHUB_ENV'], 'a') as output:
               output.write('TEST_SIMULATOR_ID=' + candidates[0]['udid'] + '\n')
           PY
+      - name: Authorize generated Photos fixtures and verify album scope
+        if: matrix.family == 'iPhone'
+        env:
+          TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE: '1'
+        run: |
+          Tests/run-app-tests.sh "$TEST_SIMULATOR_ID" -only-testing:AppUITests/SimulatorPhotosPermissionTests -resultBundlePath .local/ci-photos-permission.xcresult
+          Tests/run-app-tests.sh "$TEST_SIMULATOR_ID" -only-testing:AppModelTests/PhotoScopeTests -resultBundlePath .local/ci-photos-scope.xcresult
       - name: Run app model and UI regressions
-        run: Tests/run-app-tests.sh "$TEST_SIMULATOR_ID"
+        run: Tests/run-app-tests.sh "$TEST_SIMULATOR_ID" -resultBundlePath .local/ci-app-tests.xcresult
+      - name: Preserve simulator validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: acceptance-${{ matrix.family }}
+          path: |
+            .local/ci-app-tests.xcresult
+            .local/ci-photos-permission.xcresult
+            .local/ci-photos-scope.xcresult
+          include-hidden-files: true
+          retention-days: 3
+
+  mac-app-tests:
+    name: macOS model and UI regressions
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prepare test generator
+        run: command -v xcodegen || brew install xcodegen
+      - name: Run macOS regressions
+        run: Tests/run-macos-tests.sh -resultBundlePath .local/ci-mac-tests.xcresult
+      - name: Preserve macOS validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: acceptance-macOS
+          path: .local/ci-mac-tests.xcresult
+          include-hidden-files: true
+          retention-days: 3
