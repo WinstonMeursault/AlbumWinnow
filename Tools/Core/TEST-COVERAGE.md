@@ -1,14 +1,14 @@
-# Migration coverage map
+# Regression coverage map
 
-This maps preserved behavior, not test-count equivalence. Phase completion and
-actual commands/results are recorded in `.local/docs/v2.0.0-validation.md`.
-Production SwiftUI now adopts the native actor/pages. Earlier phase statements
-below describe their checkpoint boundaries; complete application acceptance is
-still pending. The retained AppTests now use v2 APIs and compile on both Apple
-platforms. P8 has removed the Swift review store, cleanup authorization/group
-business implementations and GRDB. Native constructors require explicit source
-IDs; v2 identity namespaces, current notices and three-language docs are in place.
-Clean-checkout/platform/artifact and full runtime acceptance remain pending.
+This maps preserved behavior to its current Rust, Apple and Kotlin tests.
+Production SwiftUI uses the native actor, bounded pages and lazy group details;
+recognition, state, storage and cleanup authority have one Rust owner. The former
+Swift business/store implementations and GRDB are removed. Tests use v2 APIs,
+explicit source identities and isolated single-owner lifetimes.
+
+The map describes assertions and test locations, not a claim that every suite
+ran on every commit. Per-run commands, failures and results belong in local
+validation records. Test-count equality alone does not establish coverage.
 
 | Existing coverage | v2 coverage | Behavior retained |
 | --- | --- | --- |
@@ -18,8 +18,8 @@ Clean-checkout/platform/artifact and full runtime acceptance remain pending.
 | SceneSimilarity / SceneScale | Existing Apple tests; `scene_reference.rs`; Swift/Kotlin SceneDifference | Native Vision/archive; provider isolation; bounded candidates/groups; clique consistency; recommendations and controlled distances |
 | PhotoDifference | Existing Apple tests; `difference_reference.rs`; Swift/Kotlin SceneDifference | Native previews; exact fixed regions, unchanged unavailable reasons, geometry, cancellation |
 | Cleanup / FolderCompanion / Hardening / RemovalPreflight / PhotoScope / SourcePolicy | Existing Apple suites retained; Rust `cleanup_plan.rs`; Swift/Kotlin CleanupProtocol; Apple RustNativeSource/RustNativeCleanup | Protection, aliases, companion resources, source scope, cancellation and recoverable native removal |
-| SceneReview / DifferenceReview / SceneQueue UI | Existing application and UI suites retained; P4 focused execution passed; P7 complete regression pending | Manual decisions, preview lifecycle, queue behavior and accessibility identifiers remain required |
-| ReviewState / ReviewModel | Existing tests retained; P5 Rust storage/command and Swift/Kotlin ReviewStorage tests | v2 restart, transaction failures, protection failure and incremental updates remain required |
+| SceneReview / DifferenceReview / SceneQueue UI | SceneReview, DifferenceReview and SceneQueue application/UI suites | Manual decisions, preview lifecycle, queue behavior and accessibility identifiers remain required |
+| ReviewState / ReviewModel | ReviewState/ReviewModel, Rust storage/command and Swift/Kotlin ReviewStorage tests | v2 restart, transaction failures, protection failure and incremental updates |
 | ReviewEvidence recommendation reasons | Same named Core test, now using RustReviewSession/groupDetail | Missing bit depth stays unknown; resolution/depth reasons and absent evidence |
 | ReviewEvidence date/count ordering | Same named Core test, now using Rust queryPage | Unknown dates last in both directions; stable count ties |
 | ReviewEvidence space estimates | Same named Core test, now using Rust summary estimates | Partial/negative unknown sizes, protected members, empty retained selection and Int64 saturation |
@@ -42,7 +42,7 @@ The Android controlled scene provider is test-only. It does not implement Apple
 Vision or advertise compatibility with Apple's live provider. Fixed Apple vectors
 are arithmetic fixtures, not an Android scene-recognition capability claim.
 
-P5 cache/signature coverage: `cache_storage.rs`, `review_signature.rs`, Swift and
+Cache/signature coverage: `cache_storage.rs`, `review_signature.rs`, Swift and
 Kotlin CacheStorage tests replace the old Swift storage/compression path. Existing
 Apple CacheRecovery cases still verify damaged metadata/samples, invalid measured
 bit depth, inactive-source pruning and clear-cache behavior. The v1 cache migration
@@ -51,8 +51,8 @@ the explicit no-migration scope; it asserts the old bytes stay unopened/unchange
 Rust `review_domain.rs` covers retained edges, aliases, protection pruning and
 Delete All. `review_store` initialization tests cover first install/restart,
 missing/empty/corrupt/foreign/unknown data, missing required rows, live file
-replacement and lost protection rows. Review command/UI cutover remains pending.
-P5 review command coverage: `review_store/{tests,protection,settings}.rs` and
+replacement and lost protection rows.
+Review command coverage: `review_store/{tests,protection,settings}.rs` and
 `review_session/tests.rs` cover opaque source registration, v2 restart, required
 state integrity, atomic scan replacement, protection/decision pruning, stale and
 idempotent intents, monotonic navigation, scope versus query epochs, reset,
@@ -62,10 +62,10 @@ recommendation explanations, size estimates and date fallback. The tracked
 saved decisions with incremental navigation/decision operations. Swift/Kotlin
 ReviewStorage tests exercise actual native persistence, protection pruning,
 cancelled staging, missing protection data and concurrent commands through both
-bindings. Apple application state/UI cutover and P6 cleanup authority remain
-pending; passing binding tests does not close those gates.
+bindings. Apple application tests additionally exercise the native owner and
+production cleanup path.
 
-P6 portable-plan coverage: `cleanup_plan.rs` and `review_session/tests.rs` cover
+Portable-plan coverage: `cleanup_plan.rs` and `review_session/tests.rs` cover
 manual versus estimated choices, four authority epochs, current native facts,
 cross-group/native aliases (including retained resources outside selected groups),
 whole-group preflight, source/provider compatibility, current companions/link
@@ -81,7 +81,7 @@ Bounded read-only snapshot and whole-group preflight tests additionally require
 failed recheck, paged cleanup outcomes, and Rust-owned final PhotoKit date-range
 checks. Both bindings exercise these exports in native runtime tests.
 
-P6 Apple-native coverage: RustNativeSource/RustNativeCleanup use opaque registered
+Apple-native coverage: RustNativeSource/RustNativeCleanup use opaque registered
 directory identities and generated files. They verify actual Trash recovery and
 byte-preserving restoration, partial completion, new companions blocking the whole
 group, atomic cancellation, a replaced locked path alias, unavailable inactive
@@ -92,28 +92,27 @@ and album, then checks retained versus Recently Deleted outcomes, scope-change
 rejection or OS denial preserving both photos and the manual choice. CoreNativePermission
 is the separate full-access UI setup/verification scheme. Missing opt-in or access
 fails native Photos tests instead of silently skipping. Neither target authorizes
-access to a user's physical-device library. Application cutover remains P7 work;
-passing adapter tests alone does not establish the production UI uses this path.
+access to a user's physical-device library. Production application tests exercise
+the same owner and native cleanup adapter.
 
-P7 direct handoff coverage: `review_scan.rs` tests completed ordinary/A-B and
+Direct handoff coverage: `review_scan.rs` tests completed ordinary/A-B and
 scene detection transferred directly to the Rust review owner, preserving native
 metadata, actual edges, provider/quality measurements, dates and persisted
 signatures. Incomplete/cancelled/stale/mixed stages, unrelated sources and missing
 or failed final scene facts cannot commit. Native metadata and final-fact batches
-are bounded16 and validate atomically. Swift/Kotlin ScanReviewHandoff tests call
+are bounded to 16 and validate atomically. Swift/Kotlin ScanReviewHandoff tests call
 this direct API (without fetching/reimporting detection groups), exercise both
 optional scene-handle variants and require exactly one concurrent commit. All
-sessions/handoff must use the operation's same cancellation handle. Apple scan
-orchestration and production SwiftUI adoption remain subsequent P7 work.
+sessions/handoff must use the operation's same cancellation handle. The Apple
+scan driver and production SwiftUI owner use this handoff.
 
-P7 scene-candidate coverage: `scan_session.rs` exercises multi-page ordinary/A-B
+Scene-candidate coverage: `scan_session.rs` exercises multi-page ordinary/A-B
 eligibility, validated duplicate exclusion, incomplete/revised final facts,
 invalid limits, end/maximum offsets, repeat reads and cancellation. Swift/Kotlin
 handoff tests exercise the bounded pages over the actual bridges. Apple
 SceneSimilarityTests also drives real Vision observations into the retained
 scene session and directly into the Rust review store, verifies provider/edge
-persistence, and rejects changed final native facts. This native integration
-fixture does not establish production application cutover.
+persistence, and rejects changed final native facts. Production application tests separately exercise the native owner and queues.
 
 | Existing scan fixture coverage | Current location and verification |
 | --- | --- |
@@ -129,7 +128,7 @@ It supplies no alternate production engine or persisted compatibility snapshot.
 RustScanPipelineTests also runs in the iOS CoreBridge target with bundled,
 project-generated images. ScanBenchmark uses the production receipt API and
 validates committed Rust pages/details; its timing includes the review commit
-and paged result verification. P9 must report this boundary when comparing P0.
+and paged result verification. Performance comparisons must report this boundary.
 
 AppleReviewOwnerTests covers isolated v2 bootstrap/legacy sentinels, lost DB and
 invalid initialization markers, registered bookmark/identity restoration without
@@ -139,16 +138,15 @@ recoverable generated Trash plus restored bytes. The PhotoKit foreground fixture
 now uses this owner and actual native scan/manual intent rather than injected
 review groups. Both paths remain opt-in/generated fixtures only.
 
-During implementation use necessary targeted checks, not repeated full suites.
-The full required matrix and clean builds are reserved for the delivery candidate.
+During development, select checks affected by a change. Release acceptance adds
+the required platform matrix and clean builds; compilation alone is not a test pass.
 
-P7 presentation: five focused Rust tests cover bounded previews, saved-vs-estimated
+Presentation: five focused Rust tests cover bounded previews, saved-vs-estimated
 removals, pending/filter/global counts, scene/duplicate categories, alias owners,
 limits and nonmutating reads. A focused Swift owner test covers real native reads,
 source deactivation across await, core protection flags, prepared plan paging and
 cancellation without system deletion. A focused Android instrument validates the
-new records, limits and saved choices over actual Kotlin/native bindings. Full
-regression/candidate builds remain reserved for delivery.
+records, limits and saved choices over actual Kotlin/native bindings.
 
 V2ApplicationTests adds real native scan → lightweight gallery → lazy group
 detail → manual intent → hidden saved candidates → prepared/cancelled confirmation
@@ -171,7 +169,7 @@ trigger installed while the owner is closed proves a failed real decision
 transaction publishes no selection/revision and disables cleanup. macOS native
 cleanup additionally requires actual Trash movement, a returned native location,
 restoration and byte equality; simulator provider failures are not reported as
-Trash success. These checks were selected individually, not a full-suite run.
+Trash success. Per-run validation records distinguish targeted checks from complete suites.
 
 iOS lifecycle regressions cover cancellation settings being serialized after the
 scan drains, and a new manual scan superseding an old cancelled marker before
@@ -179,11 +177,10 @@ background cancellation. The cached header is updated only after that core
 setting commits. Existing generated PhotoKit fixtures additionally verify that
 preview callbacks still skip cloud reads after scan downloads are allowed, then
 exercise actual retained-ID-safe native recovery. No real cloud transfer is
-claimed by that policy assertion. Full runtime/UI/clean-build acceptance remains
-reserved for delivery.
+claimed by that policy assertion.
 
-P8 removes the corresponding Swift recommendation, size accumulation and query
-implementations. These tests exercise the production Rust session through FFI;
+The Swift recommendation, size accumulation and query implementations are
+removed. These tests exercise the production Rust session through FFI;
 their test fixture only constructs typed inputs, commits scans and reads pages.
 An unrelated registered source returns no matching groups. An unregistered query
 source is rejected without changing settings or decisions. Sources are registered
@@ -197,10 +194,11 @@ database payloads are changed only after the Rust owner has closed. The retained
 native revision parser is tested locally; Rust revisions remain opaque.
 ReviewStateBenchmark now measures the same navigation/decision operations over
 the Rust bridge, with bounded input pages and a closed-owner reopen assertion.
-Its compilation is not performance acceptance; delivery measurements remain due.
+Its compilation is not performance acceptance; run it to measure timings and
+post-close memory for the current build.
 
-P8 deletes AssetMutationService, CleanupProtection, CleanupPair and their old
-outcome types. Invalid single-member/partial whole-group submissions no longer
+AssetMutationService, CleanupProtection, CleanupPair and their old outcome types
+are removed. Invalid single-member/partial whole-group submissions no longer
 have a production API: the retained CleanupProtocol fixture explicitly checks
 that authorization fails before complete preflight, then tests one-use tickets.
 NativeCleanupFixture deliberately supplies scan labels in boundary tests so that
@@ -238,9 +236,9 @@ local, and regeneration runs Cargo offline after dependency preparation. This
 checks the shared Rust/Apple notice list, including the pinned standard-library
 distribution notices. Android main/test runtime graphs are locked; reviewed
 framework license resources are copied during native preparation, and the APK
-verifier requires their exact contents. Final rebuilt APK acceptance remains due.
+verifier requires their exact contents in the rebuilt artifact.
 
-Cache metadata pages are covered by `cache_storage` across273 persisted records,
+Cache metadata pages are covered by `cache_storage` across 273 persisted records,
 including order, page boundaries, invalid limits and cancellation. Swift and
 Kotlin cache roundtrips also assert page exhaustion and oversized-page rejection.
 `review_scan` unit tests cover lossless packed staging with maximum bounded

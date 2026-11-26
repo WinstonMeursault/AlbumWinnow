@@ -1,8 +1,10 @@
 # Shared core build
 
 The production Apple application uses the Rust v2 core through native Swift services.
-P8 cleanup and the final P9 acceptance matrix remain in progress. P0–P9 evidence is kept locally in `.local/docs/v2.0.0-progress.md`
-and `.local/docs/v2.0.0-validation.md`; generated native libraries stay outside Git.
+Rust owns recognition, review, persistence and cleanup authorization; Swift owns
+Apple services and presentation. Generated native libraries stay outside Git.
+See [the input contract](CONTRACT.md), [coverage map](TEST-COVERAGE.md) and
+[release procedure](../Release/README.md) for integration and validation.
 
 ## Prerequisites
 
@@ -108,7 +110,7 @@ cargo test --workspace --release --locked
 Tools/Core/generate-bindings.sh --check
 ```
 
-P1 probes version/UInt64/optional/nested values, bounded BLAKE3, typed errors,
+Bridge tests probe version/UInt64/optional/nested values, bounded BLAKE3, typed errors,
 independent cancellation, explicit Kotlin release, and bundled SQLite linking.
 They are a bridge gate, not evidence of completed algorithm/state/UI migration.
 
@@ -120,6 +122,7 @@ their own temporary copies to Trash, restore the moved copies and verify bytes.
 
 PhotoKit needs an isolated iOS simulator and the opt-in `CoreNativeCleanup`
 scheme in `Tests/Bridge-project.yml`. Generate that project with
+`mkdir -p .local/bridge-tests`, then
 `ALBUMWINNOW_ROOT="$PWD" xcodegen generate --spec Tests/Bridge-project.yml --project-root "$PWD/.local/bridge-tests" --project .local/bridge-tests`,
 then run its scheme on the dedicated simulator. The scheme enables
 `ALBUMWINNOW_PHOTOS_FIXTURE=1`; missing opt-in fails. The fixture host additionally
@@ -154,7 +157,6 @@ Production SwiftUI now uses AppleReviewOwner, native receipts, bounded summaries
 and lazy current/neighbor detail reads. Its new focused application tests are in
 Tests/AppTests/V2ApplicationTests.swift. The retained application tests now use
 v2 APIs and compile for macOS/iOS; test-only ModelWorkspace scopes each suite and
-owner lifetime. The complete runtime/UI/regression/delivery matrix remains P7–P9
-work. Build-for-testing is compilation evidence, not a passing full suite.
+owner lifetime. Build-for-testing is compilation evidence, not a passing suite.
 During development run only checks necessary for a change, and reserve full
 suites plus clean candidate builds for delivery.

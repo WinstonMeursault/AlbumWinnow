@@ -4,15 +4,17 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 AlbumWinnow is a native photo organizer for macOS, iOS, and iPadOS. It finds duplicates across the system photo library and user-selected folders, recommends which copies to keep, and lets users review each group before cleanup.
 
-## Project status
+[Release notes](CHANGELOG.md)
 
-AlbumWinnow v2.0.0 is a local release candidate, with the Apple application using a Rust core and Swift/SwiftUI platform services. Clean Apple Release builds and local platform validation are complete; publication remains a separate step. English, Simplified Chinese and Japanese are supported on macOS 26, iOS 26 and iPadOS 26 or later. Kotlin bindings and a minimal Android validation host are included; a complete Android client and Windows/Linux applications are outside this version's scope.
+## Architecture and platforms
+
+AlbumWinnow v2.0.1 uses Rust Core with Swift/SwiftUI for its native Apple applications. English, Simplified Chinese and Japanese are supported on macOS 26, iOS 26 and iPadOS 26 or later. The repository also includes Kotlin bindings and a minimal Android validation host; this version does not include a complete Android client or Windows/Linux applications.
 
 v2 starts with separate source/asset identities, review/cache databases, signatures and preferences. After upgrading, configure sources and protection again and rescan. v1 data is neither migrated nor automatically deleted, and its deletion candidates are not restored. The existing application bundle identifier is retained.
 
 On an ordinary relaunch, start a scan manually to restore confirmed v2 plans that still match the current resources. Relaunching does not start a scan or delete photos automatically. Background-interrupted scans can resume with their saved consent; explicitly cancelling a scan stops automatic recovery.
 
-The previous formal v1.0.0 release remains available on the [GitHub Releases page](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
+Download release artifacts from [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases). The macOS package contains a universal Apple Silicon/Intel app with an ad hoc signature. The iOS/iPadOS IPA is unsigned and requires signing before installation.
 
 ## Build and run
 
@@ -54,7 +56,7 @@ Unavailable or corrupt v2 protection disables cleanup. Rust stores review decisi
 
 Run native macOS regressions with `Tests/run-macos-tests.sh`. Simulator regressions support standard iPhone and iPad. Packaging and atomic IPAes upload/download verification are versioned under [Tools/Release](Tools/Release/README.md). A release build does not imply a notarized macOS app or a signed IPA.
 
-## v1.6 languages
+## languages
 
 The app follows system language preferences and the operating system’s per-app language setting. Choose English, Simplified Chinese or Japanese, then restart the app. Unsupported languages fall back to English. Changing language preserves manual keep choices, locks, scope and pending cleanup; reopening never deletes photos automatically.
 
@@ -62,7 +64,7 @@ The app follows system language preferences and the operating system’s per-app
 
 Translations live in a platform-neutral message table and are exported to native Apple catalogs. See [Localization](Localization/README.md) for editing and validation. This prepares the wording workflow for a future Android app; Android support is not included.
 
-## v1.5 difference previews
+## difference previews
 
 Open **Review Evidence → Show Differences**, explicitly choose a reference and comparison, then select **Show Differences**. The original previews remain available through **Original / Differences**, with adjustable highlight opacity. Reference photos are comparison inputs and do not change your selected keeper, recommendation, duplicate category or cleanup plan.
 
@@ -70,7 +72,7 @@ The comparison uses fresh, orientation-corrected previews up to 512 pixels and c
 
 Changing the pair, leaving the view or backgrounding clears the temporary result. Returning requires an explicit comparison. Photos previews never authorize iCloud downloads. Source revisions and active scope are checked again; a changed or inaccessible resource blocks stale cleanup until rescan. Generated calibration covers compression, size, color, orientation, local digit and expression-shape changes; it does not establish natural-photo or real-expression accuracy.
 
-## v1.4 burst and similar scenes
+## burst and similar scenes
 
 Enable **Find Burst and Similar Scenes** in Settings, or choose **Similar Photos → Scan Similar Photos** after a scan. Analysis is off by default. **Duplicates** retains the existing duplicate matcher; stronger duplicate groups take priority over the separate **Similar Photos** queue. Confirmed cleanup candidates remain global across both queues. Valid manual choices survive analysis being disabled, cache clearing and reopening, but must be revalidated against current resources before cleanup.
 
@@ -78,7 +80,7 @@ Vision feature distances supply similarity evidence, not a confidence percentage
 
 Measured thumbnail focus and exposure signals may suggest a keeper only when the measured advantage is clear; otherwise there is no recommendation. These signals do not judge expressions, artistic blur or aesthetic merit. This release has not been evaluated against an annotated natural-photo benchmark; natural precision and recall are unmeasured. Review all differences manually. Cleanup rereads the actual retained/removal pair, rechecks scene similarity and applies the existing resource, lock and source protections. Active Photos album membership, album identity and date bounds are checked again before deletion.
 
-## v1.3 sources and scope
+## sources and scope
 
 **Settings → Comparison Scope** selects all accessible Photos or an album union, intersected with an optional capture-date range. Civil days use the current calendar and time zone when applied; exact bounds survive recovery. Unknown capture dates are excluded unless explicitly included. Missing, renamed or inaccessible albums require scope review and never expand the scan to the whole library. Limited Photos permission cannot enumerate user albums.
 
@@ -86,7 +88,7 @@ Measured thumbnail focus and exposure signals may suggest a keeper only when the
 
 **Source Policy** can prefer Photos or another source only when the existing quality-ranking signals tie. Recommendation changes preserve valid manual choices. Read-only sources participate in comparison but are protected at deletion, including overlapping folder paths and known hardlink identities. Enabling protection cancels affected pending removals immediately; disabling it does not reinstate them. Source protection survives scan-cache clearing, source removal and review-progress resets. If a protected folder is inaccessible, cleanup fails closed. Folder hardlinks can be retained conservatively while any folder is read-only.
 
-## v1.2 review tools
+## review tools
 
 Open **Review Evidence** in a group for measured recommendation reasons, each member’s actual match to the reference, and source metadata. Unknown sizes, capture dates and bit depths remain unknown. Size estimates describe candidate resources, not immediately released device space.
 
@@ -94,7 +96,7 @@ Double-tap or double-click to zoom, pinch to adjust, and drag to pan while zoome
 
 **Filter and Sort** supports review status, match category and source, plus stable, capture-date, count and candidate-size ordering. Unknown dates stay last in both directions. Filters preserve confirmed choices; **Confirm Cleanup** includes candidates outside the filter. Entering a group freezes the review queue. Cancelling a supplemental scan preserves saved choices for review but requires a manual rescan before cleanup; reopening does not restart a user-cancelled scan.
 
-## v1.1 review and cloud policy
+## review and cloud policy
 
 Confirmed plans, kept groups, deferred groups, photo locks and the review position are stored separately from scan fingerprints. After reopening, a manual scan rebuilds results before restoring valid decisions; it never deletes photos automatically. Temporary photo taps are not saved as deletion plans. **Skip** defers a group without cancelling an existing plan. **Group Actions** provides **Keep Entire Group** and **Undo Group Decision**. Long-press or right-click a photo to lock it. Locked photos remain alongside the selected copy; **Delete All** is unavailable for any protected group. Cleanup execution checks the same protection context, including overlapping folder paths and hard links.
 
@@ -102,7 +104,7 @@ Use **Continue Review** or **Review Ten Groups** in the overview. Kept groups ar
 
 **Skip Photos Stored Only in iCloud** is enabled by default. Disabling it permits downloads during scanning. **Download Pending Photos from iCloud** authorizes only the requested photos for that scan, together with a fresh comparison against local photos. Cached fingerprints do not substitute for a current availability check. Processed, policy-skipped, failed and unfinished counts remain separate; cancelling does not turn unfinished photos into failures. Previews do not silently authorize downloads. Automated cloud validation uses controlled callbacks rather than a real account.
 
-## v1.0 scope
+## scope
 
 - Scan accessible photos in the system library and user-selected folders, including duplicates across both sources.
 - Detect exact duplicates and copies of the same image at different resolutions, compression levels, or in different formats such as HEIC, JPEG, and PNG.
@@ -127,7 +129,7 @@ Rust owns fingerprints and byte identity, classification, duplicate and scene gr
 
 ## Implementation and validation
 
-The production Apple flow is connected to Rust. Candidate retrieval uses a multi-index of Hamming-distance hash bands; duplicate classification uses perceptual hashes and multiscale pixel checks, while optional scene grouping uses native Vision measurements. [Migration coverage](Tools/Core/TEST-COVERAGE.md) maps preserved assertions to their v2 locations. This development state is not a completed v2 acceptance claim.
+The production Apple flow is connected to Rust. Candidate retrieval uses a multi-index of Hamming-distance hash bands; duplicate classification uses perceptual hashes and multiscale pixel checks, while optional scene grouping uses native Vision measurements. [Migration coverage](Tools/Core/TEST-COVERAGE.md) maps preserved assertions to their v2 locations.
 
 `Tests/Performance` contains a deterministic full-resolution JPEG generator and an executable that calls the production scan engine. It checks cold scans, unchanged scans, changes to 1% of assets, and cache reuse after cancellation, including the exact membership of known duplicate pairs. Generate data in a fresh local directory:
 

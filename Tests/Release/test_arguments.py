@@ -20,8 +20,8 @@ def module(name):
 class ReleaseArgumentsTests(unittest.TestCase):
     def test_publish_rejects_invalid_or_shell_interpretable_inputs_without_uploading(self):
         publish = module('publish_ipaes')
-        base = ['2.0.0', '--host', 'test-host', '--upload-directory', '/opt/ipaes/ipa', '--repository-url', 'https://example.test/']
-        self.assertEqual(publish.arguments(base).version, '2.0.0')
+        base = ['2.0.1', '--host', 'test-host', '--upload-directory', '/opt/ipaes/ipa', '--repository-url', 'https://example.test/']
+        self.assertEqual(publish.arguments(base).version, '2.0.1')
         for index, bad in [(0, '1.7.0'), (0, '2.0.0-rc.1'), (0, '../../bad'), (2, '-x'), (2, 'host;echo'), (4, '/tmp/../ipa'), (4, '/tmp/$(id)'), (6, 'http://example.test/'), (6, 'https://user:secret@example.test/')]:
             args = base.copy(); args[index] = bad
             with self.subTest(bad=bad), contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
@@ -50,12 +50,12 @@ class ReleaseArgumentsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=ROOT / '.local') as temporary:
             try:
                 os.chdir(temporary)
-                release = Path('.local/App/v2.0.0'); release.mkdir(parents=True)
-                ipa = release / 'AlbumWinnow-v2.0.0-unsigned.ipa'; ipa.write_bytes(b'test IPA')
+                release = Path('.local/App/v2.0.1'); release.mkdir(parents=True)
+                ipa = release / 'AlbumWinnow-v2.0.1-unsigned.ipa'; ipa.write_bytes(b'test IPA')
                 (release / 'SHA256SUMS').write_text(hashlib.sha256(ipa.read_bytes()).hexdigest() + '  ' + ipa.name + '\n')
                 notes = Path('.local/docs'); notes.mkdir(parents=True)
-                (notes / 'v2.0.0-release-notes.md').write_text("# Release\n\n中文 'quotes' \"double\"\nLiteral $(command) and `text`.")
-                args = ['publish', '2.0.0', '--host', 'test-host', '--upload-directory', '/opt/ipaes/ipa', '--repository-url', 'https://example.test/']
+                (notes / 'v2.0.1-release-notes.md').write_text("# Release\n\n中文 'quotes' \"double\"\nLiteral $(command) and `text`.")
+                args = ['publish', '2.0.1', '--host', 'test-host', '--upload-directory', '/opt/ipaes/ipa', '--repository-url', 'https://example.test/']
                 with mock.patch('sys.argv', args), mock.patch('subprocess.run', side_effect=capture), self.assertRaises(Captured):
                     publish.main()
             finally:

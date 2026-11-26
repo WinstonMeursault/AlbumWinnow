@@ -1,6 +1,6 @@
 # v2 core input contract
 
-Contract version 1. App version 2.0.0, FFI contract, data schema, fingerprint,
+Contract version 1. App version 2.0.1, FFI contract, data schema, fingerprint,
 decision signature and decoding pipeline versions are independent.
 
 IDs are opaque `(source_id, item_id)` strings. The core never parses an item ID
@@ -74,7 +74,7 @@ real edges. Recommendations, localized text and display order do not participate
 SHA-256 digests and canonical bytes have an independent fixed protocol vector in
 `Tests/CoreFixtures/signature/v2.json`.
 
-Cache fingerprint metadata crosses the bridge in ordered pages of1–256 records,
+Cache fingerprint metadata crosses the bridge in ordered pages of 1–256 records,
 never as one whole-library buffer. Empty pages mark the end. The first read still
 validates stored metadata and its sample checksum before permitting reuse.
 
@@ -95,7 +95,7 @@ SQLite snapshot. Typed review commands commit before acknowledgement; the Apple
 presentation model acknowledges saved choices only after the actor returns.
 
 The direct detection-to-review API stages `CoreScanReviewAsset` native metadata
-in batches of at most16. `finishDetectedScan` receives references to completed
+in batches of at most 16. `finishDetectedScan` receives references to completed
 Rust detection sessions and returns only committed review metadata. Group
 assembly, real edges, provider/quality evidence, signatures and the transaction
 stay inside Rust. Native metadata must match prepared identities, revisions,
@@ -107,13 +107,13 @@ Normal scans may use the available subset of active registered sources; the host
 must report unavailable sources. A/B scans require both selected registered
 sources, and neither path can add an unregistered/inactive source. Scene outputs
 cannot overlap duplicate groups or use a different operation/provider context.
-Completed duplicate detection exposes scene-candidate ID pages of at most16.
+Completed duplicate detection exposes scene-candidate ID pages of at most 16.
 Rust derives these from the final validated groups, excluding their members in
 both ordinary and A/B scans. Preparation or missing final facts rejects the read.
 The candidate list is cached per validation state, invalidated by new final facts,
 and cancellation rejects cached reads too. Page reads do not rebuild all groups.
 Apple does not export groups to decide scene eligibility.
-Both detection sessions expose final-validation ID pages of at most16. Scene
+Both detection sessions expose final-validation ID pages of at most 16. Scene
 handoff requires every grouped member's current accessible revision; missing,
 changed, duplicate or late facts cannot publish a partial result or repair an
 already failed scene check.
@@ -122,9 +122,7 @@ One `CancellationHandle` belongs to the whole bridged operation. Detection,
 optional scene session and handoff must share that same handle; an unrelated
 handle is rejected. Cancellation remains atomic without taking a state lock.
 Cross-session handoff locks detection, then scene, then review, with no inverse
-path. Native image/Vision work and callbacks run outside these locks. The direct
-API is a cutover boundary; passing its tests alone does not prove the production
-SwiftUI application has adopted it.
+path. Native image/Vision work and callbacks run outside these locks. The production SwiftUI application uses this direct API through its native owner.
 
 ### Apple scan commit boundary
 
@@ -137,7 +135,7 @@ source IDs in `AppleScanReceipt`; A/B requires both sides. Root identity is chec
 again before commit. Settings/catalog edits during work invalidate the staged
 operation rather than publishing a partial review.
 
-Native asset/evidence batches are16 entries, with the same operation and
+Native asset/evidence batches are 16 entries, with the same operation and
 cancellation handle for duplicate detection, native-driven scene detection and
 review commit. ScanEngine never fetches all detection groups or reimports Swift
 groups. The receipt contains committed metadata, counts/issues, unavailable source
@@ -151,8 +149,7 @@ that review transaction: cancelled/failed cache maintenance is reported separate
 and cannot turn it into an apparent failed review commit. A new source snapshot
 and fresh native validation remain required before another cleanup operation.
 
-The production SwiftUI model now uses the native actor and receipt/page APIs.
-The full application regression and delivery matrix remain pending.
+The production SwiftUI model uses the native actor and receipt/page APIs.
 
 ### Native application owner
 
@@ -164,14 +161,13 @@ Independent v2 preferences/root initialization requires an absent marker for a
 fresh install or a true boolean marker for an initialized store. Missing DB and
 malformed markers cannot become empty protection. No legacy data is read/deleted.
 Native scope is reconstructed from the exact Rust range, without calendar
-reinterpretation. Read-only directory snapshots are staged16 at a time; unknown
+reinterpretation. Read-only directory snapshots are staged 16 at a time; unknown
 native facts produce incomplete protection rather than declaring it complete.
-Full application acceptance remains P7 work.
 
 ### Bounded presentation and confirmation
 
-`reviewPage` atomically returns the current header, overview and at most256
-lightweight group summaries. Each summary carries up to2 preview assets and the
+`reviewPage` atomically returns the current header, overview and at most 256
+lightweight group summaries. Each summary carries up to 2 preview assets and the
 preferred evidence; full members are read only through a selected group detail.
 Visible/pending pages follow the stored query. Cleanup-candidate pages and saved
 removal totals include effective saved confirmed/deferred choices independently
@@ -191,7 +187,7 @@ source-edit token. Query/navigation edits do not change scopeEpoch.
 
 ReviewModel now bootstraps AppleReviewOwner asynchronously, with no old database
 open/history deletion, legacy preference read, automatic scan or old candidate
-restoration. The existing bundle ID is retained per plan6.1. AppStorage uses the
+restoration. The existing bundle ID is retained. AppStorage uses the
 v2 preference suite too. A one-time localized setup notice precedes scanning.
 Normal v2 relaunch restores source/protection/settings records but exposes no
 cleanup candidates until an explicit, successful native scan revalidates them.
@@ -199,7 +195,7 @@ Persisted background-interruption consent is v2-only; user cancellation clears
 it and records the core cancelled-by-user setting.
 
 The gallery/pager holds lightweight summaries, not full library groups. Current
-and adjacent pages fetch at most3 single-group details. Status labels are cached
+and adjacent pages fetch at most 3 single-group details. Status labels are cached
 from committed core output across detail eviction, so a stable batch order can
 show its actual completed decisions. Filters, counts, estimates, recommendations,
 protection flags and cleanup pairs come from Rust. Only temporary keep/delete-all
@@ -208,11 +204,10 @@ plan is cancelled when the confirmation is dismissed; applying takes ownership
 before dismissal can cancel it. Native image/preview/difference access uses the
 owner's retained authorization callbacks, not separately restored UI bookmarks.
 
-The unused Swift BLAKE3 package dependency was removed at application link cutover
-because its C symbol collided with Rust BLAKE3. Remaining legacy Swift store/
-business types and their tests still require P8 removal/API migration. Passing
-new focused application tests does not establish the complete old AppTests/UI
-matrix or five-target candidate build.
+Rust is the sole production owner of recognition, review storage and cleanup
+authority. The former Swift business/store implementations, GRDB and Swift
+BLAKE3 package are removed; no compatibility engine or full-scan JSON bridge
+is retained. Test fixtures construct typed inputs and exercise the Rust owner.
 
 Cancellation policy writes are serialized after the active scan drains; busy
 state remains set until the policy commits. Starting a new manual scan first

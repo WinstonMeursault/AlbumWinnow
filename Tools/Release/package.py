@@ -5,7 +5,7 @@ import re
 
 def version(value):
     if not re.fullmatch(r'2\.[0-9]+\.[0-9]+', value):
-        raise argparse.ArgumentTypeError('Expected a v2 release number, e.g. 2.0.0')
+        raise argparse.ArgumentTypeError('Expected a v2 release number, e.g. 2.0.1')
     return value
 
 def arguments(argv=None):

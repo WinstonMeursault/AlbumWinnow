@@ -9,7 +9,7 @@ import AlbumWinnowRust
     let dated = BridgeProbe(value: 0, date: -0.25,
                             identity: BridgeIdentity(sourceId: "", itemId: "", revision: "nanoseconds:123456789"))
     #expect(try roundTrip(probe: dated) == dated)
-    #expect(coreVersion() == "2.0.0")
+    #expect(coreVersion() == "2.0.1")
     #expect(try !sqliteProbe().isEmpty)
 }
 

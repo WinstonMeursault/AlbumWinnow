@@ -4,9 +4,11 @@
 
 AlbumWinnow は macOS、iOS、iPadOS 向けの写真整理アプリです。アクセスを許可した Apple の写真ライブラリと選択したフォルダから重複を探し、写真を見比べて残すものを選べます。macOS 26、iOS 26、iPadOS 26 以降に対応します。
 
-## v2.0.0 ローカル候補
+[リリースノート](CHANGELOG.md)
 
-Apple アプリは Rust Core と Swift/SwiftUI のプラットフォームサービスへ接続済みです。Apple Release のクリーンビルドとローカル検証を完了しました。公開はしていません。Kotlin バインディングと最小 Android 検証ホストも含みます。完全な Android クライアントと Windows/Linux アプリは今回の対象外です。
+## アーキテクチャと対応環境
+
+AlbumWinnow v2.0.1 の Apple アプリは Rust Core と Swift/SwiftUI を採用しています。英語、簡体字中国語、日本語に対応します。リポジトリには Kotlin バインディングと最小 Android 検証ホストも含まれます。本バージョンには完全な Android クライアントや Windows/Linux アプリは含まれません。
 
 v2 は出所・写真の識別子、確認・キャッシュ用データベース、署名、設定を独立させます。更新後は出所と保護を設定し直して再スキャンしてください。v1 のデータを移行・自動削除せず、削除候補も復元しません。既存のアプリ bundle ID は維持します。
 
@@ -20,7 +22,7 @@ v2 の保護情報が利用できない、または破損した場合は整理�
 
 macOS の回帰テストは `Tests/run-macos-tests.sh`、公開手順は [Tools/Release](Tools/Release/README.md) を参照してください。macOS の公証や IPA の署名は別途必要です。
 
-## v1.6.0 と言語
+## 言語
 
 英語、簡体字中国語、日本語に対応しました。システムの優先言語、または OS のアプリ別言語設定に従います。言語を変更した後はアプリを開き直してください。未対応の言語では英語を使います。言語を変えても、手動の選択、ロック、比較範囲、整理待ちの計画は保持されます。
 
@@ -59,6 +61,6 @@ UI テストには XcodeGen と標準の iOS シミュレータが必要です�
 
 Rust が指紋、分類、重複・場面のグループ化、推奨、確認状態、出所・別名の保護、SQLite 保存、一時的な整理許可を管理します。UniFFI が Swift/Kotlin を接続し、Apple 側は PhotoKit/Foundation、ImageIO/Core Image、Vision 測定、ブックマークと OS の復元可能な移動を担当します。SwiftUI は有界の概要と必要なグループ詳細だけを読みます。既存の照合規則、手動確認、保護の意味を維持します。
 
-[移行カバレッジ](Tools/Core/TEST-COVERAGE.md)に既存の検証の移行先を記録しています。依存関係の通知は `python3 Tools/Core/notices.py` で生成し、`--check` で照合します。macOS は Apple Silicon／Intel の universal 配布を目指し、ad hoc 署名と未署名 IPA の扱いは [公開手順](Tools/Release/README.md) を参照してください。候補の生成や公開はまだ完了していません。
+[移行カバレッジ](Tools/Core/TEST-COVERAGE.md)に既存の検証の移行先を記録しています。依存関係の通知は `python3 Tools/Core/notices.py` で生成し、`--check` で照合します。macOS は Apple Silicon／Intel の universal ビルドに対応し、ad hoc 署名と未署名 IPA の扱いは [公開手順](Tools/Release/README.md) を参照してください。配布物は [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases) から取得できます。
 
 [プライバシーポリシー](PRIVACY.md) · [AGPL-3.0 ライセンス](LICENSE) · [サードパーティ通知](THIRD-PARTY-NOTICES.txt)

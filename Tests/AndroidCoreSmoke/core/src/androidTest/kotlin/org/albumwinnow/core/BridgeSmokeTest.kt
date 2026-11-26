@@ -36,7 +36,7 @@ class BridgeSmokeTest {
     }
 
     @Test fun typesHashErrorsCancellationAndRelease() {
-        assertEquals("2.0.0", coreVersion())
+        assertEquals("2.0.1", coreVersion())
         assertTrue(sqliteProbe().isNotEmpty())
         val probe = BridgeProbe(ULong.MAX_VALUE, null, BridgeIdentity("source-v2", "opaque:照片/é", null))
         assertEquals(probe, roundTrip(probe))
