@@ -21,7 +21,7 @@ export IPHONEOS_DEPLOYMENT_TARGET=26.0
 flags=(--profile dev)
 [[ "$profile" == release ]] && flags=(--release)
 for target in "${targets[@]}"; do
-    rustup target list --installed | rg -qx "$target" || { echo "Missing Rust target: $target; run rustup target add $target" >&2; exit 1; }
+    rustup target list --installed | grep -Fxq "$target" || { echo "Missing Rust target: $target; run rustup target add $target" >&2; exit 1; }
     cargo build -p albumwinnow-ffi --lib --locked --target "$target" "${flags[@]}"
 done
 output="$root/.local/core"
