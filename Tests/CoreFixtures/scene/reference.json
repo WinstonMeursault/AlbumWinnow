@@ -1,0 +1,1170 @@
+{
+  "algorithm_source" : "ba4f125 (SceneSimilarity\/SceneGrouping unchanged)",
+  "cross_groups" : [
+    {
+      "edges" : [
+        {
+          "distance" : 0.037973534315824509,
+          "first" : "orientation.png",
+          "second" : "burst-b.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0.037973534315824509,
+          "first" : "pixel-copy.png",
+          "second" : "burst-b.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0.037973534315824509,
+          "first" : "pixel-copy.tiff",
+          "second" : "burst-b.png",
+          "shared_burst" : false
+        }
+      ],
+      "members" : [
+        "burst-b.png",
+        "orientation.png",
+        "pixel-copy.png",
+        "pixel-copy.tiff"
+      ],
+      "preferred" : "burst-b.png",
+      "reason" : null,
+      "recommended" : null
+    }
+  ],
+  "distances" : [
+    {
+      "distance" : 0.037973534315824509,
+      "first" : "burst-a.png",
+      "second" : "burst-b.png"
+    },
+    {
+      "distance" : 0.92315918207168579,
+      "first" : "burst-a.png",
+      "second" : "detail-a.png"
+    },
+    {
+      "distance" : 0.9222341775894165,
+      "first" : "burst-a.png",
+      "second" : "detail-b.png"
+    },
+    {
+      "distance" : 0.89282435178756714,
+      "first" : "burst-a.png",
+      "second" : "depth16-a.png"
+    },
+    {
+      "distance" : 0.89282435178756714,
+      "first" : "burst-a.png",
+      "second" : "depth16-b.png"
+    },
+    {
+      "distance" : 0.8859260082244873,
+      "first" : "burst-a.png",
+      "second" : "flat-a.png"
+    },
+    {
+      "distance" : 0.95107871294021606,
+      "first" : "burst-a.png",
+      "second" : "flat-b.png"
+    },
+    {
+      "distance" : 0.54426020383834839,
+      "first" : "burst-a.png",
+      "second" : "landscape.jpg"
+    },
+    {
+      "distance" : 0.52863377332687378,
+      "first" : "burst-a.png",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0,
+      "first" : "burst-a.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0,
+      "first" : "burst-a.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0,
+      "first" : "burst-a.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.25767549872398376,
+      "first" : "burst-a.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.29895654320716858,
+      "first" : "burst-a.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.29358559846878052,
+      "first" : "burst-a.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.92702680826187134,
+      "first" : "burst-b.png",
+      "second" : "detail-a.png"
+    },
+    {
+      "distance" : 0.92606449127197266,
+      "first" : "burst-b.png",
+      "second" : "detail-b.png"
+    },
+    {
+      "distance" : 0.89300322532653809,
+      "first" : "burst-b.png",
+      "second" : "depth16-a.png"
+    },
+    {
+      "distance" : 0.89300322532653809,
+      "first" : "burst-b.png",
+      "second" : "depth16-b.png"
+    },
+    {
+      "distance" : 0.88726955652236938,
+      "first" : "burst-b.png",
+      "second" : "flat-a.png"
+    },
+    {
+      "distance" : 0.95304971933364868,
+      "first" : "burst-b.png",
+      "second" : "flat-b.png"
+    },
+    {
+      "distance" : 0.5456850528717041,
+      "first" : "burst-b.png",
+      "second" : "landscape.jpg"
+    },
+    {
+      "distance" : 0.52889001369476318,
+      "first" : "burst-b.png",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0.037973534315824509,
+      "first" : "burst-b.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.037973534315824509,
+      "first" : "burst-b.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.037973534315824509,
+      "first" : "burst-b.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.26127240061759949,
+      "first" : "burst-b.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.30689853429794312,
+      "first" : "burst-b.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.29998290538787842,
+      "first" : "burst-b.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.0087579162791371346,
+      "first" : "detail-a.png",
+      "second" : "detail-b.png"
+    },
+    {
+      "distance" : 0.82870626449584961,
+      "first" : "detail-a.png",
+      "second" : "depth16-a.png"
+    },
+    {
+      "distance" : 0.82870626449584961,
+      "first" : "detail-a.png",
+      "second" : "depth16-b.png"
+    },
+    {
+      "distance" : 0.81149941682815552,
+      "first" : "detail-a.png",
+      "second" : "flat-a.png"
+    },
+    {
+      "distance" : 0.85604351758956909,
+      "first" : "detail-a.png",
+      "second" : "flat-b.png"
+    },
+    {
+      "distance" : 0.8963513970375061,
+      "first" : "detail-a.png",
+      "second" : "landscape.jpg"
+    },
+    {
+      "distance" : 0.90471392869949341,
+      "first" : "detail-a.png",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0.92315918207168579,
+      "first" : "detail-a.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.92315918207168579,
+      "first" : "detail-a.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.92315918207168579,
+      "first" : "detail-a.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.95497608184814453,
+      "first" : "detail-a.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.95041042566299438,
+      "first" : "detail-a.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.95171791315078735,
+      "first" : "detail-a.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.8279755711555481,
+      "first" : "detail-b.png",
+      "second" : "depth16-a.png"
+    },
+    {
+      "distance" : 0.8279755711555481,
+      "first" : "detail-b.png",
+      "second" : "depth16-b.png"
+    },
+    {
+      "distance" : 0.81097036600112915,
+      "first" : "detail-b.png",
+      "second" : "flat-a.png"
+    },
+    {
+      "distance" : 0.85606473684310913,
+      "first" : "detail-b.png",
+      "second" : "flat-b.png"
+    },
+    {
+      "distance" : 0.89585244655609131,
+      "first" : "detail-b.png",
+      "second" : "landscape.jpg"
+    },
+    {
+      "distance" : 0.90414237976074219,
+      "first" : "detail-b.png",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0.9222341775894165,
+      "first" : "detail-b.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.9222341775894165,
+      "first" : "detail-b.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.9222341775894165,
+      "first" : "detail-b.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.95418179035186768,
+      "first" : "detail-b.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.94996321201324463,
+      "first" : "detail-b.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.95124870538711548,
+      "first" : "detail-b.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0,
+      "first" : "depth16-a.png",
+      "second" : "depth16-b.png"
+    },
+    {
+      "distance" : 0.29841324687004089,
+      "first" : "depth16-a.png",
+      "second" : "flat-a.png"
+    },
+    {
+      "distance" : 0.43930557370185852,
+      "first" : "depth16-a.png",
+      "second" : "flat-b.png"
+    },
+    {
+      "distance" : 0.92406529188156128,
+      "first" : "depth16-a.png",
+      "second" : "landscape.jpg"
+    },
+    {
+      "distance" : 0.91778552532196045,
+      "first" : "depth16-a.png",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0.89282435178756714,
+      "first" : "depth16-a.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.89282435178756714,
+      "first" : "depth16-a.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.89282435178756714,
+      "first" : "depth16-a.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.94402295351028442,
+      "first" : "depth16-a.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 1.0029256343841553,
+      "first" : "depth16-a.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.99508434534072876,
+      "first" : "depth16-a.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.29841324687004089,
+      "first" : "depth16-b.png",
+      "second" : "flat-a.png"
+    },
+    {
+      "distance" : 0.43930557370185852,
+      "first" : "depth16-b.png",
+      "second" : "flat-b.png"
+    },
+    {
+      "distance" : 0.92406529188156128,
+      "first" : "depth16-b.png",
+      "second" : "landscape.jpg"
+    },
+    {
+      "distance" : 0.91778552532196045,
+      "first" : "depth16-b.png",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0.89282435178756714,
+      "first" : "depth16-b.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.89282435178756714,
+      "first" : "depth16-b.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.89282435178756714,
+      "first" : "depth16-b.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.94402295351028442,
+      "first" : "depth16-b.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 1.0029256343841553,
+      "first" : "depth16-b.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.99508434534072876,
+      "first" : "depth16-b.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.32097873091697693,
+      "first" : "flat-a.png",
+      "second" : "flat-b.png"
+    },
+    {
+      "distance" : 0.89989417791366577,
+      "first" : "flat-a.png",
+      "second" : "landscape.jpg"
+    },
+    {
+      "distance" : 0.89906573295593262,
+      "first" : "flat-a.png",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0.8859260082244873,
+      "first" : "flat-a.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.8859260082244873,
+      "first" : "flat-a.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.8859260082244873,
+      "first" : "flat-a.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.91941791772842407,
+      "first" : "flat-a.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.97694867849349976,
+      "first" : "flat-a.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.97135156393051147,
+      "first" : "flat-a.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.96608471870422363,
+      "first" : "flat-b.png",
+      "second" : "landscape.jpg"
+    },
+    {
+      "distance" : 0.9678148627281189,
+      "first" : "flat-b.png",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0.95107871294021606,
+      "first" : "flat-b.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.95107871294021606,
+      "first" : "flat-b.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.95107871294021606,
+      "first" : "flat-b.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.97956991195678711,
+      "first" : "flat-b.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 1.0246318578720093,
+      "first" : "flat-b.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 1.0202767848968506,
+      "first" : "flat-b.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.10713356733322144,
+      "first" : "landscape.jpg",
+      "second" : "landscape-small.png"
+    },
+    {
+      "distance" : 0.54426020383834839,
+      "first" : "landscape.jpg",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.54426020383834839,
+      "first" : "landscape.jpg",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.54426020383834839,
+      "first" : "landscape.jpg",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.48444363474845886,
+      "first" : "landscape.jpg",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.53793913125991821,
+      "first" : "landscape.jpg",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.53210562467575073,
+      "first" : "landscape.jpg",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.52863377332687378,
+      "first" : "landscape-small.png",
+      "second" : "pixel-copy.png"
+    },
+    {
+      "distance" : 0.52863377332687378,
+      "first" : "landscape-small.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0.52863377332687378,
+      "first" : "landscape-small.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.49165573716163635,
+      "first" : "landscape-small.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.53262418508529663,
+      "first" : "landscape-small.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.52175343036651611,
+      "first" : "landscape-small.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0,
+      "first" : "pixel-copy.png",
+      "second" : "pixel-copy.tiff"
+    },
+    {
+      "distance" : 0,
+      "first" : "pixel-copy.png",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.25767549872398376,
+      "first" : "pixel-copy.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.29895654320716858,
+      "first" : "pixel-copy.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.29358559846878052,
+      "first" : "pixel-copy.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0,
+      "first" : "pixel-copy.tiff",
+      "second" : "orientation.png"
+    },
+    {
+      "distance" : 0.25767549872398376,
+      "first" : "pixel-copy.tiff",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.29895654320716858,
+      "first" : "pixel-copy.tiff",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.29358559846878052,
+      "first" : "pixel-copy.tiff",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.25767549872398376,
+      "first" : "orientation.png",
+      "second" : "scene.png"
+    },
+    {
+      "distance" : 0.29895654320716858,
+      "first" : "orientation.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.29358559846878052,
+      "first" : "orientation.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.2584744393825531,
+      "first" : "scene.png",
+      "second" : "scene-small.jpg"
+    },
+    {
+      "distance" : 0.25255393981933594,
+      "first" : "scene.png",
+      "second" : "scene-small.heic"
+    },
+    {
+      "distance" : 0.052294731140136719,
+      "first" : "scene-small.jpg",
+      "second" : "scene-small.heic"
+    }
+  ],
+  "groups" : [
+    {
+      "edges" : [
+        {
+          "distance" : 0.037973534315824509,
+          "first" : "burst-b.png",
+          "second" : "burst-a.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0,
+          "first" : "orientation.png",
+          "second" : "burst-a.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0.037973534315824509,
+          "first" : "orientation.png",
+          "second" : "burst-b.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0,
+          "first" : "pixel-copy.png",
+          "second" : "burst-a.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0.037973534315824509,
+          "first" : "pixel-copy.png",
+          "second" : "burst-b.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0,
+          "first" : "pixel-copy.png",
+          "second" : "orientation.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0,
+          "first" : "pixel-copy.tiff",
+          "second" : "burst-a.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0.037973534315824509,
+          "first" : "pixel-copy.tiff",
+          "second" : "burst-b.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0,
+          "first" : "pixel-copy.tiff",
+          "second" : "orientation.png",
+          "shared_burst" : false
+        },
+        {
+          "distance" : 0,
+          "first" : "pixel-copy.tiff",
+          "second" : "pixel-copy.png",
+          "shared_burst" : false
+        }
+      ],
+      "members" : [
+        "burst-a.png",
+        "burst-b.png",
+        "orientation.png",
+        "pixel-copy.png",
+        "pixel-copy.tiff"
+      ],
+      "preferred" : "burst-a.png",
+      "reason" : null,
+      "recommended" : null
+    },
+    {
+      "edges" : [
+        {
+          "distance" : 0.0087579162791371346,
+          "first" : "detail-b.png",
+          "second" : "detail-a.png",
+          "shared_burst" : false
+        }
+      ],
+      "members" : [
+        "detail-a.png",
+        "detail-b.png"
+      ],
+      "preferred" : "detail-a.png",
+      "reason" : null,
+      "recommended" : null
+    },
+    {
+      "edges" : [
+        {
+          "distance" : 0.10713356733322144,
+          "first" : "landscape.jpg",
+          "second" : "landscape-small.png",
+          "shared_burst" : false
+        }
+      ],
+      "members" : [
+        "landscape-small.png",
+        "landscape.jpg"
+      ],
+      "preferred" : "landscape-small.png",
+      "reason" : null,
+      "recommended" : null
+    },
+    {
+      "edges" : [
+        {
+          "distance" : 0.052294731140136719,
+          "first" : "scene-small.jpg",
+          "second" : "scene-small.heic",
+          "shared_burst" : false
+        }
+      ],
+      "members" : [
+        "scene-small.heic",
+        "scene-small.jpg"
+      ],
+      "preferred" : "scene-small.heic",
+      "reason" : null,
+      "recommended" : null
+    }
+  ],
+  "items" : [
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 429.47538603391911,
+      "height" : 384,
+      "id" : "burst-a.png",
+      "keys" : [
+        51415,
+        39962,
+        6836,
+        50623
+      ],
+      "pixels" : "burst-a.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.00097782513361576308,
+        "mean_luminance" : 0.4545033492742781,
+        "texture_variance" : 0.0089467907993800895
+      },
+      "revision" : "reference",
+      "vector" : "burst-a.png.f32le",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 429.90688924796052,
+      "height" : 384,
+      "id" : "burst-b.png",
+      "keys" : [
+        51415,
+        39962,
+        6900,
+        50623
+      ],
+      "pixels" : "burst-b.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.00098190877437296167,
+        "mean_luminance" : 0.45449705666934537,
+        "texture_variance" : 0.0089461585837803375
+      },
+      "revision" : "reference",
+      "vector" : "burst-b.png.f32le",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 2119.9621544177667,
+      "height" : 3024,
+      "id" : "detail-a.png",
+      "keys" : [
+        30833,
+        64918,
+        65181,
+        46107
+      ],
+      "pixels" : "detail-a.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0.0003662109375,
+        "focus_energy" : 0.079220796685410641,
+        "mean_luminance" : 0.50100672009037817,
+        "texture_variance" : 0.028077378348192364
+      },
+      "revision" : "reference",
+      "vector" : "detail-a.png.f32le",
+      "wide_color" : false,
+      "width" : 4032
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 2122.0048929886684,
+      "height" : 3024,
+      "id" : "detail-b.png",
+      "keys" : [
+        30833,
+        64918,
+        65181,
+        46107
+      ],
+      "pixels" : "detail-b.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0.0003662109375,
+        "focus_energy" : 0.079316885362546954,
+        "mean_luminance" : 0.5009680053710921,
+        "texture_variance" : 0.028088258413503424
+      },
+      "revision" : "reference",
+      "vector" : "detail-b.png.f32le",
+      "wide_color" : false,
+      "width" : 4032
+    },
+    {
+      "bit_depth" : 16,
+      "capture_date" : null,
+      "edge_detail" : 0,
+      "height" : 128,
+      "id" : "depth16-a.png",
+      "keys" : [
+        39445,
+        27698,
+        23285,
+        62622
+      ],
+      "pixels" : "depth16-a.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0,
+        "mean_luminance" : 0.50196078431394842,
+        "texture_variance" : 4.9699025889828965e-26
+      },
+      "revision" : "reference",
+      "vector" : "depth16-a.png.f32le",
+      "wide_color" : false,
+      "width" : 128
+    },
+    {
+      "bit_depth" : 16,
+      "capture_date" : null,
+      "edge_detail" : 0,
+      "height" : 128,
+      "id" : "depth16-b.png",
+      "keys" : [
+        39445,
+        27698,
+        23285,
+        62622
+      ],
+      "pixels" : "depth16-b.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0,
+        "mean_luminance" : 0.50196078431394842,
+        "texture_variance" : 4.9699025889828965e-26
+      },
+      "revision" : "reference",
+      "vector" : "depth16-b.png.f32le",
+      "wide_color" : false,
+      "width" : 128
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 0,
+      "height" : 128,
+      "id" : "flat-a.png",
+      "keys" : [
+        39508,
+        27702,
+        53973,
+        63134
+      ],
+      "pixels" : "flat-a.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0,
+        "mean_luminance" : 0.32409803921564678,
+        "texture_variance" : 1.5577568502665278e-27
+      },
+      "revision" : "reference",
+      "vector" : "flat-a.png.f32le",
+      "wide_color" : false,
+      "width" : 128
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 0,
+      "height" : 128,
+      "id" : "flat-b.png",
+      "keys" : [
+        39620,
+        27678,
+        53837,
+        63132
+      ],
+      "pixels" : "flat-b.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 1.2325951644078309e-32,
+        "mean_luminance" : 0.3349803921567906,
+        "texture_variance" : 5.1997057825423459e-27
+      },
+      "revision" : "reference",
+      "vector" : "flat-b.png.f32le",
+      "wide_color" : false,
+      "width" : 128
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 429.06350838998952,
+      "height" : 960,
+      "id" : "landscape.jpg",
+      "keys" : [
+        40665,
+        39962,
+        6884,
+        42047
+      ],
+      "pixels" : "landscape.jpg.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.0009091425883643434,
+        "mean_luminance" : 0.45450004236557634,
+        "texture_variance" : 0.00893936047881967
+      },
+      "revision" : "reference",
+      "vector" : "landscape.jpg.f32le",
+      "wide_color" : false,
+      "width" : 1280
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 426.36419513026874,
+      "height" : 480,
+      "id" : "landscape-small.png",
+      "keys" : [
+        40665,
+        39962,
+        6884,
+        42046
+      ],
+      "pixels" : "landscape-small.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.00088693333029560306,
+        "mean_luminance" : 0.45282348584941184,
+        "texture_variance" : 0.0088693303552007455
+      },
+      "revision" : "reference",
+      "vector" : "landscape-small.png.f32le",
+      "wide_color" : false,
+      "width" : 640
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 429.47538603391911,
+      "height" : 384,
+      "id" : "pixel-copy.png",
+      "keys" : [
+        51415,
+        39962,
+        6836,
+        50623
+      ],
+      "pixels" : "pixel-copy.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.00097782513361576308,
+        "mean_luminance" : 0.4545033492742781,
+        "texture_variance" : 0.0089467907993800895
+      },
+      "revision" : "reference",
+      "vector" : "pixel-copy.png.f32le",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 429.47538603391911,
+      "height" : 384,
+      "id" : "pixel-copy.tiff",
+      "keys" : [
+        51415,
+        39962,
+        6836,
+        50623
+      ],
+      "pixels" : "pixel-copy.tiff.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.00097782513361576308,
+        "mean_luminance" : 0.4545033492742781,
+        "texture_variance" : 0.0089467907993800895
+      },
+      "revision" : "reference",
+      "vector" : "pixel-copy.tiff.f32le",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 429.50348117755522,
+      "height" : 384,
+      "id" : "orientation.png",
+      "keys" : [
+        51415,
+        39962,
+        6836,
+        50623
+      ],
+      "pixels" : "orientation.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.00097782513361576308,
+        "mean_luminance" : 0.4545033492742781,
+        "texture_variance" : 0.0089467907993800895
+      },
+      "revision" : "reference",
+      "vector" : "orientation.png.f32le",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 428.45582150969238,
+      "height" : 3024,
+      "id" : "scene.png",
+      "keys" : [
+        51415,
+        39962,
+        6900,
+        34239
+      ],
+      "pixels" : "scene.png.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.00090765529038822632,
+        "mean_luminance" : 0.45456071394377962,
+        "texture_variance" : 0.0089316190978686594
+      },
+      "revision" : "reference",
+      "vector" : "scene.png.f32le",
+      "wide_color" : false,
+      "width" : 4032
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 429.06755638566284,
+      "height" : 960,
+      "id" : "scene-small.jpg",
+      "keys" : [
+        56031,
+        39954,
+        6900,
+        42303
+      ],
+      "pixels" : "scene-small.jpg.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.0009090676834994639,
+        "mean_luminance" : 0.45449815602022176,
+        "texture_variance" : 0.0089396696452773289
+      },
+      "revision" : "reference",
+      "vector" : "scene-small.jpg.f32le",
+      "wide_color" : false,
+      "width" : 1280
+    },
+    {
+      "bit_depth" : 8,
+      "capture_date" : null,
+      "edge_detail" : 425.34344813750852,
+      "height" : 960,
+      "id" : "scene-small.heic",
+      "keys" : [
+        56023,
+        39954,
+        6900,
+        42303
+      ],
+      "pixels" : "scene-small.heic.rgba",
+      "quality" : {
+        "bright_clipping" : 0,
+        "dark_clipping" : 0,
+        "focus_energy" : 0.00093018522084991565,
+        "mean_luminance" : 0.45469884128944799,
+        "texture_variance" : 0.008940870526475974
+      },
+      "revision" : "reference",
+      "vector" : "scene-small.heic.f32le",
+      "wide_color" : false,
+      "width" : 1280
+    }
+  ],
+  "metric_absolute_tolerance" : 1e-10,
+  "provider" : "scene-v1.vn2.scaleFill512.Version 27.2.1 (Build 26B131).arm64",
+  "reference_commit" : "4af5f8d"
+}

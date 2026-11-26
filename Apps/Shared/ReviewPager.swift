@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import SwiftUI
 #if os(macOS)
 import AppKit
@@ -7,29 +7,30 @@ import UIKit
 #endif
 
 enum ReviewAnimation: String, CaseIterable, Identifiable {
-    static let defaultsKey = "AlbumWinnow.reviewAnimation"
+    static let defaultsKey = "reviewAnimation"
     case slide, cover, fade, none
 
     var id: String { rawValue }
 
-    var title: LocalizedStringKey {
+    var title: String {
         switch self {
-        case .slide: "Slide"
-        case .cover: "Cover"
-        case .fade: "Fade"
-        case .none: "None"
+        case .slide: L10n.text("app_slide")
+        case .cover: L10n.text("app_cover")
+        case .fade: L10n.text("app_fade")
+        case .none: L10n.text("app_none")
         }
     }
 }
 
 struct ReviewPager: View {
-    let groups: [DuplicateGroup]
+    let groups: [ReviewGroupSummary]
     @Binding var selectedID: AssetID?
     let model: ReviewModel
     let finishReview: () -> Void
 
     @AppStorage(ReviewAnimation.defaultsKey) private var preference = ReviewAnimation.slide.rawValue
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var zoomed = false
     @State private var translation: CGFloat = 0
     @State private var settling = false
     @State private var transitionID = UUID()
@@ -43,14 +44,21 @@ struct ReviewPager: View {
         GeometryReader { geometry in
             if let index = groups.firstIndex(where: { $0.id == selectedID }) {
                 let width = max(1, geometry.size.width)
-                let neighbors = groups[max(0, index - 1)..<min(groups.count, index + 2)]
+                // Stacked invisible pages can leave safe-area controls above the active page on iPad.
+                let activeOnly = style == .none || (style == .fade && !settling && translation == 0)
+                let neighbors = activeOnly ? groups[index...index] :
+                    groups[max(0, index - 1)..<min(groups.count, index + 2)]
                 let previousID = index > 0 ? groups[index - 1].id : nil
                 ZStack {
                     background
                     ForEach(neighbors) { group in
                         let relative = group.id == selectedID ? 0 : (group.id == previousID ? -1 : 1)
-                        GroupReviewView(group: group, model: model, isActive: relative == 0) {
-                            navigate(forward: true, width: width, index: index)
+                        Group {
+                            if let detail = model.details[group.id] {
+                                GroupReviewView(group: detail, model: model, isActive: relative == 0, zoomed: $zoomed) {
+                                    navigate(forward: true, width: width, index: index)
+                                }
+                            } else { ProgressView() }
                         }
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .background { background }
@@ -65,7 +73,7 @@ struct ReviewPager: View {
                             .accessibilityHidden(relative != 0)
                     }
                     if index == groups.count - 1 {
-                        Label("Back to Overview", systemImage: "square.grid.2x2")
+                        Label(L10n.text("app_back_to_overview"), systemImage: "square.grid.2x2")
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background { background }
@@ -84,7 +92,7 @@ struct ReviewPager: View {
                         .onChanged { update($0.translation, width: width, index: index) }
                         .onEnded {
                             end($0.translation, velocity: $0.velocity.width, cancelled: false, width: width, index: index)
-                        }
+                        }, including: zoomed ? .subviews : .all
                 )
                 .background {
                     ReviewTrackpadSwipe(
@@ -94,20 +102,23 @@ struct ReviewPager: View {
                 }
                 #else
                 .gesture(ReviewSwipe(
+                    enabled: !zoomed,
                     onChange: { update($0, width: width, index: index) },
                     onEnd: { end($0, velocity: $1, cancelled: $2, width: width, index: index) }
                 ))
                 #endif
-                .accessibilityAction(named: Text("Previous Group")) { navigate(forward: false, width: width, index: index) }
-                .accessibilityAction(named: Text("Next Group")) { navigate(forward: true, width: width, index: index) }
+                .accessibilityAction(named: Text(L10n.text("app_previous_group"))) { navigate(forward: false, width: width, index: index) }
+                .accessibilityAction(named: Text(L10n.text("app_next_group"))) { navigate(forward: true, width: width, index: index) }
                 .onChange(of: geometry.size) { reset() }
+                .task(id: neighbors.map(\.signature)) { await model.loadDetails(for: Array(neighbors)) }
             }
         }
-        .onChange(of: selectedID) { reset() }
+        .onChange(of: selectedID) { reset(); zoomed = false }
+        .onChange(of: zoomed) { if zoomed { reset() } }
         .onChange(of: groups) { reset() }
         .onChange(of: preference) { reset() }
         .onChange(of: reduceMotion) { reset() }
-        .onDisappear { reset() }
+        .onDisappear { reset(); model.releaseDetails() }
     }
 
     private var background: Color {
@@ -148,13 +159,13 @@ struct ReviewPager: View {
     }
 
     private func update(_ distance: CGSize, width: CGFloat, index: Int) {
-        guard !settling, abs(distance.width) > 1.5 * abs(distance.height) else { return }
+        guard !zoomed, !settling, abs(distance.width) > 1.5 * abs(distance.height) else { return }
         let horizontal = min(width, max(-width, distance.width))
         translation = index == 0 && horizontal > 0 ? horizontal * 0.22 : horizontal
     }
 
     private func end(_ distance: CGSize, velocity: CGFloat, cancelled: Bool, width: CGFloat, index: Int) {
-        guard !settling else { return }
+        guard !zoomed, !settling else { return }
         let horizontal = distance.width
         let horizontalIntent = abs(horizontal) > 1.5 * abs(distance.height)
         let projected = horizontal + velocity * 0.15
@@ -262,6 +273,7 @@ private struct ReviewTrackpadSwipe: NSViewRepresentable {
 }
 #else
 private struct ReviewSwipe: UIGestureRecognizerRepresentable {
+    let enabled: Bool
     let onChange: (CGSize) -> Void
     let onEnd: (CGSize, CGFloat, Bool) -> Void
 
@@ -269,9 +281,14 @@ private struct ReviewSwipe: UIGestureRecognizerRepresentable {
 
     func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
         let recognizer = UIPanGestureRecognizer()
+        recognizer.isEnabled = enabled
         recognizer.maximumNumberOfTouches = 1
         recognizer.delegate = context.coordinator
         return recognizer
+    }
+
+    func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        recognizer.isEnabled = enabled
     }
 
     func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {

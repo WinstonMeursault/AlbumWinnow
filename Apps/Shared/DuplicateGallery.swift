@@ -1,4 +1,5 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
+import AlbumWinnowRust
 import SwiftUI
 
 struct DuplicateMasonry {
@@ -11,7 +12,7 @@ struct DuplicateMasonry {
     let height: CGFloat
     private let tallestTile: CGFloat
 
-    init(groups: [DuplicateGroup] = [], width: CGFloat = 0, columns: Int = 1, captionHeight: CGFloat = 0) {
+    init(groups: [ReviewGroupSummary] = [], width: CGFloat = 0, columns: Int = 1, captionHeight: CGFloat = 0) {
         let gap: CGFloat = 12
         let inset: CGFloat = 16
         let cardWidth = max(1, (width - 2 * inset - CGFloat(columns - 1) * gap) / CGFloat(columns))
@@ -59,20 +60,21 @@ struct DuplicateMasonry {
 }
 
 struct DuplicateGallery<Header: View>: View {
-    let groups: [DuplicateGroup]
+    let groups: [ReviewGroupSummary]
     let model: ReviewModel
     let selectedGroup: AssetID?
     let narrowed: Bool
     let isActive: Bool
     let bottomRequest: Int
     let header: () -> Header
-    let open: (DuplicateGroup) -> Void
+    let open: (ReviewGroupSummary) -> Void
 
     @Environment(\.displayScale) private var displayScale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .caption) private var captionHeight: CGFloat = 52
     @State private var masonry = DuplicateMasonry()
     @State private var viewport = CGRect.zero
+    @State private var headerHeight: CGFloat = 0
     @State private var position = ScrollPosition(edge: .top)
     @State private var overviewAnchor: Anchor?
     @State private var pendingBottomScroll = false
@@ -96,30 +98,33 @@ struct DuplicateGallery<Header: View>: View {
             let configuration = Configuration(width: width, columns: columnCount(at: width),
                                               captionHeight: captionHeight, narrowed: narrowed,
                                               bottomRequest: bottomRequest)
-            let top = max(0, viewport.minY)
+            let top = max(0, viewport.minY - headerHeight)
             let bottom = top + max(viewport.height, geometry.size.height)
             let loadedRange = max(0, top - 220)..<(bottom + 220)
             ScrollView {
-                ZStack(alignment: .topLeading) {
-                    ForEach(masonry.visible(in: loadedRange)) { tile in
-                        if groups.indices.contains(tile.id), tile.frame.maxY >= loadedRange.lowerBound {
-                            let group = groups[tile.id]
-                            GalleryCard(group: group, model: model, isOpen: group.id == selectedGroup,
-                                        imageHeight: tile.frame.height - configuration.captionHeight,
-                                        captionHeight: configuration.captionHeight,
-                                        pixelSize: pixelSize(for: tile.frame, captionHeight: configuration.captionHeight),
-                                        isActive: isActive) { open(group) }
-                                .frame(width: tile.frame.width, height: tile.frame.height)
-                                .position(x: tile.frame.midX, y: tile.frame.midY)
-                                .accessibilitySortPriority(-Double(tile.id))
+                VStack(spacing: 0) {
+                    header()
+                        .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { headerHeight = $0 }
+                    ZStack(alignment: .topLeading) {
+                        ForEach(masonry.visible(in: loadedRange)) { tile in
+                            if groups.indices.contains(tile.id), tile.frame.maxY >= loadedRange.lowerBound {
+                                let group = groups[tile.id]
+                                GalleryCard(group: group, model: model, isOpen: group.id == selectedGroup,
+                                            imageHeight: tile.frame.height - configuration.captionHeight,
+                                            captionHeight: configuration.captionHeight,
+                                            pixelSize: pixelSize(for: tile.frame, captionHeight: configuration.captionHeight),
+                                            isActive: isActive) { open(group) }
+                                    .frame(width: tile.frame.width, height: tile.frame.height)
+                                    .position(x: tile.frame.midX, y: tile.frame.midY)
+                                    .accessibilitySortPriority(-Double(tile.id))
+                            }
                         }
                     }
+                    .frame(width: width, height: masonry.height, alignment: .topLeading)
                 }
-                .frame(width: width, height: masonry.height, alignment: .topLeading)
             }
             .accessibilityIdentifier("duplicate-gallery")
             .scrollClipDisabled()
-            .safeAreaInset(edge: .top, spacing: 0, content: header)
             .scrollPosition($position)
             .onScrollGeometryChange(for: CGRect.self, of: \.visibleRect) { _, rect in
                 if isActive { viewport = rect }
@@ -174,13 +179,13 @@ struct DuplicateGallery<Header: View>: View {
             position.scrollTo(edge: .top)
             return
         }
-        let y = max(0, masonry.tiles[anchor.tile].frame.minY + anchor.offset)
+        let y = max(0, headerHeight + masonry.tiles[anchor.tile].frame.minY + anchor.offset)
         position.scrollTo(y: y)
     }
 }
 
 private struct GalleryCard: View {
-    let group: DuplicateGroup
+    let group: ReviewGroupSummary
     let model: ReviewModel
     let isOpen: Bool
     let imageHeight: CGFloat
@@ -195,16 +200,15 @@ private struct GalleryCard: View {
 
     private var hasVisualMatch: Bool { group.match != .exactDuplicate }
 
-    private var matchDescription: Text {
-        group.match == .similarPhoto ? Text("Similar photos") : Text("Possible same image")
+    private var matchDescription: String {
+        group.match == .sceneSimilar ? L10n.text("app_burst_similar_scene") : group.match == .similarPhoto ? L10n.text("app_similar_photos") : L10n.text("app_possible_same_image")
     }
 
     var body: some View {
-        let selection = model.selection(for: group.id)
-        let asset = selection.keepID.flatMap { id in group.duplicates.first { $0.id == id }?.asset } ?? group.preferred
+        let asset = group.preview
         let key = isActive ? GalleryThumbnailKey(asset: asset, pixelSize: pixelSize) : nil
-        let count = group.duplicates.count + 1
-        let selected = selection.selected.count
+        let count = group.count
+        let selected = group.selectedCount
 
         Button(action: open) {
             VStack(spacing: 0) {
@@ -233,8 +237,10 @@ private struct GalleryCard: View {
                             .fixedSize(horizontal: true, vertical: false)
                         VStack(alignment: .leading, spacing: 2) { counts(total: count, selected: selected) }
                     }
-                    if hasVisualMatch {
-                        matchDescription.foregroundStyle(.secondary)
+                    if model.status(for: group) != .pending {
+                        Text(model.status(for: group).title).foregroundStyle(.secondary)
+                    } else if hasVisualMatch {
+                        Text(matchDescription).foregroundStyle(.secondary)
                     }
                 }
                 .font(.caption)
@@ -253,9 +259,9 @@ private struct GalleryCard: View {
             .contentShape(.rect(cornerRadius: 14))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("\(count) photos"))
+        .accessibilityLabel(Text(L10n.text("photo_count", Int64(count))))
         .accessibilityValue(accessibilityStatus(selected: selected))
-        .accessibilityHint(Text("Opens the duplicate group for review"))
+        .accessibilityHint(Text(L10n.text("app_opens_the_duplicate_group_for_review")))
         .accessibilityIdentifier("duplicate-group-\(group.preferred.name)")
         .task(id: key) {
             thumbnail = nil
@@ -275,21 +281,21 @@ private struct GalleryCard: View {
     }
 
     @ViewBuilder private func counts(total: Int, selected: Int) -> some View {
-        Text("\(total) photos").fontWeight(.semibold)
+        Text(L10n.text("photo_count", Int64(total))).fontWeight(.semibold)
         if selected > 0 {
-            Text("\(selected) selected")
+            Text(L10n.text("cleanup_pending_count", Int64(selected)))
                 .foregroundStyle(.tint)
         }
     }
 
     private func accessibilityStatus(selected: Int) -> Text {
         if failed && selected > 0 {
-            return hasVisualMatch ? Text("\(selected) selected, \(matchDescription), preview unavailable") : Text("\(selected) selected, preview unavailable")
+            return hasVisualMatch ? Text(L10n.text("app_arg1_selected_arg2_preview_unavailable", Int64(selected), matchDescription)) : Text(L10n.text("app_arg1_selected_preview_unavailable", Int64(selected)))
         }
-        if failed { return hasVisualMatch ? Text("\(matchDescription), preview unavailable") : Text("Preview unavailable") }
+        if failed { return hasVisualMatch ? Text(L10n.text("app_arg1_preview_unavailable", matchDescription)) : Text(L10n.text("app_preview_unavailable")) }
         if selected > 0 {
-            return hasVisualMatch ? Text("\(selected) selected, \(matchDescription)") : Text("\(selected) selected")
+            return hasVisualMatch ? Text(L10n.text("app_arg1_selected_arg2", Int64(selected), matchDescription)) : Text(L10n.text("cleanup_pending_count", Int64(selected)))
         }
-        return hasVisualMatch ? matchDescription : Text("")
+        return hasVisualMatch ? Text(matchDescription) : Text("")
     }
 }

@@ -14,9 +14,11 @@ assert len(versions) == 1, 'App versions must agree'
 print(versions.pop())
 PY
 )"
+python3 Tools/Localization/export.py --check
+Tools/Core/build-apple.sh release --if-needed
 xcrun simctl bootstatus "$simulator_id" -b
 mkdir -p .local/app-tests
 xcodegen generate --spec Tests/project.yml --project-root "$repo_root/.local/app-tests" --project .local/app-tests
 common=(-project .local/app-tests/AppAcceptance.xcodeproj -scheme AppAcceptance -configuration Debug
-        -destination "platform=iOS Simulator,id=$simulator_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO)
+        -destination "platform=iOS Simulator,id=$simulator_id" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO -testLanguage en -testRegion US)
 xcodebuild "${common[@]}" "$@" test

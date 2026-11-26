@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import Foundation
 import XCTest
 @testable import AlbumWinnowAcceptance
@@ -12,7 +12,7 @@ private actor LoadCounter {
 
 final class PreviewLoadingTests: XCTestCase {
     func testLargeFilePreviewReadsMetadataAndBoundsDecodedDimensions() async throws {
-        let url = URL.documentsDirectory.appending(path: "large-preview-\(UUID()).png")
+        let url = URL.acceptanceDocumentsDirectory.appending(path: "large-preview-\(UUID()).png")
         defer { try? FileManager.default.removeItem(at: url) }
         let fixture = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/48mp.png")
         try FileManager.default.copyItem(at: fixture, to: url)
@@ -59,6 +59,34 @@ final class PreviewLoadingTests: XCTestCase {
         for task in tasks { _ = try await task.value }
         let peak = await counter.peak
         XCTAssertEqual(peak, 1)
+    }
+
+    func testZoomDetailsRunExclusivelyAndAreNotRetainedByCache() async throws {
+        let queue = GalleryThumbnails()
+        let counter = LoadCounter()
+        let url = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/scene.png")
+        let asset = PhotoAsset(id: AssetID(source: "fixture", item: "detail"), name: "detail", revision: "1")
+        let preview = try await LoadedPreview.load(asset: asset, file: url)
+        let image = try XCTUnwrap(preview.image)
+        let key = GalleryThumbnailKey(asset: asset, pixelSize: 2560)
+        let tasks = (0..<6).map { _ in
+            Task {
+                try await queue.image(for: key) {
+                    await counter.begin()
+                    try await Task.sleep(for: .milliseconds(20))
+                    await counter.end()
+                    return image
+                }
+            }
+        }
+        for task in tasks { _ = try await task.value }
+        let peak = await counter.peak
+        XCTAssertEqual(peak, 1)
+        // A released view must not leave its detail image in the ordinary thumbnail cache.
+        do {
+            _ = try await queue.image(for: key) { throw AssetAccessError.inaccessible }
+            XCTFail("Detail unexpectedly survived in cache")
+        } catch AssetAccessError.inaccessible {}
     }
 
     func testPreviewQueueIsBoundedAndCancelledWaitersReleaseTheirPlaces() async throws {

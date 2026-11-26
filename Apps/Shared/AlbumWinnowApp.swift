@@ -18,6 +18,7 @@ import SwiftUI
         #if os(macOS)
         Settings {
             ScanSourcesView(model: model)
+                .defaultAppStorage(model.preferenceStore)
                 .frame(width: 460, height: 400)
         }
         #endif

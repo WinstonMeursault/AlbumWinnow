@@ -1,0 +1,5466 @@
+{
+  "sourceLanguage": "en",
+  "languages": [
+    "en",
+    "zh-Hans",
+    "ja"
+  ],
+  "messages": [
+    {
+      "id": "app_version",
+      "context": "AboutView.swift: Version",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Version",
+        "zh-Hans": "版本",
+        "ja": "バージョン"
+      }
+    },
+    {
+      "id": "app_copyright_2026_winston_meursault",
+      "context": "AboutView.swift: Copyright © 2026 Winston Meursault",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Copyright © 2026 Winston Meursault",
+        "zh-Hans": "版权所有 © 2026 Winston Meursault",
+        "ja": "Copyright © 2026 Winston Meursault"
+      }
+    },
+    {
+      "id": "app_albumwinnow_s_public_source_code_is_available_under_the_gnu_affero_general_public_license_version_3",
+      "context": "AboutView.swift: AlbumWinnow’s public source code is available under the GNU Affero General Public License, version 3.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "AlbumWinnow’s public source code is available under the GNU Affero General Public License, version 3.",
+        "zh-Hans": "AlbumWinnow 的公开源代码采用 GNU Affero 通用公共许可证第 3 版授权。",
+        "ja": "AlbumWinnow の公開ソースコードは GNU Affero General Public License 第3版で提供されています。"
+      }
+    },
+    {
+      "id": "app_open_source",
+      "context": "AboutView.swift: Open Source",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Open Source",
+        "zh-Hans": "开源信息",
+        "ja": "オープンソース"
+      }
+    },
+    {
+      "id": "app_source_code_for_this_version",
+      "context": "AboutView.swift: Source Code for This Version",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Source Code for This Version",
+        "zh-Hans": "此版本的源代码",
+        "ja": "このバージョンのソースコード"
+      }
+    },
+    {
+      "id": "app_source_code",
+      "context": "AboutView.swift: Source Code",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Source Code",
+        "zh-Hans": "源代码",
+        "ja": "ソースコード"
+      }
+    },
+    {
+      "id": "app_agpl_3_0_license",
+      "context": "AboutView.swift: AGPL-3.0 License",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "AGPL-3.0 License",
+        "zh-Hans": "AGPL-3.0 许可证",
+        "ja": "AGPL-3.0 ライセンス"
+      }
+    },
+    {
+      "id": "app_third_party_notices",
+      "context": "AboutView.swift: Third-Party Notices",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Third-Party Notices",
+        "zh-Hans": "第三方声明",
+        "ja": "サードパーティの表記"
+      }
+    },
+    {
+      "id": "app_privacy",
+      "context": "AboutView.swift: Privacy",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Privacy",
+        "zh-Hans": "隐私",
+        "ja": "プライバシー"
+      }
+    },
+    {
+      "id": "app_privacy_policy",
+      "context": "AboutView.swift: Privacy Policy",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Privacy Policy",
+        "zh-Hans": "隐私政策",
+        "ja": "プライバシーポリシー"
+      }
+    },
+    {
+      "id": "app_about_open_source",
+      "context": "AboutView.swift: About & Open Source",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "About & Open Source",
+        "zh-Hans": "关于与开源信息",
+        "ja": "このアプリとオープンソース"
+      }
+    },
+    {
+      "id": "app_done",
+      "context": "AboutView.swift: Done",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Done",
+        "zh-Hans": "完成",
+        "ja": "完了"
+      }
+    },
+    {
+      "id": "app_license_text_is_unavailable",
+      "context": "AboutView.swift: License text is unavailable.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "License text is unavailable.",
+        "zh-Hans": "无法读取许可证正文。",
+        "ja": "ライセンス本文を読み込めません。"
+      }
+    },
+    {
+      "id": "app_burst_similar_scene",
+      "context": "DuplicateGallery.swift: Burst / Similar Scene",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Burst / Similar Scene",
+        "zh-Hans": "连拍／相似场景",
+        "ja": "連写／類似シーン"
+      }
+    },
+    {
+      "id": "app_similar_photos",
+      "context": "DuplicateGallery.swift: Similar photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Similar photos",
+        "zh-Hans": "相似照片",
+        "ja": "似ている写真"
+      }
+    },
+    {
+      "id": "app_possible_same_image",
+      "context": "DuplicateGallery.swift: Possible same image",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Possible same image",
+        "zh-Hans": "可能为同一图像",
+        "ja": "同じ画像の可能性"
+      }
+    },
+    {
+      "id": "photo_count",
+      "context": "DuplicateGallery.swift: {arg1} photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} photo",
+          "other": "{arg1} photos"
+        },
+        "zh-Hans": {
+          "other": "{arg1} 张照片"
+        },
+        "ja": {
+          "other": "{arg1}枚の写真"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_opens_the_duplicate_group_for_review",
+      "context": "DuplicateGallery.swift: Opens the duplicate group for review",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Opens the duplicate group for review",
+        "zh-Hans": "打开此组以核对照片",
+        "ja": "写真を確認するためにグループを開きます"
+      }
+    },
+    {
+      "id": "cleanup_pending_count",
+      "context": "Count of removal candidates; never the group keep selection. DuplicateGallery.swift: {arg1} selected",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} pending cleanup",
+          "other": "{arg1} pending cleanup"
+        },
+        "zh-Hans": {
+          "other": "{arg1} 张待清理"
+        },
+        "ja": {
+          "other": "{arg1}枚が整理待ち"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_arg1_selected_arg2_preview_unavailable",
+      "context": "Count of removal candidates; never the group keep selection. DuplicateGallery.swift: {arg1} selected, {arg2}, preview unavailable",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} pending cleanup, {arg2}, preview unavailable",
+        "zh-Hans": "{arg1} 张待清理，{arg2}，预览不可用",
+        "ja": "{arg1}枚が整理待ち、{arg2}、プレビューを表示できません"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_arg1_selected_preview_unavailable",
+      "context": "Count of removal candidates; never the group keep selection. DuplicateGallery.swift: {arg1} selected, preview unavailable",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} pending cleanup, preview unavailable",
+        "zh-Hans": "{arg1} 张待清理，预览不可用",
+        "ja": "{arg1}枚が整理待ち、プレビューを表示できません"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_arg1_preview_unavailable",
+      "context": "DuplicateGallery.swift: {arg1}, preview unavailable",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1}, preview unavailable",
+        "zh-Hans": "{arg1}，预览不可用",
+        "ja": "{arg1}、プレビューを表示できません"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_preview_unavailable",
+      "context": "DuplicateGallery.swift: Preview unavailable",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Preview unavailable",
+        "zh-Hans": "预览不可用",
+        "ja": "プレビューを表示できません"
+      }
+    },
+    {
+      "id": "app_arg1_selected_arg2",
+      "context": "Count of removal candidates; never the group keep selection. DuplicateGallery.swift: {arg1} selected, {arg2}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} pending cleanup, {arg2}",
+        "zh-Hans": "{arg1} 张待清理，{arg2}",
+        "ja": "{arg1}枚が整理待ち、{arg2}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_arg1_kept_arg2_pending_cleanup",
+      "context": "GroupReviewView.swift: {arg1} kept · {arg2} pending cleanup",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} kept · {arg2} pending cleanup",
+        "zh-Hans": "保留 {arg1} 张 · {arg2} 张待清理",
+        "ja": "{arg1}枚を残す · {arg2}枚が整理待ち"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_cross_side_evidence_only_unmatched_members_remain_kept",
+      "context": "GroupReviewView.swift: Cross-side evidence only; unmatched members remain kept.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cross-side evidence only; unmatched members remain kept.",
+        "zh-Hans": "仅采用两侧之间的匹配依据；没有匹配依据的成员仍会保留。",
+        "ja": "比較の根拠は両側間の一致のみです。一致を確認できない写真は残します。"
+      }
+    },
+    {
+      "id": "app_review_evidence",
+      "context": "GroupReviewView.swift: Review Evidence",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review Evidence",
+        "zh-Hans": "核对依据",
+        "ja": "確認の根拠"
+      }
+    },
+    {
+      "id": "app_group_actions",
+      "context": "GroupReviewView.swift: Group Actions",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Group Actions",
+        "zh-Hans": "本组操作",
+        "ja": "グループの操作"
+      }
+    },
+    {
+      "id": "app_zoom_in",
+      "context": "GroupReviewView.swift: Zoom In",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Zoom In",
+        "zh-Hans": "放大",
+        "ja": "拡大"
+      }
+    },
+    {
+      "id": "app_reset_zoom",
+      "context": "GroupReviewView.swift: Reset Zoom",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Reset Zoom",
+        "zh-Hans": "复位缩放",
+        "ja": "拡大をリセット"
+      }
+    },
+    {
+      "id": "app_sync_zoom",
+      "context": "GroupReviewView.swift: Sync Zoom",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Sync Zoom",
+        "zh-Hans": "同步放大",
+        "ja": "拡大を同期"
+      }
+    },
+    {
+      "id": "app_keep_entire_group",
+      "context": "GroupReviewView.swift: Keep Entire Group",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Keep Entire Group",
+        "zh-Hans": "保留整组",
+        "ja": "グループ全体を残す"
+      }
+    },
+    {
+      "id": "app_undo_group_decision",
+      "context": "GroupReviewView.swift: Undo Group Decision",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Undo Group Decision",
+        "zh-Hans": "撤销本组决定",
+        "ja": "このグループの判断を取り消す"
+      }
+    },
+    {
+      "id": "app_delete_all_unavailable_arg1",
+      "context": "GroupReviewView.swift: Delete All unavailable: {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Delete All unavailable: {arg1}",
+        "zh-Hans": "无法整组清理：{arg1}",
+        "ja": "すべて整理できません：{arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_similar_photos_check_differences_before_confirming",
+      "context": "GroupReviewView.swift: Similar photos · Check differences before confirming.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Similar photos · Check differences before confirming.",
+        "zh-Hans": "相似照片 · 确认前请核对差异。",
+        "ja": "似ている写真 · 確定前に違いを確認してください。"
+      }
+    },
+    {
+      "id": "app_possible_matches_compare_details_before_confirming",
+      "context": "GroupReviewView.swift: Possible matches · Compare details before confirming.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Possible matches · Compare details before confirming.",
+        "zh-Hans": "可能匹配 · 确认前请核对细节。",
+        "ja": "一致の可能性 · 確定前に細部を確認してください。"
+      }
+    },
+    {
+      "id": "app_skip",
+      "context": "GroupReviewView.swift: Skip",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Skip",
+        "zh-Hans": "稍后处理",
+        "ja": "あとで"
+      }
+    },
+    {
+      "id": "app_confirm",
+      "context": "GroupReviewView.swift: Confirm",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Confirm",
+        "zh-Hans": "确认本组",
+        "ja": "確定"
+      }
+    },
+    {
+      "id": "app_adds_the_entire_group_to_pending_cleanup",
+      "context": "GroupReviewView.swift: Adds the entire group to pending cleanup",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Adds the entire group to pending cleanup",
+        "zh-Hans": "将整组加入待清理候选",
+        "ja": "グループ全体を整理待ちに追加します"
+      }
+    },
+    {
+      "id": "app_keeps_the_selected_photo_and_queues_removable_copies",
+      "context": "GroupReviewView.swift: Keeps the selected photo and queues removable copies",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Keeps the selected photo and queues removable copies",
+        "zh-Hans": "保留选中的照片，并将可移除副本加入待清理候选",
+        "ja": "選んだ写真を残し、移動できるコピーを整理待ちに追加します"
+      }
+    },
+    {
+      "id": "app_delete_all",
+      "context": "GroupReviewView.swift: Delete All",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Delete All",
+        "zh-Hans": "整组清理",
+        "ja": "すべて整理"
+      }
+    },
+    {
+      "id": "app_on",
+      "context": "GroupReviewView.swift: On",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "On",
+        "zh-Hans": "开启",
+        "ja": "オン"
+      }
+    },
+    {
+      "id": "app_off",
+      "context": "GroupReviewView.swift: Off",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Off",
+        "zh-Hans": "关闭",
+        "ja": "オフ"
+      }
+    },
+    {
+      "id": "app_previews_removing_every_photo_in_this_group",
+      "context": "GroupReviewView.swift: Previews removing every photo in this group",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Previews removing every photo in this group",
+        "zh-Hans": "预览移除此组全部照片的方案",
+        "ja": "このグループの全写真を移動する内容をプレビューします"
+      }
+    },
+    {
+      "id": "app_photo_arg1",
+      "context": "GroupReviewView.swift: Photo {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photo {arg1}",
+        "zh-Hans": "照片 {arg1}",
+        "ja": "写真{arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_arg1_recommended_to_keep",
+      "context": "GroupReviewView.swift: {arg1}, recommended to keep",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1}, recommended to keep",
+        "zh-Hans": "{arg1}，建议保留",
+        "ja": "{arg1}、残すことを推奨"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_locked",
+      "context": "GroupReviewView.swift: Locked",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Locked",
+        "zh-Hans": "已锁定",
+        "ja": "ロック済み"
+      }
+    },
+    {
+      "id": "app_read_only_source",
+      "context": "GroupReviewView.swift: Read-only Source",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Read-only Source",
+        "zh-Hans": "只读来源",
+        "ja": "読み取り専用ソース"
+      }
+    },
+    {
+      "id": "app_download_and_rescan_this_photo",
+      "context": "GroupReviewView.swift: Download and Rescan This Photo",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Download and Rescan This Photo",
+        "zh-Hans": "下载并重新扫描此照片",
+        "ja": "この写真をダウンロードして再スキャン"
+      }
+    },
+    {
+      "id": "app_unlock_photo",
+      "context": "GroupReviewView.swift: Unlock Photo",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Unlock Photo",
+        "zh-Hans": "解锁照片",
+        "ja": "写真のロックを解除"
+      }
+    },
+    {
+      "id": "app_lock_photo",
+      "context": "GroupReviewView.swift: Lock Photo",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Lock Photo",
+        "zh-Hans": "锁定照片",
+        "ja": "写真をロック"
+      }
+    },
+    {
+      "id": "app_zoom_or_reset",
+      "context": "GroupReviewView.swift: Zoom or Reset",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Zoom or Reset",
+        "zh-Hans": "放大或复位",
+        "ja": "拡大またはリセット"
+      }
+    },
+    {
+      "id": "app_photo_details_unavailable",
+      "context": "GroupReviewView.swift: Photo details unavailable",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photo details unavailable",
+        "zh-Hans": "照片详情不可用",
+        "ja": "写真の詳細を取得できません"
+      }
+    },
+    {
+      "id": "app_locked_must_be_kept",
+      "context": "GroupReviewView.swift: Locked, must be kept",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Locked, must be kept",
+        "zh-Hans": "已锁定，必须保留",
+        "ja": "ロック済み、必ず残します"
+      }
+    },
+    {
+      "id": "app_read_only_must_be_kept",
+      "context": "GroupReviewView.swift: Read-only, must be kept",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Read-only, must be kept",
+        "zh-Hans": "只读，必须保留",
+        "ja": "読み取り専用、必ず残します"
+      }
+    },
+    {
+      "id": "app_marked_for_removal",
+      "context": "GroupReviewView.swift: Marked for removal",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Marked for removal",
+        "zh-Hans": "已标记待移除",
+        "ja": "移動候補に指定済み"
+      }
+    },
+    {
+      "id": "review_photo_selected_to_keep",
+      "context": "The user-selected photo to KEEP in group review. Not a removal candidate and not automatically confirmed.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Selected",
+        "zh-Hans": "已选保留",
+        "ja": "残す写真に選択"
+      }
+    },
+    {
+      "id": "app_recommended",
+      "context": "GroupReviewView.swift: Recommended",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Recommended",
+        "zh-Hans": "建议保留",
+        "ja": "推奨（残す）"
+      }
+    },
+    {
+      "id": "app_unknown_format",
+      "context": "GroupReviewView.swift: Unknown format",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Unknown format",
+        "zh-Hans": "格式未知",
+        "ja": "形式不明"
+      }
+    },
+    {
+      "id": "app_size_unknown",
+      "context": "GroupReviewView.swift: Size unknown",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Size unknown",
+        "zh-Hans": "大小未知",
+        "ja": "サイズ不明"
+      }
+    },
+    {
+      "id": "app_resolution_unknown",
+      "context": "GroupReviewView.swift: Resolution unknown",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Resolution unknown",
+        "zh-Hans": "分辨率未知",
+        "ja": "解像度不明"
+      }
+    },
+    {
+      "id": "app_duplicates",
+      "context": "LibraryView.swift: Duplicates",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Duplicates",
+        "zh-Hans": "重复照片",
+        "ja": "重複写真"
+      }
+    },
+    {
+      "id": "app_settings",
+      "context": "LibraryView.swift: Settings",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Settings",
+        "zh-Hans": "设置",
+        "ja": "設定"
+      }
+    },
+    {
+      "id": "app_ok",
+      "context": "LibraryView.swift: OK",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "OK",
+        "zh-Hans": "好",
+        "ja": "OK"
+      }
+    },
+    {
+      "id": "app_group_arg1_of_arg2",
+      "context": "LibraryView.swift: Group {arg1} of {arg2}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Group {arg1} of {arg2}",
+        "zh-Hans": "第 {arg1} 组，共 {arg2} 组",
+        "ja": "{arg2}グループ中{arg1}番目"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_review_group",
+      "context": "LibraryView.swift: Review Group",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review Group",
+        "zh-Hans": "核对此组",
+        "ja": "グループを確認"
+      }
+    },
+    {
+      "id": "app_arg1_of_arg2_groups_decided",
+      "context": "LibraryView.swift: {arg1} of {arg2} groups decided.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} of {arg2} groups decided.",
+        "zh-Hans": "已决定 {arg1} 组，共 {arg2} 组。",
+        "ja": "{arg2}グループ中{arg1}グループを判断済み。"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_close_review",
+      "context": "LibraryView.swift: Close Review",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Close Review",
+        "zh-Hans": "关闭核对",
+        "ja": "確認を閉じる"
+      }
+    },
+    {
+      "id": "app_arg1_processed_arg2_skipped_arg3_failed_arg4_unfinished",
+      "context": "LibraryView.swift: {arg1} processed · {arg2} skipped · {arg3} failed · {arg4} unfinished",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} processed · {arg2} skipped · {arg3} failed · {arg4} unfinished",
+        "zh-Hans": "已处理 {arg1} · 已跳过 {arg2} · 失败 {arg3} · 未完成 {arg4}",
+        "ja": "処理済み{arg1} · スキップ{arg2} · 失敗{arg3} · 未完了{arg4}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        },
+        {
+          "name": "arg3",
+          "type": "integer"
+        },
+        {
+          "name": "arg4",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_scan_cancelled_before_enumeration_finished_remaining_count_unknown",
+      "context": "LibraryView.swift: Scan cancelled before enumeration finished. Remaining count unknown.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scan cancelled before enumeration finished. Remaining count unknown.",
+        "zh-Hans": "枚举完成前已取消扫描，剩余数量未知。",
+        "ja": "一覧取得の完了前にスキャンを中止しました。残りの件数は不明です。"
+      }
+    },
+    {
+      "id": "app_preparing_scan",
+      "context": "LibraryView.swift: Preparing scan…",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Preparing scan…",
+        "zh-Hans": "正在准备扫描…",
+        "ja": "スキャンを準備中…"
+      }
+    },
+    {
+      "id": "app_cancel_download",
+      "context": "LibraryView.swift: Cancel Download",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cancel Download",
+        "zh-Hans": "取消下载",
+        "ja": "ダウンロードを中止"
+      }
+    },
+    {
+      "id": "app_cancel_scan",
+      "context": "LibraryView.swift: Cancel Scan",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cancel Scan",
+        "zh-Hans": "取消扫描",
+        "ja": "スキャンを中止"
+      }
+    },
+    {
+      "id": "app_scan",
+      "context": "LibraryView.swift: Scan",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scan",
+        "zh-Hans": "扫描",
+        "ja": "スキャン"
+      }
+    },
+    {
+      "id": "app_scan_again",
+      "context": "LibraryView.swift: Scan Again",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scan Again",
+        "zh-Hans": "重新扫描",
+        "ja": "再スキャン"
+      }
+    },
+    {
+      "id": "app_confirm_cleanup_arg1",
+      "context": "LibraryView.swift: Confirm Cleanup ({arg1})",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Confirm Cleanup ({arg1})",
+        "zh-Hans": "确认清理（{arg1}）",
+        "ja": "整理内容を確認（{arg1}）"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_moving_selected_photos",
+      "context": "LibraryView.swift: Moving Selected Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Moving Selected Photos",
+        "zh-Hans": "正在移动所选照片",
+        "ja": "選択した写真を移動中"
+      }
+    },
+    {
+      "id": "app_scanning_photos",
+      "context": "LibraryView.swift: Scanning Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scanning Photos",
+        "zh-Hans": "正在扫描照片",
+        "ja": "写真をスキャン中"
+      }
+    },
+    {
+      "id": "app_updating_scan_results",
+      "context": "LibraryView.swift: Updating Scan Results",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Updating Scan Results",
+        "zh-Hans": "正在更新扫描结果",
+        "ja": "スキャン結果を更新中"
+      }
+    },
+    {
+      "id": "app_duplicates_will_be_ready_to_review_when_the_scan_finishes",
+      "context": "LibraryView.swift: Duplicates will be ready to review when the scan finishes.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Duplicates will be ready to review when the scan finishes.",
+        "zh-Hans": "扫描结束后即可核对重复照片。",
+        "ja": "スキャン終了後に重複写真を確認できます。"
+      }
+    },
+    {
+      "id": "app_choose_scan_sources",
+      "context": "LibraryView.swift: Choose Scan Sources",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose Scan Sources",
+        "zh-Hans": "选择扫描来源",
+        "ja": "スキャン元を選択"
+      }
+    },
+    {
+      "id": "app_enable_photos_or_add_a_folder_to_start_scanning",
+      "context": "LibraryView.swift: Enable Photos or add a folder to start scanning.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Enable Photos or add a folder to start scanning.",
+        "zh-Hans": "启用照片图库或添加文件夹以开始扫描。",
+        "ja": "写真ライブラリを有効にするか、フォルダを追加してスキャンを開始してください。"
+      }
+    },
+    {
+      "id": "app_configure_scan_sources",
+      "context": "LibraryView.swift: Configure Scan Sources",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Configure Scan Sources",
+        "zh-Hans": "配置扫描来源",
+        "ja": "スキャン元を設定"
+      }
+    },
+    {
+      "id": "app_the_selected_sources_or_their_contents_changed",
+      "context": "LibraryView.swift: The selected sources or their contents changed.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The selected sources or their contents changed.",
+        "zh-Hans": "所选来源或其内容已发生变化。",
+        "ja": "選択したソースまたはその内容が変更されました。"
+      }
+    },
+    {
+      "id": "app_ready_to_scan",
+      "context": "LibraryView.swift: Ready to Scan",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Ready to Scan",
+        "zh-Hans": "可以开始扫描",
+        "ja": "スキャンの準備ができました"
+      }
+    },
+    {
+      "id": "app_no_similar_photos_found",
+      "context": "LibraryView.swift: No Similar Photos Found",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "No Similar Photos Found",
+        "zh-Hans": "未找到相似照片",
+        "ja": "似ている写真は見つかりませんでした"
+      }
+    },
+    {
+      "id": "app_no_duplicates_found",
+      "context": "LibraryView.swift: No Duplicates Found",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "No Duplicates Found",
+        "zh-Hans": "未找到重复照片",
+        "ja": "重複写真は見つかりませんでした"
+      }
+    },
+    {
+      "id": "app_review_1_scan_issue",
+      "context": "LibraryView.swift: Review 1 Scan Issue",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review 1 Scan Issue",
+        "zh-Hans": "查看 1 项扫描问题",
+        "ja": "スキャンの問題を1件確認"
+      }
+    },
+    {
+      "id": "app_review_arg1_scan_issues",
+      "context": "LibraryView.swift: Review {arg1} Scan Issues",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "Review {arg1} Scan Issue",
+          "other": "Review {arg1} Scan Issues"
+        },
+        "zh-Hans": {
+          "other": "查看 {arg1} 项扫描问题"
+        },
+        "ja": {
+          "other": "スキャンの問題を{arg1}件確認"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_review_collection",
+      "context": "LibraryView.swift: Review Collection",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review Collection",
+        "zh-Hans": "核对队列",
+        "ja": "確認する種類"
+      }
+    },
+    {
+      "id": "app_similar_photos_caption",
+      "context": "LibraryView.swift: Similar Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Similar Photos",
+        "zh-Hans": "相似照片",
+        "ja": "似ている写真"
+      }
+    },
+    {
+      "id": "app_find_burst_frames_and_similar_scenes_in_a_separate_review_queue_all_cleanup_requires_your_confirmation",
+      "context": "LibraryView.swift: Find burst frames and similar scenes in a separate review queue. All cleanup requires your confirmation.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Find burst frames and similar scenes in a separate review queue. All cleanup requires your confirmation.",
+        "zh-Hans": "在独立队列中查找连拍和相似场景。所有清理均需你确认。",
+        "ja": "連写や類似シーンを専用の一覧で確認します。整理には必ず確認が必要です。"
+      }
+    },
+    {
+      "id": "app_scan_similar_photos",
+      "context": "LibraryView.swift: Scan Similar Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scan Similar Photos",
+        "zh-Hans": "扫描相似照片",
+        "ja": "似ている写真をスキャン"
+      }
+    },
+    {
+      "id": "app_protection_unavailable_cleanup_disabled",
+      "context": "LibraryView.swift: Protection unavailable · Cleanup disabled",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Protection unavailable · Cleanup disabled",
+        "zh-Hans": "保护信息不可用 · 清理已停用",
+        "ja": "保護情報を取得できません · 整理は無効です"
+      }
+    },
+    {
+      "id": "app_arg1_of_arg2_groups_shown_arg3",
+      "context": "LibraryView.swift: {arg1} of {arg2} groups shown · {arg3}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} of {arg2} groups shown · {arg3}",
+        "zh-Hans": "显示 {arg1}／{arg2} 组 · {arg3}",
+        "ja": "{arg2}グループ中{arg1}グループを表示 · {arg3}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        },
+        {
+          "name": "arg3",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_no_similar_scenes_found_in_this_scan",
+      "context": "LibraryView.swift: No similar scenes found in this scan.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "No similar scenes found in this scan.",
+        "zh-Hans": "此次扫描未找到相似场景。",
+        "ja": "今回のスキャンでは類似シーンは見つかりませんでした。"
+      }
+    },
+    {
+      "id": "app_no_duplicates_found_in_this_scan",
+      "context": "LibraryView.swift: No duplicates found in this scan.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "No duplicates found in this scan.",
+        "zh-Hans": "此次扫描未找到重复照片。",
+        "ja": "今回のスキャンでは重複写真は見つかりませんでした。"
+      }
+    },
+    {
+      "id": "app_no_groups_match_these_filters",
+      "context": "LibraryView.swift: No groups match these filters.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "No groups match these filters.",
+        "zh-Hans": "没有符合筛选条件的组。",
+        "ja": "条件に合うグループはありません。"
+      }
+    },
+    {
+      "id": "app_clear_filters",
+      "context": "LibraryView.swift: Clear Filters",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Clear Filters",
+        "zh-Hans": "清除筛选",
+        "ja": "絞り込みを解除"
+      }
+    },
+    {
+      "id": "app_continue_review",
+      "context": "LibraryView.swift: Continue Review",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Continue Review",
+        "zh-Hans": "继续核对",
+        "ja": "確認を続ける"
+      }
+    },
+    {
+      "id": "app_review_options",
+      "context": "LibraryView.swift: Review Options",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review Options",
+        "zh-Hans": "核对选项",
+        "ja": "確認オプション"
+      }
+    },
+    {
+      "id": "app_review_ten_groups",
+      "context": "LibraryView.swift: Review Ten Groups",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review Ten Groups",
+        "zh-Hans": "核对十组",
+        "ja": "10グループを確認"
+      }
+    },
+    {
+      "id": "app_filter_and_sort",
+      "context": "LibraryView.swift: Filter and Sort",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Filter and Sort",
+        "zh-Hans": "筛选与排序",
+        "ja": "絞り込みと並べ替え"
+      }
+    },
+    {
+      "id": "app_scan_complete",
+      "context": "LibraryView.swift: Scan Complete",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scan Complete",
+        "zh-Hans": "扫描完成",
+        "ja": "スキャン完了"
+      }
+    },
+    {
+      "id": "app_arg1_processed_arg2_skipped_arg3_failed_0_unfinished",
+      "context": "LibraryView.swift: {arg1} processed · {arg2} skipped · {arg3} failed · 0 unfinished",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} processed · {arg2} skipped · {arg3} failed · 0 unfinished",
+        "zh-Hans": "已处理 {arg1} · 已跳过 {arg2} · 失败 {arg3} · 未完成 0",
+        "ja": "処理済み{arg1} · スキップ{arg2} · 失敗{arg3} · 未完了0"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        },
+        {
+          "name": "arg3",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_the_photo_library_changed_scan_again_before_cleanup",
+      "context": "LibraryView.swift: The photo library changed. Scan again before cleanup.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "The photo library changed. Scan again before cleanup.",
+        "zh-Hans": "照片图库已变化，清理前请重新扫描。",
+        "ja": "写真ライブラリが変更されました。整理する前に再スキャンしてください。"
+      }
+    },
+    {
+      "id": "app_arg1_photos_checked",
+      "context": "LibraryView.swift: {arg1} photos checked",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} photo checked",
+          "other": "{arg1} photos checked"
+        },
+        "zh-Hans": {
+          "other": "已检查 {arg1} 张照片"
+        },
+        "ja": {
+          "other": "{arg1}枚の写真を確認済み"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_1_duplicate_group_to_review",
+      "context": "LibraryView.swift: 1 duplicate group to review",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "1 duplicate group to review",
+        "zh-Hans": "1 组重复照片待核对",
+        "ja": "確認待ちの重複グループが1件あります"
+      }
+    },
+    {
+      "id": "app_arg1_duplicate_groups_to_review",
+      "context": "LibraryView.swift: {arg1} duplicate groups to review",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} duplicate group to review",
+          "other": "{arg1} duplicate groups to review"
+        },
+        "zh-Hans": {
+          "other": "{arg1} 组重复照片待核对"
+        },
+        "ja": {
+          "other": "確認待ちの重複グループが{arg1}件あります"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_reading_photos",
+      "context": "LibraryView.swift: Reading photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Reading photos",
+        "zh-Hans": "正在读取照片",
+        "ja": "写真を読み込み中"
+      }
+    },
+    {
+      "id": "app_comparing_photos",
+      "context": "LibraryView.swift: Comparing photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Comparing photos",
+        "zh-Hans": "正在比较照片",
+        "ja": "写真を比較中"
+      }
+    },
+    {
+      "id": "app_finding_similar_scenes",
+      "context": "LibraryView.swift: Finding similar scenes",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Finding similar scenes",
+        "zh-Hans": "正在查找相似场景",
+        "ja": "類似シーンを検索中"
+      }
+    },
+    {
+      "id": "app_downloading_from_icloud",
+      "context": "LibraryView.swift: Downloading from iCloud",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Downloading from iCloud",
+        "zh-Hans": "正在从 iCloud 下载",
+        "ja": "iCloudからダウンロード中"
+      }
+    },
+    {
+      "id": "app_icloud_download_cancelled",
+      "context": "LibraryView.swift: iCloud Download Cancelled",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "iCloud Download Cancelled",
+        "zh-Hans": "iCloud 下载已取消",
+        "ja": "iCloudのダウンロードを中止しました"
+      }
+    },
+    {
+      "id": "app_icloud_download_incomplete",
+      "context": "LibraryView.swift: iCloud Download Incomplete",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "iCloud Download Incomplete",
+        "zh-Hans": "iCloud 下载未完成",
+        "ja": "iCloudのダウンロードは未完了です"
+      }
+    },
+    {
+      "id": "app_icloud_download_finished",
+      "context": "LibraryView.swift: iCloud Download Finished",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "iCloud Download Finished",
+        "zh-Hans": "iCloud 下载已结束",
+        "ja": "iCloudのダウンロードが終了しました"
+      }
+    },
+    {
+      "id": "app_arg1_available_arg2_failed_arg3_pending",
+      "context": "LibraryView.swift: {arg1} available · {arg2} failed · {arg3} pending",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} available · {arg2} failed · {arg3} pending",
+        "zh-Hans": "可用 {arg1} · 失败 {arg2} · 待处理 {arg3}",
+        "ja": "利用可能{arg1} · 失敗{arg2} · 未処理{arg3}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        },
+        {
+          "name": "arg3",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_arg1_pending_photos_are_outside_the_current_filters_all_confirmed_candidates_are_shown_here",
+      "context": "LibraryView.swift: {arg1} pending photos are outside the current filters. All confirmed candidates are shown here.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} pending photo is outside the current filters. All confirmed candidates are shown here.",
+          "other": "{arg1} pending photos are outside the current filters. All confirmed candidates are shown here."
+        },
+        "zh-Hans": {
+          "other": "{arg1} 张待清理照片在当前筛选范围之外。这里显示全部已确认候选。"
+        },
+        "ja": {
+          "other": "整理待ちの写真{arg1}枚は現在の絞り込み対象外です。ここには確定済みの候補をすべて表示します。"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_confirm_cleanup",
+      "context": "LibraryView.swift: Confirm Cleanup",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Confirm Cleanup",
+        "zh-Hans": "确认清理",
+        "ja": "整理内容の確認"
+      }
+    },
+    {
+      "id": "app_cancel",
+      "context": "LibraryView.swift: Cancel",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cancel",
+        "zh-Hans": "取消",
+        "ja": "キャンセル"
+      }
+    },
+    {
+      "id": "app_move_selected",
+      "context": "LibraryView.swift: Move Selected",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Move Selected",
+        "zh-Hans": "移动所选项目",
+        "ja": "選択項目を移動"
+      }
+    },
+    {
+      "id": "app_download_pending_photos_from_icloud",
+      "context": "LibraryView.swift: Download Pending Photos from iCloud",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Download Pending Photos from iCloud",
+        "zh-Hans": "从 iCloud 下载待处理照片",
+        "ja": "iCloudから未処理の写真をダウンロード"
+      }
+    },
+    {
+      "id": "app_arg1_photos_pending",
+      "context": "LibraryView.swift: {arg1} photos pending",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} photo pending",
+          "other": "{arg1} photos pending"
+        },
+        "zh-Hans": {
+          "other": "{arg1} 张照片待处理"
+        },
+        "ja": {
+          "other": "{arg1}枚の写真が未処理"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_skipped_photos",
+      "context": "LibraryView.swift: Skipped Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Skipped Photos",
+        "zh-Hans": "已跳过的照片",
+        "ja": "スキップした写真"
+      }
+    },
+    {
+      "id": "app_icloud_photo_skipped_by_policy",
+      "context": "LibraryView.swift: iCloud photo skipped by policy",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "iCloud photo skipped by policy",
+        "zh-Hans": "按设置跳过了 iCloud 照片",
+        "ja": "設定に従ってiCloudの写真をスキップしました"
+      }
+    },
+    {
+      "id": "app_photos",
+      "context": "LibraryView.swift: Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photos",
+        "zh-Hans": "照片图库",
+        "ja": "写真ライブラリ"
+      }
+    },
+    {
+      "id": "app_scan_issues",
+      "context": "LibraryView.swift: Scan Issues",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scan Issues",
+        "zh-Hans": "扫描问题",
+        "ja": "スキャンの問題"
+      }
+    },
+    {
+      "id": "app_unavailable",
+      "context": "LibraryView.swift: Unavailable",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Unavailable",
+        "zh-Hans": "无法访问",
+        "ja": "アクセスできません"
+      }
+    },
+    {
+      "id": "app_changed_during_scan",
+      "context": "LibraryView.swift: Changed during scan",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Changed during scan",
+        "zh-Hans": "扫描期间已变化",
+        "ja": "スキャン中に変更されました"
+      }
+    },
+    {
+      "id": "app_unreadable_image",
+      "context": "LibraryView.swift: Unreadable image",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Unreadable image",
+        "zh-Hans": "图像无法读取",
+        "ja": "画像を読み込めません"
+      }
+    },
+    {
+      "id": "app_unsupported_image",
+      "context": "LibraryView.swift: Unsupported image",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Unsupported image",
+        "zh-Hans": "不支持的图像",
+        "ja": "未対応の画像"
+      }
+    },
+    {
+      "id": "app_skipped_by_icloud_policy",
+      "context": "LibraryView.swift: Skipped by iCloud policy",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Skipped by iCloud policy",
+        "zh-Hans": "按 iCloud 策略跳过",
+        "ja": "iCloudの設定によりスキップ"
+      }
+    },
+    {
+      "id": "app_icloud_download_required",
+      "context": "LibraryView.swift: iCloud download required",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "iCloud download required",
+        "zh-Hans": "需要从 iCloud 下载",
+        "ja": "iCloudからのダウンロードが必要です"
+      }
+    },
+    {
+      "id": "app_icloud_download_failed",
+      "context": "LibraryView.swift: iCloud download failed",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "iCloud download failed",
+        "zh-Hans": "iCloud 下载失败",
+        "ja": "iCloudのダウンロードに失敗しました"
+      }
+    },
+    {
+      "id": "app_scene_analysis_could_not_finish",
+      "context": "LibraryView.swift: Scene analysis could not finish",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scene analysis could not finish",
+        "zh-Hans": "场景分析未能完成",
+        "ja": "シーンの解析を完了できませんでした"
+      }
+    },
+    {
+      "id": "app_will_remove_arg1",
+      "context": "LibraryView.swift: Will Remove ({arg1})",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Will Remove ({arg1})",
+        "zh-Hans": "待移除（{arg1}）",
+        "ja": "移動予定（{arg1}）"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_delete_entire_group_arg1_photos",
+      "context": "LibraryView.swift: Delete entire group · {arg1} photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "Delete entire group · {arg1} photo",
+          "other": "Delete entire group · {arg1} photos"
+        },
+        "zh-Hans": {
+          "other": "整组清理 · {arg1} 张照片"
+        },
+        "ja": {
+          "other": "グループ全体を整理 · {arg1}枚の写真"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_possible_same_image_check_differences_before_confirming",
+      "context": "LibraryView.swift: Possible same image · Check differences before confirming.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Possible same image · Check differences before confirming.",
+        "zh-Hans": "可能为同一图像 · 确认前请核对差异。",
+        "ja": "同じ画像の可能性 · 確定前に違いを確認してください。"
+      }
+    },
+    {
+      "id": "app_will_remove",
+      "context": "LibraryView.swift: Will Remove",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Will Remove",
+        "zh-Hans": "待移除",
+        "ja": "移動予定"
+      }
+    },
+    {
+      "id": "app_keep",
+      "context": "LibraryView.swift: Keep",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Keep",
+        "zh-Hans": "保留",
+        "ja": "残す"
+      }
+    },
+    {
+      "id": "app_preview",
+      "context": "LibraryView.swift: Preview",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Preview",
+        "zh-Hans": "预览",
+        "ja": "プレビュー"
+      }
+    },
+    {
+      "id": "app_recently_deleted",
+      "context": "LibraryView.swift: Recently Deleted",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Recently Deleted",
+        "zh-Hans": "最近删除",
+        "ja": "最近削除した項目"
+      }
+    },
+    {
+      "id": "app_trash",
+      "context": "LibraryView.swift: Trash",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Trash",
+        "zh-Hans": "废纸篓",
+        "ja": "ゴミ箱"
+      }
+    },
+    {
+      "id": "app_photo",
+      "context": "LibraryView.swift: Photo",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photo",
+        "zh-Hans": "照片",
+        "ja": "写真"
+      }
+    },
+    {
+      "id": "app_cleanup_finished",
+      "context": "LibraryView.swift: Cleanup Finished",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cleanup Finished",
+        "zh-Hans": "清理已完成",
+        "ja": "整理が完了しました"
+      }
+    },
+    {
+      "id": "app_no_photos_moved",
+      "context": "LibraryView.swift: No Photos Moved",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "No Photos Moved",
+        "zh-Hans": "未移动任何照片",
+        "ja": "移動した写真はありません"
+      }
+    },
+    {
+      "id": "app_cleanup_partially_completed",
+      "context": "LibraryView.swift: Cleanup Partially Completed",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cleanup Partially Completed",
+        "zh-Hans": "清理部分完成",
+        "ja": "整理が一部完了しました"
+      }
+    },
+    {
+      "id": "app_arg1_moved_arg2_skipped_arg3_failed",
+      "context": "LibraryView.swift: {arg1} moved · {arg2} skipped · {arg3} failed",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} moved · {arg2} skipped · {arg3} failed",
+        "zh-Hans": "已移动 {arg1} · 已跳过 {arg2} · 失败 {arg3}",
+        "ja": "移動済み{arg1} · スキップ{arg2} · 失敗{arg3}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        },
+        {
+          "name": "arg3",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_photos_not_moved",
+      "context": "LibraryView.swift: Photos Not Moved",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photos Not Moved",
+        "zh-Hans": "未移动的照片",
+        "ja": "移動できなかった写真"
+      }
+    },
+    {
+      "id": "app_photo_preview",
+      "context": "LibraryView.swift: Photo preview",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photo preview",
+        "zh-Hans": "照片预览",
+        "ja": "写真のプレビュー"
+      }
+    },
+    {
+      "id": "app_skipped",
+      "context": "LibraryView.swift: Skipped",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Skipped",
+        "zh-Hans": "已跳过",
+        "ja": "スキップ済み"
+      }
+    },
+    {
+      "id": "app_failed",
+      "context": "LibraryView.swift: Failed",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Failed",
+        "zh-Hans": "失败",
+        "ja": "失敗"
+      }
+    },
+    {
+      "id": "app_the_photo_could_not_be_moved_scan_again_to_retry",
+      "context": "LibraryView.swift: The photo could not be moved. Scan again to retry.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The photo could not be moved. Scan again to retry.",
+        "zh-Hans": "无法移动此照片，请重新扫描后重试。",
+        "ja": "この写真を移動できませんでした。再スキャンしてからやり直してください。"
+      }
+    },
+    {
+      "id": "app_choose_two_photos_to_compare_your_keep_choice_stays_unchanged",
+      "context": "PhotoDifferenceView.swift: Choose two photos to compare. Your keep choice stays unchanged.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose two photos to compare. Your keep choice stays unchanged.",
+        "zh-Hans": "选择两张照片进行比较，保留选择不会改变。",
+        "ja": "比較する写真を2枚選んでください。残す写真の選択は変わりません。"
+      }
+    },
+    {
+      "id": "app_reference",
+      "context": "PhotoDifferenceView.swift: Reference",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Reference",
+        "zh-Hans": "参照照片",
+        "ja": "比較元"
+      }
+    },
+    {
+      "id": "app_choose_photo",
+      "context": "PhotoDifferenceView.swift: Choose Photo",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose Photo",
+        "zh-Hans": "选择照片",
+        "ja": "写真を選択"
+      }
+    },
+    {
+      "id": "app_comparison",
+      "context": "PhotoDifferenceView.swift: Comparison",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Comparison",
+        "zh-Hans": "对照照片",
+        "ja": "比較先"
+      }
+    },
+    {
+      "id": "app_show_differences",
+      "context": "PhotoDifferenceView.swift: Show Differences",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Show Differences",
+        "zh-Hans": "显示差异",
+        "ja": "違いを表示"
+      }
+    },
+    {
+      "id": "app_refresh_differences",
+      "context": "PhotoDifferenceView.swift: Refresh Differences",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Refresh Differences",
+        "zh-Hans": "刷新差异",
+        "ja": "違いを更新"
+      }
+    },
+    {
+      "id": "app_comparing_previews",
+      "context": "PhotoDifferenceView.swift: Comparing previews…",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Comparing previews…",
+        "zh-Hans": "正在比较预览…",
+        "ja": "プレビューを比較中…"
+      }
+    },
+    {
+      "id": "app_cannot_reliably_show_differences",
+      "context": "PhotoDifferenceView.swift: Cannot reliably show differences",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cannot reliably show differences",
+        "zh-Hans": "无法可靠显示差异",
+        "ja": "違いを正確に表示できません"
+      }
+    },
+    {
+      "id": "app_display",
+      "context": "PhotoDifferenceView.swift: Display",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Display",
+        "zh-Hans": "显示方式",
+        "ja": "表示方法"
+      }
+    },
+    {
+      "id": "app_original",
+      "context": "PhotoDifferenceView.swift: Original",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Original",
+        "zh-Hans": "原图",
+        "ja": "元の画像"
+      }
+    },
+    {
+      "id": "app_differences",
+      "context": "PhotoDifferenceView.swift: Differences",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Differences",
+        "zh-Hans": "差异",
+        "ja": "違い"
+      }
+    },
+    {
+      "id": "app_no_significant_local_differences_at_this_preview_resolution",
+      "context": "PhotoDifferenceView.swift: No significant local differences at this preview resolution.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "No significant local differences at this preview resolution.",
+        "zh-Hans": "在此预览分辨率下未发现明显局部差异。",
+        "ja": "このプレビューの解像度では、目立つ局所的な違いは見つかりませんでした。"
+      }
+    },
+    {
+      "id": "app_1_local_change_region",
+      "context": "PhotoDifferenceView.swift: 1 Local Change Region",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "1 Local Change Region",
+        "zh-Hans": "1 处局部变化",
+        "ja": "局所的な変化が1か所"
+      }
+    },
+    {
+      "id": "app_arg1_local_change_regions",
+      "context": "PhotoDifferenceView.swift: {arg1} Local Change Regions",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} Local Change Region",
+          "other": "{arg1} Local Change Regions"
+        },
+        "zh-Hans": {
+          "other": "{arg1} 处局部变化"
+        },
+        "ja": {
+          "other": "局所的な変化が{arg1}か所"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_highlight_opacity",
+      "context": "PhotoDifferenceView.swift: Highlight Opacity",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Highlight Opacity",
+        "zh-Hans": "高亮透明度",
+        "ja": "強調表示の不透明度"
+      }
+    },
+    {
+      "id": "app_these_are_approximate_image_change_hints_from_previews_up_to_512_pixels_with_global_color_and_compression_noise_suppressed_small_details_can_be_missed_use_synchronized_zoom_in_the_group_to_inspect_originals_hints_do_not_change_matching_recommendations_or_cleanup_choices",
+      "context": "PhotoDifferenceView.swift: These are approximate image-change hints from previews up to 512 pixels, with global color and compression noise suppressed. Small details can be missed. Use synchronized zoom in the group to inspect originals. Hints do not change matching, recommendations or cleanup choices.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "These are approximate image-change hints from previews up to 512 pixels, with global color and compression noise suppressed. Small details can be missed. Use synchronized zoom in the group to inspect originals. Hints do not change matching, recommendations or cleanup choices.",
+        "zh-Hans": "这些是基于最长边不超过 512 像素的预览生成的近似图像变化提示，已抑制全局颜色变化和压缩噪声。细微差异可能漏检。请在组内同步放大检查原图。提示不改变匹配、推荐或清理选择。",
+        "ja": "長辺512ピクセル以下のプレビューから、全体的な色の変化と圧縮ノイズを抑えて検出した、おおよその画像の変化です。細部を見落とす場合があります。グループ内の同期拡大で元の画像を確認してください。この表示は一致判定、推奨、整理対象の選択に影響しません。"
+      }
+    },
+    {
+      "id": "app_compare_photos",
+      "context": "PhotoDifferenceView.swift: Compare Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Compare Photos",
+        "zh-Hans": "比较照片",
+        "ja": "写真を比較"
+      }
+    },
+    {
+      "id": "app_arg1_preview",
+      "context": "PhotoDifferenceView.swift: {arg1} preview",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1} preview",
+        "zh-Hans": "{arg1}预览",
+        "ja": "{arg1}のプレビュー"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_the_image_proportions_differ_crops_or_changed_viewpoints_require_manual_comparison",
+      "context": "PhotoDifferenceView.swift: The image proportions differ. Crops or changed viewpoints require manual comparison.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The image proportions differ. Crops or changed viewpoints require manual comparison.",
+        "zh-Hans": "图像比例不同。裁剪或视角变化需要人工比较。",
+        "ja": "画像の縦横比が異なります。切り抜きや視点の変化は手動で比較してください。"
+      }
+    },
+    {
+      "id": "app_there_is_not_enough_stable_detail_to_verify_alignment_inspect_the_photos_with_synchronized_zoom_in_the_group",
+      "context": "PhotoDifferenceView.swift: There is not enough stable detail to verify alignment. Inspect the photos with synchronized zoom in the group.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "There is not enough stable detail to verify alignment. Inspect the photos with synchronized zoom in the group.",
+        "zh-Hans": "稳定细节不足，无法验证对齐。请在组内同步放大核对照片。",
+        "ja": "位置合わせを検証できる安定した細部が不足しています。グループ内の同期拡大で確認してください。"
+      }
+    },
+    {
+      "id": "app_the_framing_or_image_details_do_not_agree_closely_enough_for_a_reliable_overlay_inspect_the_originals_manually",
+      "context": "PhotoDifferenceView.swift: The framing or image details do not agree closely enough for a reliable overlay. Inspect the originals manually.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The framing or image details do not agree closely enough for a reliable overlay. Inspect the originals manually.",
+        "zh-Hans": "构图或图像细节的一致程度不足，无法可靠叠加。请人工核对原图。",
+        "ja": "構図や細部が十分に一致しないため、正確に重ねて表示できません。元の画像を手動で確認してください。"
+      }
+    },
+    {
+      "id": "app_the_photos_or_their_scope_changed_return_to_the_overview_and_scan_again",
+      "context": "PhotoDifferenceView.swift: The photos or their scope changed. Return to the overview and scan again.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The photos or their scope changed. Return to the overview and scan again.",
+        "zh-Hans": "照片或扫描范围已变化，请返回概览重新扫描。",
+        "ja": "写真またはスキャン範囲が変更されました。一覧に戻って再スキャンしてください。"
+      }
+    },
+    {
+      "id": "app_a_local_preview_is_unavailable_download_and_rescan_from_the_group_menu_before_comparing_again",
+      "context": "PhotoDifferenceView.swift: A local preview is unavailable. Download and rescan from the group menu before comparing again.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "A local preview is unavailable. Download and rescan from the group menu before comparing again.",
+        "zh-Hans": "本地预览不可用。请从组内菜单下载并重新扫描，再进行比较。",
+        "ja": "ローカルのプレビューを取得できません。グループのメニューでダウンロードして再スキャンした後に比較してください。"
+      }
+    },
+    {
+      "id": "app_difference_preview_cancelled_try_again_when_the_photos_are_available",
+      "context": "PhotoDifferenceView.swift: Difference preview cancelled. Try again when the photos are available.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Difference preview cancelled. Try again when the photos are available.",
+        "zh-Hans": "差异预览已取消，请在照片可用后重试。",
+        "ja": "違いのプレビューを中止しました。写真を利用できる状態でやり直してください。"
+      }
+    },
+    {
+      "id": "app_cannot_read_or_verify_these_previews_return_to_the_group_and_check_access_before_trying_again",
+      "context": "PhotoDifferenceView.swift: Cannot read or verify these previews. Return to the group and check access before trying again.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cannot read or verify these previews. Return to the group and check access before trying again.",
+        "zh-Hans": "无法读取或验证这些预览。请返回组内，检查访问权限后重试。",
+        "ja": "プレビューを読み込むか検証することができません。グループに戻り、アクセスを確認してからやり直してください。"
+      }
+    },
+    {
+      "id": "app_at_least_one_photo_cannot_be_moved_from_its_source",
+      "context": "ReviewModel.swift: At least one photo cannot be moved from its source.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "At least one photo cannot be moved from its source.",
+        "zh-Hans": "至少有一张照片无法从其来源移除。",
+        "ja": "ソースから移動できない写真が少なくとも1枚あります。"
+      }
+    },
+    {
+      "id": "app_protection_could_not_be_loaded_cleanup_is_disabled_arg1",
+      "context": "ReviewModel.swift: Protection could not be loaded. Cleanup is disabled. {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Protection could not be loaded. Cleanup is disabled. {arg1}",
+        "zh-Hans": "无法载入保护信息，清理已停用。{arg1}",
+        "ja": "保護情報を読み込めないため、整理を無効にしています。{arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_a_saved_folder_is_unavailable_select_it_again_to_restore_access",
+      "context": "ReviewModel.swift: A saved folder is unavailable. Select it again to restore access.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "A saved folder is unavailable. Select it again to restore access.",
+        "zh-Hans": "已保存的某个文件夹无法访问，请重新选择以恢复访问权限。",
+        "ja": "保存済みのフォルダにアクセスできません。もう一度選択してアクセスを復元してください。"
+      }
+    },
+    {
+      "id": "app_allow_access_to_photos_in_system_settings_to_include_the_photo_library",
+      "context": "ReviewModel.swift: Allow access to Photos in System Settings to include the photo library.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Allow access to Photos in System Settings to include the photo library.",
+        "zh-Hans": "如需扫描照片图库，请在系统设置中允许访问照片。",
+        "ja": "写真ライブラリを対象に含めるには、システム設定で写真へのアクセスを許可してください。"
+      }
+    },
+    {
+      "id": "app_scan_cache_cleared_the_next_scan_will_read_all_photos_again",
+      "context": "ReviewModel.swift: Scan cache cleared. The next scan will read all photos again.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scan cache cleared. The next scan will read all photos again.",
+        "zh-Hans": "扫描缓存已清除，下次扫描将重新读取全部照片。",
+        "ja": "スキャンのキャッシュを消去しました。次回はすべての写真を読み直します。"
+      }
+    },
+    {
+      "id": "app_the_photo_library_changed_during_the_scan_scan_again_before_cleanup",
+      "context": "ReviewModel.swift: The photo library changed during the scan. Scan again before cleanup.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "The photo library changed during the scan. Scan again before cleanup.",
+        "zh-Hans": "扫描期间照片图库已变化，清理前请重新扫描。",
+        "ja": "スキャン中に写真ライブラリが変更されました。整理する前に再スキャンしてください。"
+      }
+    },
+    {
+      "id": "app_some_icloud_photos_are_still_unavailable_for_this_scan_open_scan_issues_to_review_the_results_and_retry",
+      "context": "ReviewModel.swift: Some iCloud photos are still unavailable for this scan. Open Scan Issues to review the results and retry.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Some iCloud photos are still unavailable for this scan. Open Scan Issues to review the results and retry.",
+        "zh-Hans": "此次扫描仍有部分 iCloud 照片不可用。请打开“扫描问题”查看结果并重试。",
+        "ja": "今回のスキャンでは利用できないiCloud写真が残っています。「スキャンの問題」で結果を確認し、やり直してください。"
+      }
+    },
+    {
+      "id": "app_folder",
+      "context": "ReviewModel.swift: Folder",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Folder",
+        "zh-Hans": "文件夹",
+        "ja": "フォルダ"
+      }
+    },
+    {
+      "id": "app_this_decision_was_not_saved_cleanup_is_disabled_arg1",
+      "context": "ReviewModel.swift: This decision was not saved. Cleanup is disabled. {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "This decision was not saved. Cleanup is disabled. {arg1}",
+        "zh-Hans": "本次决定未保存，清理已停用。{arg1}",
+        "ja": "この判断は保存されていません。整理を無効にしています。{arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_photos_or_group_evidence_changed_affected_decisions_need_review_again_locks_remain_protected",
+      "context": "ReviewModel.swift: Photos or group evidence changed. Affected decisions need review again; locks remain protected.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photos or group evidence changed. Affected decisions need review again; locks remain protected.",
+        "zh-Hans": "照片或分组依据已变化。受影响的决定需要重新核对，锁定仍受保护。",
+        "ja": "写真またはグループの根拠が変更されました。影響を受ける判断は再確認が必要です。ロックは引き続き保護されます。"
+      }
+    },
+    {
+      "id": "app_choose_a_valid_capture_date_range",
+      "context": "ReviewModel.swift: Choose a valid capture-date range.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose a valid capture-date range.",
+        "zh-Hans": "请选择有效的拍摄日期范围。",
+        "ja": "有効な撮影日の範囲を選択してください。"
+      }
+    },
+    {
+      "id": "app_choose_two_different_available_sources",
+      "context": "ReviewModel.swift: Choose two different available sources.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose two different available sources.",
+        "zh-Hans": "请选择两个不同且可用的来源。",
+        "ja": "利用できる異なるソースを2つ選択してください。"
+      }
+    },
+    {
+      "id": "app_read_only_protection_needs_a_successful_rescan",
+      "context": "ReviewModel.swift: Read-only protection needs a successful rescan. ",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Read-only protection needs a successful rescan. ",
+        "zh-Hans": "只读保护需要先成功重新扫描。 ",
+        "ja": "読み取り専用の保護には、再スキャンの正常終了が必要です。 "
+      }
+    },
+    {
+      "id": "app_needs_review",
+      "context": "ReviewModel.swift: Needs Review",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Needs Review",
+        "zh-Hans": "待核对",
+        "ja": "確認待ち"
+      }
+    },
+    {
+      "id": "app_later",
+      "context": "ReviewModel.swift: Later",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Later",
+        "zh-Hans": "稍后处理",
+        "ja": "あとで確認"
+      }
+    },
+    {
+      "id": "app_confirmed",
+      "context": "ReviewModel.swift: Confirmed",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Confirmed",
+        "zh-Hans": "已确认待清理",
+        "ja": "確定・整理待ち"
+      }
+    },
+    {
+      "id": "app_entire_group_kept",
+      "context": "ReviewModel.swift: Entire Group Kept",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Entire Group Kept",
+        "zh-Hans": "整组已保留",
+        "ja": "グループ全体を残す"
+      }
+    },
+    {
+      "id": "app_slide",
+      "context": "ReviewPager.swift: Slide",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Slide",
+        "zh-Hans": "滑动",
+        "ja": "スライド"
+      }
+    },
+    {
+      "id": "app_cover",
+      "context": "ReviewPager.swift: Cover",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cover",
+        "zh-Hans": "覆盖",
+        "ja": "カバー"
+      }
+    },
+    {
+      "id": "app_fade",
+      "context": "ReviewPager.swift: Fade",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Fade",
+        "zh-Hans": "淡入淡出",
+        "ja": "フェード"
+      }
+    },
+    {
+      "id": "app_none",
+      "context": "ReviewPager.swift: None",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "None",
+        "zh-Hans": "无",
+        "ja": "なし"
+      }
+    },
+    {
+      "id": "app_back_to_overview",
+      "context": "ReviewPager.swift: Back to Overview",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Back to Overview",
+        "zh-Hans": "返回概览",
+        "ja": "一覧に戻る"
+      }
+    },
+    {
+      "id": "app_previous_group",
+      "context": "ReviewPager.swift: Previous Group",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Previous Group",
+        "zh-Hans": "上一组",
+        "ja": "前のグループ"
+      }
+    },
+    {
+      "id": "app_next_group",
+      "context": "ReviewPager.swift: Next Group",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Next Group",
+        "zh-Hans": "下一组",
+        "ja": "次のグループ"
+      }
+    },
+    {
+      "id": "app_review_status",
+      "context": "ReviewToolsView.swift: Review Status",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review Status",
+        "zh-Hans": "核对状态",
+        "ja": "確認状況"
+      }
+    },
+    {
+      "id": "app_match_category",
+      "context": "ReviewToolsView.swift: Match Category",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Match Category",
+        "zh-Hans": "匹配类别",
+        "ja": "一致の種類"
+      }
+    },
+    {
+      "id": "app_all_categories",
+      "context": "ReviewToolsView.swift: All Categories",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "All Categories",
+        "zh-Hans": "全部类别",
+        "ja": "すべての種類"
+      }
+    },
+    {
+      "id": "app_source",
+      "context": "ReviewToolsView.swift: Source",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Source",
+        "zh-Hans": "来源",
+        "ja": "ソース"
+      }
+    },
+    {
+      "id": "app_all_sources",
+      "context": "ReviewToolsView.swift: All Sources",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "All Sources",
+        "zh-Hans": "全部来源",
+        "ja": "すべてのソース"
+      }
+    },
+    {
+      "id": "app_unavailable_source",
+      "context": "ReviewToolsView.swift: Unavailable Source",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Unavailable Source",
+        "zh-Hans": "不可用的来源",
+        "ja": "利用できないソース"
+      }
+    },
+    {
+      "id": "app_sort",
+      "context": "ReviewToolsView.swift: Sort",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Sort",
+        "zh-Hans": "排序",
+        "ja": "並べ替え"
+      }
+    },
+    {
+      "id": "app_dates_use_the_latest_known_capture_metadata_in_each_group_unknown_dates_stay_last_in_either_direction_size_sorting_uses_known_candidate_bytes_partial_sizes_are_lower_bounds",
+      "context": "ReviewToolsView.swift: Dates use the latest known capture metadata in each group. Unknown dates stay last in either direction. Size sorting uses known candidate bytes; partial sizes are lower bounds.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Dates use the latest known capture metadata in each group. Unknown dates stay last in either direction. Size sorting uses known candidate bytes; partial sizes are lower bounds.",
+        "zh-Hans": "日期采用每组最新的已知拍摄元数据。无论升序或降序，日期未知的组均置后。大小排序使用候选的已知字节数，部分已知的大小为下限。",
+        "ja": "日付にはグループ内の最新の既知の撮影情報を使います。日付不明のグループは常に最後です。サイズ順は候補の既知のバイト数に基づき、一部不明の場合は下限値です。"
+      }
+    },
+    {
+      "id": "app_filtering_never_clears_confirmed_cleanup_candidates_a_review_session_keeps_its_current_order_until_you_return_to_the_overview",
+      "context": "ReviewToolsView.swift: Filtering never clears confirmed cleanup candidates. A review session keeps its current order until you return to the overview.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Filtering never clears confirmed cleanup candidates. A review session keeps its current order until you return to the overview.",
+        "zh-Hans": "筛选不会清除已确认的清理候选。核对会话保持当前顺序，直到你返回概览。",
+        "ja": "絞り込みで確定済みの整理候補が消えることはありません。一覧に戻るまで、確認中の順序を維持します。"
+      }
+    },
+    {
+      "id": "app_recommendation_evidence",
+      "context": "ReviewToolsView.swift: Recommendation Evidence",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Recommendation Evidence",
+        "zh-Hans": "推荐依据",
+        "ja": "推奨の根拠"
+      }
+    },
+    {
+      "id": "app_more_evidence",
+      "context": "ReviewToolsView.swift: More Evidence",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "More Evidence",
+        "zh-Hans": "更多依据",
+        "ja": "根拠をさらに表示"
+      }
+    },
+    {
+      "id": "app_recommended_is_a_suggestion_selected_is_your_keep_choice_locked_photos_must_also_remain_a_lock_is_not_a_quality_rating",
+      "context": "ReviewToolsView.swift: Recommended is a suggestion. Selected is your keep choice. Locked photos must also remain; a lock is not a quality rating.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Recommended is a suggestion. Selected is your keep choice. Locked photos must also remain; a lock is not a quality rating.",
+        "zh-Hans": "“建议保留”只是建议，“已选保留”是你的选择。已锁定的照片也必须保留；锁定不是质量评级。",
+        "ja": "「推奨」は提案、「残す写真に選択」はあなたの選択です。ロックした写真も必ず残します。ロックは品質の評価ではありません。"
+      }
+    },
+    {
+      "id": "app_why_these_photos_are_grouped",
+      "context": "ReviewToolsView.swift: Why These Photos Are Grouped",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Why These Photos Are Grouped",
+        "zh-Hans": "这些照片为何分组",
+        "ja": "グループ化の理由"
+      }
+    },
+    {
+      "id": "app_only_cross_side_edges_are_evidence_photos_on_the_same_side_are_not_assumed_identical_choosing_one_photo_may_retain_additional_members_without_a_verified_match_to_a_retained_photo",
+      "context": "ReviewToolsView.swift: Only cross-side edges are evidence. Photos on the same side are not assumed identical. Choosing one photo may retain additional members without a verified match to a retained photo.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Only cross-side edges are evidence. Photos on the same side are not assumed identical. Choosing one photo may retain additional members without a verified match to a retained photo.",
+        "zh-Hans": "仅两侧之间的匹配关系作为依据，不假定同侧照片相同。选择保留一张后，与保留照片没有已验证匹配关系的其他成员也可能继续保留。",
+        "ja": "根拠にするのは両側間の一致のみで、同じ側の写真が同一とは見なしません。1枚を残すよう選択しても、残す写真との一致を検証できない他の写真は残る場合があります。"
+      }
+    },
+    {
+      "id": "app_the_summary_uses_the_most_cautious_category_each_member_below_records_its_own_match_to_the_reference_photo_not_to_every_other_member",
+      "context": "ReviewToolsView.swift: The summary uses the most cautious category. Each member below records its own match to the reference photo, not to every other member.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The summary uses the most cautious category. Each member below records its own match to the reference photo, not to every other member.",
+        "zh-Hans": "摘要采用最谨慎的类别。下列每张照片记录的是与参照照片的匹配关系，并非与其他所有成员的关系。",
+        "ja": "概要には最も慎重な分類を使います。各写真の情報は比較元との関係であり、すべての写真同士の一致を示すものではありません。"
+      }
+    },
+    {
+      "id": "app_reference_arg1",
+      "context": "ReviewToolsView.swift: Reference: {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Reference: {arg1}",
+        "zh-Hans": "参照：{arg1}",
+        "ja": "比較元：{arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_photo_1",
+      "context": "ReviewToolsView.swift: Photo 1",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photo 1",
+        "zh-Hans": "照片 1",
+        "ja": "写真1"
+      }
+    },
+    {
+      "id": "app_scene_similarity_evidence",
+      "context": "ReviewToolsView.swift: Scene Similarity Evidence",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scene Similarity Evidence",
+        "zh-Hans": "场景相似依据",
+        "ja": "シーンの類似性の根拠"
+      }
+    },
+    {
+      "id": "app_visual_features_agree_within_this_group_a_shared_burst_identifier_and_capture_time_proximity_are_candidate_hints_not_proof_of_identical_content",
+      "context": "ReviewToolsView.swift: Visual features agree within this group. A shared burst identifier and capture-time proximity are candidate hints, not proof of identical content.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Visual features agree within this group. A shared burst identifier and capture-time proximity are candidate hints, not proof of identical content.",
+        "zh-Hans": "本组的视觉特征接近。共同连拍标识和拍摄时间邻近仅用于查找候选，并非内容相同的证明。",
+        "ja": "グループ内の視覚的特徴が近いことを示します。同じ連写IDや近い撮影時刻は候補を探す手掛かりであり、内容が同一である証明ではありません。"
+      }
+    },
+    {
+      "id": "app_groups_require_every_member_to_agree_with_the_representative_and_the_other_members_with_at_most_24_photos_larger_scenes_and_similarity_chains_can_be_split_low_texture_photos_may_be_omitted",
+      "context": "ReviewToolsView.swift: Groups require every member to agree with the representative and the other members, with at most 24 photos. Larger scenes and similarity chains can be split. Low-texture photos may be omitted.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Groups require every member to agree with the representative and the other members, with at most 24 photos. Larger scenes and similarity chains can be split. Low-texture photos may be omitted.",
+        "zh-Hans": "每个成员必须与代表图及其他成员保持一致，每组最多 24 张。较大的场景和相似链条可能拆分，低纹理照片可能被省略。",
+        "ja": "各写真は代表画像および他の全写真との一致条件を満たす必要があり、1グループは最大24枚です。大きなシーンや類似の連鎖は分割され、模様の少ない写真は対象外になる場合があります。"
+      }
+    },
+    {
+      "id": "app_natural_photo_precision_and_recall_have_not_been_measured_inspect_content_differences_before_deciding_what_to_keep",
+      "context": "ReviewToolsView.swift: Natural-photo precision and recall have not been measured. Inspect content differences before deciding what to keep.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Natural-photo precision and recall have not been measured. Inspect content differences before deciding what to keep.",
+        "zh-Hans": "尚未测量自然照片的精确率和召回率。决定保留前，请核对内容差异。",
+        "ja": "自然写真での適合率と再現率は未測定です。残す写真を決める前に内容の違いを確認してください。"
+      }
+    },
+    {
+      "id": "app_arg1_actual_pair_comparisons",
+      "context": "ReviewToolsView.swift: {arg1} actual pair comparisons",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} actual pair comparison",
+          "other": "{arg1} actual pair comparisons"
+        },
+        "zh-Hans": {
+          "other": "实际比较了 {arg1} 对照片"
+        },
+        "ja": {
+          "other": "実際の比較は{arg1}組"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_pair_details",
+      "context": "ReviewToolsView.swift: Pair Details",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Pair Details",
+        "zh-Hans": "成对比较详情",
+        "ja": "写真ペアの詳細"
+      }
+    },
+    {
+      "id": "app_pair_arg1_feature_distance_arg2",
+      "context": "ReviewToolsView.swift: Pair {arg1}: feature distance {arg2}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Pair {arg1}: feature distance {arg2}",
+        "zh-Hans": "第 {arg1} 对：特征距离 {arg2}",
+        "ja": "ペア{arg1}：特徴の距離{arg2}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_shared_photos_burst_identifier",
+      "context": "ReviewToolsView.swift: Shared Photos burst identifier",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Shared Photos burst identifier",
+        "zh-Hans": "具有相同的照片图库连拍标识",
+        "ja": "写真ライブラリの連写IDが共通"
+      }
+    },
+    {
+      "id": "app_feature_distance_is_not_a_confidence_percentage_smaller_values_mean_closer_representations_not_guaranteed_duplicates",
+      "context": "ReviewToolsView.swift: Feature distance is not a confidence percentage. Smaller values mean closer representations, not guaranteed duplicates.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Feature distance is not a confidence percentage. Smaller values mean closer representations, not guaranteed duplicates.",
+        "zh-Hans": "特征距离不是置信度百分比。数值较小表示特征更接近，不保证照片重复。",
+        "ja": "特徴の距離は確信度のパーセントではありません。小さい値は表現が近いことを示しますが、重複を保証しません。"
+      }
+    },
+    {
+      "id": "app_photo_metadata",
+      "context": "ReviewToolsView.swift: Photo Metadata",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photo Metadata",
+        "zh-Hans": "照片元数据",
+        "ja": "写真のメタデータ"
+      }
+    },
+    {
+      "id": "app_arg1_bit",
+      "context": "ReviewToolsView.swift: {arg1}-bit",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1}-bit",
+        "zh-Hans": "{arg1} 位",
+        "ja": "{arg1}ビット"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_bit_depth_unknown",
+      "context": "ReviewToolsView.swift: Bit depth unknown",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Bit depth unknown",
+        "zh-Hans": "位深未知",
+        "ja": "ビット深度不明"
+      }
+    },
+    {
+      "id": "app_resolution_and_bit_depth_unknown",
+      "context": "ReviewToolsView.swift: Resolution and bit depth unknown",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Resolution and bit depth unknown",
+        "zh-Hans": "分辨率与位深未知",
+        "ja": "解像度とビット深度が不明"
+      }
+    },
+    {
+      "id": "app_capture_date_unknown",
+      "context": "ReviewToolsView.swift: Capture date unknown",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Capture date unknown",
+        "zh-Hans": "拍摄日期未知",
+        "ja": "撮影日時不明"
+      }
+    },
+    {
+      "id": "app_thumbnail_focus_energy_arg1",
+      "context": "ReviewToolsView.swift: Thumbnail focus energy: {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Thumbnail focus energy: {arg1}",
+        "zh-Hans": "缩略图焦点能量：{arg1}",
+        "ja": "サムネイルの焦点エネルギー：{arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_clipped_shadows_arg1_clipped_highlights_arg2",
+      "context": "ReviewToolsView.swift: Clipped shadows: {arg1}; clipped highlights: {arg2}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Clipped shadows: {arg1}; clipped highlights: {arg2}",
+        "zh-Hans": "暗部溢出：{arg1}；高光溢出：{arg2}",
+        "ja": "黒つぶれ：{arg1}、白飛び：{arg2}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        },
+        {
+          "name": "arg2",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_these_measured_thumbnail_signals_do_not_establish_subject_focus_artistic_intent_or_aesthetic_quality",
+      "context": "ReviewToolsView.swift: These measured thumbnail signals do not establish subject focus, artistic intent or aesthetic quality.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "These measured thumbnail signals do not establish subject focus, artistic intent or aesthetic quality.",
+        "zh-Hans": "这些缩略图测量信号不能证明主体对焦、艺术意图或审美质量。",
+        "ja": "これらのサムネイルの測定値は、被写体のピント、表現意図、美的な品質を証明するものではありません。"
+      }
+    },
+    {
+      "id": "app_candidate_resource_size",
+      "context": "ReviewToolsView.swift: Candidate Resource Size",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Candidate Resource Size",
+        "zh-Hans": "候选资源大小",
+        "ja": "候補のリソースサイズ"
+      }
+    },
+    {
+      "id": "app_choose_and_confirm_a_keeper_before_estimating_candidate_size",
+      "context": "ReviewToolsView.swift: Choose and confirm a keeper before estimating candidate size.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose and confirm a keeper before estimating candidate size.",
+        "zh-Hans": "请先选择并确认保留照片，再估算候选大小。",
+        "ja": "候補のサイズを見積もるには、先に残す写真を選んで確定してください。"
+      }
+    },
+    {
+      "id": "app_this_is_not_a_promise_of_immediately_released_device_storage_icloud_optimization_and_recently_deleted_affect_actual_free_space",
+      "context": "ReviewToolsView.swift: This is not a promise of immediately released device storage. iCloud optimization and Recently Deleted affect actual free space.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "This is not a promise of immediately released device storage. iCloud optimization and Recently Deleted affect actual free space.",
+        "zh-Hans": "这不代表设备空间会立即释放。iCloud 优化存储和“最近删除”都会影响实际可用空间。",
+        "ja": "この値と同じ空き容量がすぐに増えるとは限りません。iCloudのストレージ最適化や「最近削除した項目」が実際の空き容量に影響します。"
+      }
+    },
+    {
+      "id": "app_difference_preview",
+      "context": "ReviewToolsView.swift: Difference Preview",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Difference Preview",
+        "zh-Hans": "差异预览",
+        "ja": "違いのプレビュー"
+      }
+    },
+    {
+      "id": "app_choose_a_reference_and_comparison_photo_differences_are_shown_only_when_their_previews_can_be_reliably_aligned",
+      "context": "ReviewToolsView.swift: Choose a reference and comparison photo. Differences are shown only when their previews can be reliably aligned.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose a reference and comparison photo. Differences are shown only when their previews can be reliably aligned.",
+        "zh-Hans": "选择参照与对照照片。仅在预览能够可靠对齐时显示差异。",
+        "ja": "比較元と比較先の写真を選択してください。プレビューの位置を正確に合わせられる場合のみ違いを表示します。"
+      }
+    },
+    {
+      "id": "app_zoom",
+      "context": "ReviewToolsView.swift: Zoom",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Zoom",
+        "zh-Hans": "缩放",
+        "ja": "拡大表示"
+      }
+    },
+    {
+      "id": "app_double_tap_or_double_click_a_photo_to_zoom_or_reset_use_the_group_menu_for_zoom_in_reset_zoom_and_sync_zoom_dragging_while_zoomed_pans_the_image_instead_of_changing_groups",
+      "context": "ReviewToolsView.swift: Double-tap or double-click a photo to zoom or reset. Use the group menu for Zoom In, Reset Zoom and Sync Zoom. Dragging while zoomed pans the image instead of changing groups.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Double-tap or double-click a photo to zoom or reset. Use the group menu for Zoom In, Reset Zoom and Sync Zoom. Dragging while zoomed pans the image instead of changing groups.",
+        "zh-Hans": "双击照片可放大或复位。组内菜单提供放大、复位和同步缩放。放大后拖动只平移图像，不翻组。",
+        "ja": "写真をダブルタップまたはダブルクリックすると拡大・リセットできます。グループのメニューからも拡大、リセット、同期を選べます。拡大中のドラッグは画像の移動になり、グループは切り替わりません。"
+      }
+    },
+    {
+      "id": "app_photos_are_linked_by_relative_image_position_not_pixel_alignment_crops_and_different_viewpoints_may_show_different_objects_detail_previews_are_limited_to_available_pixels_and_do_not_silently_download_from_icloud",
+      "context": "ReviewToolsView.swift: Photos are linked by relative image position, not pixel alignment. Crops and different viewpoints may show different objects. Detail previews are limited to available pixels and do not silently download from iCloud.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Photos are linked by relative image position, not pixel alignment. Crops and different viewpoints may show different objects. Detail previews are limited to available pixels and do not silently download from iCloud.",
+        "zh-Hans": "照片按图像内的相对位置联动，并非像素对齐。裁剪和不同视角可能显示不同对象。细节预览受可用像素限制，不会静默从 iCloud 下载。",
+        "ja": "写真は画像内の相対位置で連動し、ピクセル単位で位置合わせするものではありません。切り抜きや視点の違いで別の被写体が表示される場合があります。詳細表示は利用可能な画素数に制限され、iCloudから無断でダウンロードすることはありません。"
+      }
+    },
+    {
+      "id": "app_more_measured_thumbnail_edge_energy_at_the_same_image_dimensions_and_comparable_exposure_check_subject_focus_manually_intentional_blur_can_be_appropriate",
+      "context": "ReviewToolsView.swift: More measured thumbnail edge energy at the same image dimensions and comparable exposure. Check subject focus manually; intentional blur can be appropriate.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "More measured thumbnail edge energy at the same image dimensions and comparable exposure. Check subject focus manually; intentional blur can be appropriate.",
+        "zh-Hans": "在尺寸相同、曝光接近时，测得更高的缩略图边缘能量。请人工检查主体对焦；有意的虚焦也可能合适。",
+        "ja": "同じ画像サイズと近い露出で、サムネイルの輪郭エネルギーが高く測定されました。被写体のピントは手動で確認してください。意図的なぼかしが適切な場合もあります。"
+      }
+    },
+    {
+      "id": "app_less_measured_shadow_highlight_clipping_at_the_same_image_dimensions_exposure_can_be_intentional_inspect_the_original_appearance",
+      "context": "ReviewToolsView.swift: Less measured shadow/highlight clipping at the same image dimensions. Exposure can be intentional; inspect the original appearance.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Less measured shadow/highlight clipping at the same image dimensions. Exposure can be intentional; inspect the original appearance.",
+        "zh-Hans": "在尺寸相同时，测得更少的暗部或高光溢出。曝光可能是创作选择，请检查原始观感。",
+        "ja": "同じ画像サイズで、黒つぶれや白飛びが少なく測定されました。露出には表現意図がある場合があるため、元の見た目を確認してください。"
+      }
+    },
+    {
+      "id": "app_quality_ranking_signals_are_tied_the_configured_source_preference_is_used",
+      "context": "ReviewToolsView.swift: Quality-ranking signals are tied; the configured source preference is used.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Quality-ranking signals are tied; the configured source preference is used.",
+        "zh-Hans": "质量排序信号相当，使用已设置的来源偏好。",
+        "ja": "品質の順位付けに使う値が同等のため、設定したソースの優先順を使います。"
+      }
+    },
+    {
+      "id": "app_associated_resource_flags_are_present_cleanup_protection_applies",
+      "context": "ReviewToolsView.swift: Associated resource flags are present. Cleanup protection applies.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Associated resource flags are present. Cleanup protection applies.",
+        "zh-Hans": "检测到关联资源标记，清理保护生效。",
+        "ja": "関連リソースの印があるため、整理時の保護が適用されます。"
+      }
+    },
+    {
+      "id": "app_more_pixels_than_another_copy_arg1_arg2_resolution_alone_does_not_establish_sharpness",
+      "context": "ReviewToolsView.swift: More pixels than another copy ({arg1} × {arg2}). Resolution alone does not establish sharpness.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "More pixels than another copy ({arg1} × {arg2}). Resolution alone does not establish sharpness.",
+        "zh-Hans": "像素数多于另一副本（{arg1} × {arg2}）。仅凭分辨率不能证明清晰度。",
+        "ja": "別のコピーより画素数が多い画像です（{arg1} × {arg2}）。解像度だけで鮮明さは判断できません。"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        },
+        {
+          "name": "arg2",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_higher_documented_bit_depth_arg1_bit_than_another_copy",
+      "context": "ReviewToolsView.swift: Higher documented bit depth ({arg1}-bit) than another copy.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Higher documented bit depth ({arg1}-bit) than another copy.",
+        "zh-Hans": "记录的位深高于另一副本（{arg1} 位）。",
+        "ja": "記録されたビット深度が別のコピーより高い画像です（{arg1}ビット）。"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "app_the_decoded_image_has_a_wide_color_profile",
+      "context": "ReviewToolsView.swift: The decoded image has a wide-color profile.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The decoded image has a wide-color profile.",
+        "zh-Hans": "解码后的图像具有广色域配置。",
+        "ja": "デコードした画像は広色域のプロファイルを持っています。"
+      }
+    },
+    {
+      "id": "app_a_thumbnail_edge_contrast_tie_break_is_used_this_is_not_a_calibrated_sharpness_comparison",
+      "context": "ReviewToolsView.swift: A thumbnail edge-contrast tie-break is used. This is not a calibrated sharpness comparison.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "A thumbnail edge-contrast tie-break is used. This is not a calibrated sharpness comparison.",
+        "zh-Hans": "采用缩略图边缘对比度来打破并列。这不是经过校准的清晰度比较。",
+        "ja": "同等の場合にサムネイルの輪郭コントラストを使っています。校正された鮮明さの比較ではありません。"
+      }
+    },
+    {
+      "id": "app_no_established_quality_advantage_choose_according_to_your_preference",
+      "context": "ReviewToolsView.swift: No established quality advantage. Choose according to your preference.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "No established quality advantage. Choose according to your preference.",
+        "zh-Hans": "未发现已证实的质量优势，请按个人偏好选择。",
+        "ja": "明確な品質の優位性は確認できません。好みに合わせて選んでください。"
+      }
+    },
+    {
+      "id": "app_all_except_kept",
+      "context": "ReviewToolsView.swift: All Except Kept",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "All Except Kept",
+        "zh-Hans": "不含整组保留",
+        "ja": "グループ全体を残したもの以外"
+      }
+    },
+    {
+      "id": "app_all_review_states",
+      "context": "ReviewToolsView.swift: All Review States",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "All Review States",
+        "zh-Hans": "全部核对状态",
+        "ja": "すべての確認状況"
+      }
+    },
+    {
+      "id": "app_stable_order",
+      "context": "ReviewToolsView.swift: Stable Order",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Stable Order",
+        "zh-Hans": "稳定顺序",
+        "ja": "固定の順序"
+      }
+    },
+    {
+      "id": "app_capture_date_newest_first",
+      "context": "ReviewToolsView.swift: Capture Date · Newest First",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Capture Date · Newest First",
+        "zh-Hans": "拍摄日期 · 从新到旧",
+        "ja": "撮影日時 · 新しい順"
+      }
+    },
+    {
+      "id": "app_capture_date_oldest_first",
+      "context": "ReviewToolsView.swift: Capture Date · Oldest First",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Capture Date · Oldest First",
+        "zh-Hans": "拍摄日期 · 从旧到新",
+        "ja": "撮影日時 · 古い順"
+      }
+    },
+    {
+      "id": "app_most_photos",
+      "context": "ReviewToolsView.swift: Most Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Most Photos",
+        "zh-Hans": "照片数量最多",
+        "ja": "写真が多い順"
+      }
+    },
+    {
+      "id": "app_largest_candidate_size",
+      "context": "ReviewToolsView.swift: Largest Candidate Size",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Largest Candidate Size",
+        "zh-Hans": "候选大小最大",
+        "ja": "候補のサイズが大きい順"
+      }
+    },
+    {
+      "id": "app_exact_duplicate",
+      "context": "ReviewToolsView.swift: Exact Duplicate",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Exact Duplicate",
+        "zh-Hans": "完全重复",
+        "ja": "完全な重複"
+      }
+    },
+    {
+      "id": "app_possible_same_image_caption",
+      "context": "ReviewToolsView.swift: Possible Same Image",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Possible Same Image",
+        "zh-Hans": "可能为同一图像",
+        "ja": "同じ画像の可能性"
+      }
+    },
+    {
+      "id": "app_highly_similar_review_differences",
+      "context": "ReviewToolsView.swift: Highly Similar · Review Differences",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Highly Similar · Review Differences",
+        "zh-Hans": "高度相似 · 请核对差异",
+        "ja": "非常に似ている写真 · 違いを確認"
+      }
+    },
+    {
+      "id": "app_different_photos",
+      "context": "ReviewToolsView.swift: Different Photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Different Photos",
+        "zh-Hans": "不同照片",
+        "ja": "異なる写真"
+      }
+    },
+    {
+      "id": "app_visual_scene_features_are_close_frames_may_contain_different_expressions_movement_or_objects_this_is_not_duplicate_proof",
+      "context": "ReviewToolsView.swift: Visual scene features are close. Frames may contain different expressions, movement or objects; this is not duplicate proof.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Visual scene features are close. Frames may contain different expressions, movement or objects; this is not duplicate proof.",
+        "zh-Hans": "视觉场景特征接近，但帧内可能有不同表情、动作或对象；这不是重复的证明。",
+        "ja": "シーンの視覚的特徴が近くても、表情、動き、被写体が異なる場合があります。重複の証明ではありません。"
+      }
+    },
+    {
+      "id": "app_file_bytes_and_effective_orientation_agree",
+      "context": "ReviewToolsView.swift: File bytes and effective orientation agree.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "File bytes and effective orientation agree.",
+        "zh-Hans": "文件字节与实际显示方向一致。",
+        "ja": "ファイルのバイト列と実際の表示方向が一致しています。"
+      }
+    },
+    {
+      "id": "app_multi_scale_image_checks_agree_size_format_or_compression_may_differ",
+      "context": "ReviewToolsView.swift: Multi-scale image checks agree. Size, format or compression may differ.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Multi-scale image checks agree. Size, format or compression may differ.",
+        "zh-Hans": "多尺度图像检查一致，尺寸、格式或压缩程度可能不同。",
+        "ja": "複数の縮尺で画像の一致を確認しています。サイズ、形式、圧縮率が異なる場合があります。"
+      }
+    },
+    {
+      "id": "app_the_overall_image_is_close_but_higher_resolution_checks_found_local_differences_manual_review_is_required",
+      "context": "ReviewToolsView.swift: The overall image is close, but higher-resolution checks found local differences. Manual review is required.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The overall image is close, but higher-resolution checks found local differences. Manual review is required.",
+        "zh-Hans": "整体图像接近，但高分辨率检查发现局部差异，需要人工核对。",
+        "ja": "画像全体は似ていますが、高解像度の確認で局所的な違いが見つかりました。手動での確認が必要です。"
+      }
+    },
+    {
+      "id": "app_these_photos_do_not_have_a_verified_duplicate_relationship",
+      "context": "ReviewToolsView.swift: These photos do not have a verified duplicate relationship.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "These photos do not have a verified duplicate relationship.",
+        "zh-Hans": "这些照片没有经过验证的重复关系。",
+        "ja": "これらの写真の重複関係は検証できていません。"
+      }
+    },
+    {
+      "id": "app_at_least_arg1_plus_arg2_photos_of_unknown_size",
+      "context": "ReviewToolsView.swift: At least {arg1}, plus {arg2} photos of unknown size",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "At least {arg1}, plus {arg2} photo of unknown size",
+          "other": "At least {arg1}, plus {arg2} photos of unknown size"
+        },
+        "zh-Hans": {
+          "other": "至少 {arg1}，另有 {arg2} 张大小未知"
+        },
+        "ja": {
+          "other": "少なくとも{arg1}、ほかにサイズ不明の写真が{arg2}枚"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg2",
+          "type": "integer"
+        },
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ],
+      "plural": "arg2"
+    },
+    {
+      "id": "app_at_least_arg1",
+      "context": "ReviewToolsView.swift: At least {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "At least {arg1}",
+        "zh-Hans": "至少 {arg1}",
+        "ja": "少なくとも{arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_loading_detail_preview",
+      "context": "ReviewZoomPhoto.swift: Loading detail preview…",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Loading detail preview…",
+        "zh-Hans": "正在加载细节预览…",
+        "ja": "詳細プレビューを読み込み中…"
+      }
+    },
+    {
+      "id": "app_detail_not_loaded",
+      "context": "ReviewZoomPhoto.swift: Detail not loaded",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Detail not loaded",
+        "zh-Hans": "细节未加载",
+        "ja": "詳細を読み込めませんでした"
+      }
+    },
+    {
+      "id": "app_detail_limited_to_arg1",
+      "context": "ReviewZoomPhoto.swift: Detail limited to {arg1}×",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Detail limited to {arg1}×",
+        "zh-Hans": "细节倍率上限为 {arg1}×",
+        "ja": "詳細表示の上限は{arg1}倍"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_arg1_relative_position",
+      "context": "ReviewZoomPhoto.swift: {arg1}× · Relative position",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "{arg1}× · Relative position",
+        "zh-Hans": "{arg1}× · 相对位置",
+        "ja": "{arg1}倍 · 相対位置"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_comparison_scope",
+      "context": "ScanPolicySettings.swift: Comparison Scope",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Comparison Scope",
+        "zh-Hans": "比较范围",
+        "ja": "比較範囲"
+      }
+    },
+    {
+      "id": "app_photo_albums_and_dates",
+      "context": "ScanPolicySettings.swift: Photo Albums and Dates…",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photo Albums and Dates…",
+        "zh-Hans": "照片相册与日期…",
+        "ja": "アルバムと日付…"
+      }
+    },
+    {
+      "id": "app_arg1_selected_albums",
+      "context": "ScanPolicySettings.swift: {arg1} selected albums",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": {
+          "one": "{arg1} selected album",
+          "other": "{arg1} selected albums"
+        },
+        "zh-Hans": {
+          "other": "已选 {arg1} 个相册"
+        },
+        "ja": {
+          "other": "{arg1}個のアルバムを選択"
+        }
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "integer"
+        }
+      ],
+      "plural": "arg1"
+    },
+    {
+      "id": "app_all_accessible_photos",
+      "context": "ScanPolicySettings.swift: All accessible photos",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "All accessible photos",
+        "zh-Hans": "全部可访问照片",
+        "ja": "アクセス可能なすべての写真"
+      }
+    },
+    {
+      "id": "app_compare_two_sides_only",
+      "context": "ScanPolicySettings.swift: Compare Two Sides Only",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Compare Two Sides Only",
+        "zh-Hans": "仅比较两侧",
+        "ja": "両側間のみを比較"
+      }
+    },
+    {
+      "id": "app_side_a",
+      "context": "ScanPolicySettings.swift: Side A",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Side A",
+        "zh-Hans": "A 侧",
+        "ja": "A側"
+      }
+    },
+    {
+      "id": "app_side_b",
+      "context": "ScanPolicySettings.swift: Side B",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Side B",
+        "zh-Hans": "B 侧",
+        "ja": "B側"
+      }
+    },
+    {
+      "id": "app_active_arg1_arg2",
+      "context": "ScanPolicySettings.swift: Active: {arg1} ⇄ {arg2}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Active: {arg1} ⇄ {arg2}",
+        "zh-Hans": "当前：{arg1} ⇄ {arg2}",
+        "ja": "現在：{arg1} ⇄ {arg2}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        },
+        {
+          "name": "arg2",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_apply_two_sides",
+      "context": "ScanPolicySettings.swift: Apply Two Sides",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Apply Two Sides",
+        "zh-Hans": "应用两侧范围",
+        "ja": "両側の選択を適用"
+      }
+    },
+    {
+      "id": "app_cross_side_mode_uses_only_matches_between_the_two_sources_it_may_keep_extra_photos_when_a_selected_copy_has_no_verified_match_to_another_member",
+      "context": "ScanPolicySettings.swift: Cross-side mode uses only matches between the two sources. It may keep extra photos when a selected copy has no verified match to another member.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Cross-side mode uses only matches between the two sources. It may keep extra photos when a selected copy has no verified match to another member.",
+        "zh-Hans": "两侧模式仅采用两个来源之间的匹配。当所选副本与其他成员没有经过验证的匹配时，可能额外保留照片。",
+        "ja": "両側の比較では、2つのソース間の一致だけを使います。選んだコピーと他の写真の一致を検証できない場合は、追加の写真も残すことがあります。"
+      }
+    },
+    {
+      "id": "app_source_policy",
+      "context": "ScanPolicySettings.swift: Source Policy",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Source Policy",
+        "zh-Hans": "来源策略",
+        "ja": "ソースの方針"
+      }
+    },
+    {
+      "id": "app_quality_tie_preference",
+      "context": "ScanPolicySettings.swift: Quality Tie Preference",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Quality Tie Preference",
+        "zh-Hans": "质量相当时优先",
+        "ja": "品質が同等の場合の優先"
+      }
+    },
+    {
+      "id": "app_quality_first",
+      "context": "ScanPolicySettings.swift: Quality First",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Quality First",
+        "zh-Hans": "质量优先",
+        "ja": "品質優先"
+      }
+    },
+    {
+      "id": "app_read_only_sources_participate_in_comparison_but_cannot_be_cleaned_locks_and_associated_resources_remain_protected_hardlinked_files_may_be_kept_conservatively_while_a_folder_is_read_only",
+      "context": "ScanPolicySettings.swift: Read-only sources participate in comparison but cannot be cleaned. Locks and associated resources remain protected. Hardlinked files may be kept conservatively while a folder is read-only.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Read-only sources participate in comparison but cannot be cleaned. Locks and associated resources remain protected. Hardlinked files may be kept conservatively while a folder is read-only.",
+        "zh-Hans": "只读来源参与比较，但不允许清理。锁定和关联资源仍受保护。文件夹为只读时，硬链接文件可能被保守地保留。",
+        "ja": "読み取り専用ソースも比較に含めますが、整理はできません。ロックと関連リソースの保護は維持されます。読み取り専用フォルダがある場合、ハードリンクのファイルを安全のため残すことがあります。"
+      }
+    },
+    {
+      "id": "app_choose_source",
+      "context": "ScanPolicySettings.swift: Choose Source",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose Source",
+        "zh-Hans": "选择来源",
+        "ja": "ソースを選択"
+      }
+    },
+    {
+      "id": "app_read_only_arg1",
+      "context": "ScanPolicySettings.swift: Read-only · {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Read-only · {arg1}",
+        "zh-Hans": "只读 · {arg1}",
+        "ja": "読み取り専用 · {arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_selected_albums_only",
+      "context": "ScanPolicySettings.swift: Selected Albums Only",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Selected Albums Only",
+        "zh-Hans": "仅所选相册",
+        "ja": "選択したアルバムのみ"
+      }
+    },
+    {
+      "id": "app_albums_are_unavailable_with_limited_photo_access_review_access_or_choose_all_accessible_photos_explicitly",
+      "context": "ScanPolicySettings.swift: Albums are unavailable with limited photo access. Review access or choose all accessible photos explicitly.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Albums are unavailable with limited photo access. Review access or choose all accessible photos explicitly.",
+        "zh-Hans": "有限照片权限下无法使用相册。请检查访问权限，或明确选择全部可访问照片。",
+        "ja": "写真へのアクセスが制限されている場合、アルバムは利用できません。権限を確認するか、アクセス可能なすべての写真を明示的に選んでください。"
+      }
+    },
+    {
+      "id": "app_remove_unavailable_or_renamed_album_arg1",
+      "context": "ScanPolicySettings.swift: Remove Unavailable or Renamed Album: {arg1}",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Remove Unavailable or Renamed Album: {arg1}",
+        "zh-Hans": "移除不可用或已改名的相册：{arg1}",
+        "ja": "利用できない、または名前が変わったアルバムを除外：{arg1}"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_multiple_albums_form_a_union_empty_selection_scans_no_photos_unavailable_selections_never_fall_back_to_the_whole_library",
+      "context": "ScanPolicySettings.swift: Multiple albums form a union. Empty selection scans no photos; unavailable selections never fall back to the whole library.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Multiple albums form a union. Empty selection scans no photos; unavailable selections never fall back to the whole library.",
+        "zh-Hans": "多个相册采用并集。空选择不扫描任何照片；所选相册不可用时，不会退回扫描整个图库。",
+        "ja": "複数のアルバムはまとめて扱います。未選択なら写真はスキャンしません。選択したアルバムが使えなくても、ライブラリ全体のスキャンには切り替えません。"
+      }
+    },
+    {
+      "id": "app_capture_date_range",
+      "context": "ScanPolicySettings.swift: Capture Date Range",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Capture Date Range",
+        "zh-Hans": "拍摄日期范围",
+        "ja": "撮影日の範囲"
+      }
+    },
+    {
+      "id": "app_first_day",
+      "context": "ScanPolicySettings.swift: First Day",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "First Day",
+        "zh-Hans": "起始日",
+        "ja": "開始日"
+      }
+    },
+    {
+      "id": "app_last_day",
+      "context": "ScanPolicySettings.swift: Last Day",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Last Day",
+        "zh-Hans": "结束日",
+        "ja": "終了日"
+      }
+    },
+    {
+      "id": "app_include_unknown_capture_dates",
+      "context": "ScanPolicySettings.swift: Include Unknown Capture Dates",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Include Unknown Capture Dates",
+        "zh-Hans": "包含拍摄日期未知的照片",
+        "ja": "撮影日不明の写真を含める"
+      }
+    },
+    {
+      "id": "app_uses_the_current_calendar_and_time_zone_when_applied_the_exact_start_and_end_are_saved_for_scan_recovery",
+      "context": "ScanPolicySettings.swift: Uses the current calendar and time zone when applied. The exact start and end are saved for scan recovery.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Uses the current calendar and time zone when applied. The exact start and end are saved for scan recovery.",
+        "zh-Hans": "应用时采用当前日历与时区。确切的起止时间会保存，用于扫描恢复。",
+        "ja": "適用時のカレンダーとタイムゾーンを使います。スキャンの復元用に、正確な開始・終了時刻を保存します。"
+      }
+    },
+    {
+      "id": "app_photo_scope",
+      "context": "ScanPolicySettings.swift: Photo Scope",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Photo Scope",
+        "zh-Hans": "照片扫描范围",
+        "ja": "写真の対象範囲"
+      }
+    },
+    {
+      "id": "app_apply",
+      "context": "ScanPolicySettings.swift: Apply",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Apply",
+        "zh-Hans": "应用",
+        "ja": "適用"
+      }
+    },
+    {
+      "id": "app_albums_could_not_be_loaded_existing_selections_are_preserved",
+      "context": "ScanPolicySettings.swift: Albums could not be loaded. Existing selections are preserved.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Albums could not be loaded. Existing selections are preserved.",
+        "zh-Hans": "无法加载相册，已保留现有选择。",
+        "ja": "アルバムを読み込めませんでした。現在の選択は保持しています。"
+      }
+    },
+    {
+      "id": "app_scan_sources",
+      "context": "ScanSourcesView.swift: Scan Sources",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Scan Sources",
+        "zh-Hans": "扫描来源",
+        "ja": "スキャン元"
+      }
+    },
+    {
+      "id": "app_skip_photos_stored_only_in_icloud",
+      "context": "ScanSourcesView.swift: Skip Photos Stored Only in iCloud",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Skip Photos Stored Only in iCloud",
+        "zh-Hans": "跳过仅存于 iCloud 的照片",
+        "ja": "iCloudにのみ保存された写真をスキップ"
+      }
+    },
+    {
+      "id": "app_scanning_does_not_download_missing_icloud_resources_skipped_photos_may_be_absent_from_results",
+      "context": "ScanSourcesView.swift: Scanning does not download missing iCloud resources. Skipped photos may be absent from results.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Scanning does not download missing iCloud resources. Skipped photos may be absent from results.",
+        "zh-Hans": "扫描不会下载缺失的 iCloud 资源。跳过的照片可能不会出现在结果中。",
+        "ja": "スキャン時に未取得のiCloudリソースはダウンロードしません。スキップした写真は結果に含まれない場合があります。"
+      }
+    },
+    {
+      "id": "app_scanning_may_download_original_photo_resources_from_icloud_and_use_network_data",
+      "context": "ScanSourcesView.swift: Scanning may download original photo resources from iCloud and use network data.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Scanning may download original photo resources from iCloud and use network data.",
+        "zh-Hans": "扫描可能从 iCloud 下载照片原始资源，并使用网络流量。",
+        "ja": "スキャン時にiCloudから写真の元リソースをダウンロードし、通信が発生する場合があります。"
+      }
+    },
+    {
+      "id": "app_limited_access",
+      "context": "ScanSourcesView.swift: Limited access",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Limited access",
+        "zh-Hans": "有限访问权限",
+        "ja": "アクセス制限あり"
+      }
+    },
+    {
+      "id": "app_manage_photo_access",
+      "context": "ScanSourcesView.swift: Manage Photo Access",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Manage Photo Access",
+        "zh-Hans": "管理照片访问权限",
+        "ja": "写真へのアクセスを管理"
+      }
+    },
+    {
+      "id": "app_allow_photos_access_in_system_settings_to_scan_the_photo_library",
+      "context": "ScanSourcesView.swift: Allow Photos access in System Settings to scan the photo library.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Allow Photos access in System Settings to scan the photo library.",
+        "zh-Hans": "请在系统设置中允许访问照片，以扫描照片图库。",
+        "ja": "写真ライブラリをスキャンするには、システム設定で写真へのアクセスを許可してください。"
+      }
+    },
+    {
+      "id": "app_open_settings",
+      "context": "ScanSourcesView.swift: Open Settings",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Open Settings",
+        "zh-Hans": "打开设置",
+        "ja": "設定を開く"
+      }
+    },
+    {
+      "id": "app_remove_arg1_from_scan_sources",
+      "context": "ScanSourcesView.swift: Remove {arg1} from scan sources",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Remove {arg1} from scan sources",
+        "zh-Hans": "从扫描来源移除 {arg1}",
+        "ja": "スキャン元から{arg1}を除外"
+      },
+      "parameters": [
+        {
+          "name": "arg1",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "app_add_folder",
+      "context": "ScanSourcesView.swift: Add Folder…",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Add Folder…",
+        "zh-Hans": "添加文件夹…",
+        "ja": "フォルダを追加…"
+      }
+    },
+    {
+      "id": "app_review",
+      "context": "ScanSourcesView.swift: Review",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review",
+        "zh-Hans": "核对",
+        "ja": "確認"
+      }
+    },
+    {
+      "id": "app_find_burst_and_similar_scenes",
+      "context": "ScanSourcesView.swift: Find Burst and Similar Scenes",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Find Burst and Similar Scenes",
+        "zh-Hans": "查找连拍与相似场景",
+        "ja": "連写と類似シーンを検索"
+      }
+    },
+    {
+      "id": "app_adds_a_separate_similar_photos_queue_and_includes_accessible_burst_members_natural_photo_accuracy_has_not_been_measured_duplicate_checks_and_cleanup_confirmation_remain_separate",
+      "context": "ScanSourcesView.swift: Adds a separate Similar Photos queue and includes accessible burst members. Natural-photo accuracy has not been measured. Duplicate checks and cleanup confirmation remain separate.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Adds a separate Similar Photos queue and includes accessible burst members. Natural-photo accuracy has not been measured. Duplicate checks and cleanup confirmation remain separate.",
+        "zh-Hans": "增加独立的相似照片队列，并包含可访问的连拍成员。尚未测量自然照片准确率。重复检查与清理确认保持独立。",
+        "ja": "アクセスできる連写写真を含めた専用の類似写真一覧を追加します。自然写真での精度は未測定です。重複判定と整理の確認は別に行います。"
+      }
+    },
+    {
+      "id": "app_show_filenames_in_review",
+      "context": "ScanSourcesView.swift: Show Filenames in Review",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Show Filenames in Review",
+        "zh-Hans": "核对时显示文件名",
+        "ja": "確認時にファイル名を表示"
+      }
+    },
+    {
+      "id": "app_interaction",
+      "context": "ScanSourcesView.swift: Interaction",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Interaction",
+        "zh-Hans": "交互",
+        "ja": "操作"
+      }
+    },
+    {
+      "id": "app_review_button_layout",
+      "context": "ScanSourcesView.swift: Review Button Layout",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Review Button Layout",
+        "zh-Hans": "核对按钮布局",
+        "ja": "確認ボタンの配置"
+      }
+    },
+    {
+      "id": "app_left_hand",
+      "context": "ScanSourcesView.swift: Left Hand",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Left Hand",
+        "zh-Hans": "左手布局",
+        "ja": "左手用"
+      }
+    },
+    {
+      "id": "app_right_hand",
+      "context": "ScanSourcesView.swift: Right Hand",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Right Hand",
+        "zh-Hans": "右手布局",
+        "ja": "右手用"
+      }
+    },
+    {
+      "id": "app_confirm_skip_delete_all",
+      "context": "ScanSourcesView.swift: Confirm  ·  Skip  ·  Delete All",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Confirm  ·  Skip  ·  Delete All",
+        "zh-Hans": "确认本组 · 稍后处理 · 整组清理",
+        "ja": "確定 · あとで · すべて整理"
+      }
+    },
+    {
+      "id": "app_delete_all_skip_confirm",
+      "context": "ScanSourcesView.swift: Delete All  ·  Skip  ·  Confirm",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Delete All  ·  Skip  ·  Confirm",
+        "zh-Hans": "整组清理 · 稍后处理 · 确认本组",
+        "ja": "すべて整理 · あとで · 確定"
+      }
+    },
+    {
+      "id": "app_group_transition",
+      "context": "ScanSourcesView.swift: Group Transition",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Group Transition",
+        "zh-Hans": "翻组动画",
+        "ja": "グループ切り替え"
+      }
+    },
+    {
+      "id": "app_storage",
+      "context": "ScanSourcesView.swift: Storage",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Storage",
+        "zh-Hans": "存储",
+        "ja": "ストレージ"
+      }
+    },
+    {
+      "id": "app_clearing_scan_cache",
+      "context": "ScanSourcesView.swift: Clearing Scan Cache…",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Clearing Scan Cache…",
+        "zh-Hans": "正在清除扫描缓存…",
+        "ja": "スキャンのキャッシュを消去中…"
+      }
+    },
+    {
+      "id": "app_clear_scan_cache",
+      "context": "ScanSourcesView.swift: Clear Scan Cache",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Clear Scan Cache",
+        "zh-Hans": "清除扫描缓存",
+        "ja": "スキャンのキャッシュを消去"
+      }
+    },
+    {
+      "id": "app_reset_review_progress",
+      "context": "ScanSourcesView.swift: Reset Review Progress",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Reset Review Progress",
+        "zh-Hans": "重置核对进度",
+        "ja": "確認の進捗をリセット"
+      }
+    },
+    {
+      "id": "app_resets_kept_groups_deferred_groups_and_pending_cleanup_photo_locks_remain_protected",
+      "context": "ScanSourcesView.swift: Resets kept groups, deferred groups and pending cleanup. Photo locks remain protected.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Resets kept groups, deferred groups and pending cleanup. Photo locks remain protected.",
+        "zh-Hans": "重置已保留、稍后处理的组和待清理候选，照片锁定仍受保护。",
+        "ja": "残すグループ、あとで確認するグループ、整理待ちの候補をリセットします。写真のロックは維持されます。"
+      }
+    },
+    {
+      "id": "app_frees_scan_cache_storage_photos_and_source_access_are_preserved",
+      "context": "ScanSourcesView.swift: Frees scan cache storage. Photos and source access are preserved.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Frees scan cache storage. Photos and source access are preserved.",
+        "zh-Hans": "释放扫描缓存占用的空间，保留照片与来源访问权限。",
+        "ja": "スキャンのキャッシュ領域を解放します。写真やソースへのアクセス権は維持されます。"
+      }
+    },
+    {
+      "id": "app_about",
+      "context": "ScanSourcesView.swift: About",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "About",
+        "zh-Hans": "关于",
+        "ja": "このアプリについて"
+      }
+    },
+    {
+      "id": "app_reset_review_progress_confirmation_title",
+      "context": "ScanSourcesView.swift: Reset Review Progress?",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Reset Review Progress?",
+        "zh-Hans": "重置核对进度？",
+        "ja": "確認の進捗をリセットしますか？"
+      }
+    },
+    {
+      "id": "app_clears_all_group_decisions_and_pending_cleanup_locked_photos_remain_locked_no_photos_are_deleted",
+      "context": "ScanSourcesView.swift: Clears all group decisions and pending cleanup. Locked photos remain locked. No photos are deleted.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Clears all group decisions and pending cleanup. Locked photos remain locked. No photos are deleted.",
+        "zh-Hans": "清除所有分组决定与待清理候选。已锁定照片仍保持锁定，不会删除任何照片。",
+        "ja": "すべてのグループの判断と整理待ち候補を消去します。写真のロックは維持され、写真が削除されることはありません。"
+      }
+    },
+    {
+      "id": "app_add_folder_caption",
+      "context": "ScanSourcesView.swift: Add Folder",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Add Folder",
+        "zh-Hans": "添加文件夹",
+        "ja": "フォルダを追加"
+      }
+    },
+    {
+      "id": "cleanup_error_invalid_selection",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Every item must appear once and have a copy to keep.",
+        "zh-Hans": "每个项目只能出现一次，并且必须有要保留的副本。",
+        "ja": "各項目は1回だけ指定し、残すコピーが必要です。"
+      }
+    },
+    {
+      "id": "cleanup_error_in_progress",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "A cleanup operation is already in progress.",
+        "zh-Hans": "已有清理操作正在进行。",
+        "ja": "すでに整理処理が進行中です。"
+      }
+    },
+    {
+      "id": "cleanup_error_unavailable_source",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The original source is no longer available.",
+        "zh-Hans": "原始来源已不可用。",
+        "ja": "元のソースを利用できなくなりました。"
+      }
+    },
+    {
+      "id": "cleanup_error_read_only_source",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "This source is read-only, or this file may alias a read-only source.",
+        "zh-Hans": "此来源为只读，或此文件可能与只读来源指向同一资源。",
+        "ja": "このソースは読み取り専用か、このファイルが読み取り専用ソースと同じ実体を参照している可能性があります。"
+      }
+    },
+    {
+      "id": "cleanup_error_locked",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "This photo is locked and must be kept.",
+        "zh-Hans": "此照片已锁定，必须保留。",
+        "ja": "この写真はロックされているため、必ず残します。"
+      }
+    },
+    {
+      "id": "cleanup_error_unavailable_protection",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Protection could not be loaded. Cleanup is disabled.",
+        "zh-Hans": "无法载入保护信息，清理已停用。",
+        "ja": "保護情報を読み込めないため、整理を無効にしています。"
+      }
+    },
+    {
+      "id": "cleanup_error_associated_resources",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "This item has an associated video, an edit or an alternate original.",
+        "zh-Hans": "此项目有关联视频、编辑内容或其他原片。",
+        "ja": "この項目には関連する動画、編集内容、または別のオリジナルがあります。"
+      }
+    },
+    {
+      "id": "cleanup_error_changed_asset",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The photo or the copy to keep has changed. Scan again before cleanup.",
+        "zh-Hans": "照片或要保留的副本已变化，清理前请重新扫描。",
+        "ja": "写真または残すコピーが変更されました。整理する前に再スキャンしてください。"
+      }
+    },
+    {
+      "id": "cleanup_error_no_longer_duplicate",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The photo no longer matches the selected copy to keep.",
+        "zh-Hans": "此照片与所选保留副本已不再匹配。",
+        "ja": "この写真は残すように選択したコピーと一致しなくなりました。"
+      }
+    },
+    {
+      "id": "cleanup_error_same_file",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Both entries point to the same file.",
+        "zh-Hans": "两个条目指向同一文件。",
+        "ja": "両方の項目が同じファイルを参照しています。"
+      }
+    },
+    {
+      "id": "cleanup_error_unsupported_source",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "This source does not support recoverable cleanup.",
+        "zh-Hans": "此来源不支持可恢复的清理。",
+        "ja": "このソースは復元可能な整理に対応していません。"
+      }
+    },
+    {
+      "id": "scope_error_invalid_date_range",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose a valid capture-date range.",
+        "zh-Hans": "请选择有效的拍摄日期范围。",
+        "ja": "有効な撮影日の範囲を選択してください。"
+      }
+    },
+    {
+      "id": "scope_error_unavailable_album",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "A selected album is unavailable or renamed. Review Photo Albums and Dates; the scan has not expanded to all photos.",
+        "zh-Hans": "所选相册不可用或已改名，请检查“照片相册与日期”。扫描范围没有扩大到全部照片。",
+        "ja": "選択したアルバムを利用できないか、名前が変わっています。「アルバムと日付」を確認してください。すべての写真にスキャン範囲を広げていません。"
+      }
+    },
+    {
+      "id": "scope_error_invalid_comparison",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose two different available sources for cross-side comparison.",
+        "zh-Hans": "请选择两个不同且可用的来源进行两侧比较。",
+        "ja": "両側の比較には、利用できる異なるソースを2つ選択してください。"
+      }
+    },
+    {
+      "id": "asset_error_inaccessible",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The photo cannot be accessed. Check its source and access permission.",
+        "zh-Hans": "无法访问照片，请检查来源和访问权限。",
+        "ja": "写真にアクセスできません。ソースとアクセス権を確認してください。"
+      }
+    },
+    {
+      "id": "asset_error_changed",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The photo changed during the scan. Scan again before cleanup.",
+        "zh-Hans": "照片在扫描期间发生变化，清理前请重新扫描。",
+        "ja": "スキャン中に写真が変更されました。整理する前に再スキャンしてください。"
+      }
+    },
+    {
+      "id": "asset_error_cloud_required",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "This photo requires an iCloud download. Use an explicitly authorized download and rescan.",
+        "zh-Hans": "此照片需要从 iCloud 下载，请明确授权下载后重新扫描。",
+        "ja": "この写真はiCloudからのダウンロードが必要です。明示的に許可したダウンロード後、再スキャンしてください。"
+      }
+    },
+    {
+      "id": "asset_error_cloud_failed",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "The iCloud photo download failed. Review the scan issue before retrying.",
+        "zh-Hans": "iCloud 照片下载失败，请查看扫描问题后重试。",
+        "ja": "iCloud写真のダウンロードに失敗しました。スキャンの問題を確認してからやり直してください。"
+      }
+    },
+    {
+      "id": "scan_error_in_progress",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "A scan is already in progress.",
+        "zh-Hans": "扫描已在进行中。",
+        "ja": "すでにスキャンが進行中です。"
+      }
+    },
+    {
+      "id": "scan_error_duplicate_source",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The scan sources contain a duplicate identifier. Review the sources.",
+        "zh-Hans": "扫描来源中有重复标识，请检查来源设置。",
+        "ja": "スキャン元の識別子が重複しています。ソースの設定を確認してください。"
+      }
+    },
+    {
+      "id": "scan_error_invalid_snapshot",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The source returned invalid scan data. Scan again before cleanup.",
+        "zh-Hans": "来源返回的扫描数据无效，清理前请重新扫描。",
+        "ja": "ソースから無効なスキャン情報が返されました。整理する前に再スキャンしてください。"
+      }
+    },
+    {
+      "id": "image_error_unreadable",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The image could not be read.",
+        "zh-Hans": "无法读取图像。",
+        "ja": "画像を読み込めませんでした。"
+      }
+    },
+    {
+      "id": "image_error_multiple_images",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "This resource contains multiple images and cannot be compared as a single photo.",
+        "zh-Hans": "此资源包含多幅图像，不能按单张照片比较。",
+        "ja": "このリソースには複数の画像が含まれるため、1枚の写真として比較できません。"
+      }
+    },
+    {
+      "id": "image_error_dimensions",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The image dimensions are unsupported.",
+        "zh-Hans": "不支持此图像尺寸。",
+        "ja": "この画像サイズには対応していません。"
+      }
+    },
+    {
+      "id": "photos_error_authorization",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "Photo library access is required. Review access in system settings.",
+        "zh-Hans": "需要照片图库访问权限，请在系统设置中检查授权。",
+        "ja": "写真ライブラリへのアクセスが必要です。システム設定で権限を確認してください。"
+      }
+    },
+    {
+      "id": "difference_error_invalid_pair",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Choose two different available photos for comparison.",
+        "zh-Hans": "请选择两张不同且可用的照片进行比较。",
+        "ja": "利用できる異なる写真を2枚選んで比較してください。"
+      }
+    },
+    {
+      "id": "operation_cancelled",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The operation was cancelled.",
+        "zh-Hans": "操作已取消。",
+        "ja": "操作を中止しました。"
+      }
+    },
+    {
+      "id": "operation_error_detail",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The operation could not finish. Details: {detail}",
+        "zh-Hans": "操作未能完成。详情：{detail}",
+        "ja": "操作を完了できませんでした。詳細：{detail}"
+      },
+      "parameters": [
+        {
+          "name": "detail",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "diagnostic_original_detail",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Original diagnostic: {detail}",
+        "zh-Hans": "原始诊断：{detail}",
+        "ja": "元の診断情報：{detail}"
+      },
+      "parameters": [
+        {
+          "name": "detail",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "privacy_photos_usage",
+      "context": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "platforms": [
+        "apple"
+      ],
+      "translations": {
+        "en": "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.",
+        "zh-Hans": "AlbumWinnow 扫描你允许访问的照片，仅在你确认后将所选重复照片移到“最近删除”。",
+        "ja": "AlbumWinnowはアクセスを許可した写真をスキャンし、確認後に選択した重複写真を「最近削除した項目」に移動します。"
+      },
+      "table": "InfoPlist",
+      "appleKey": "NSPhotoLibraryUsageDescription"
+    },
+    {
+      "id": "cleanup_error_inaccessible",
+      "context": "Final cleanup result: the removal photo is no longer accessible from its source. Keep distinct from general read failures.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "This photo is no longer accessible from its source.",
+        "zh-Hans": "已无法从来源访问这张照片。",
+        "ja": "この写真は元のソースからアクセスできなくなりました。"
+      }
+    },
+    {
+      "id": "app_unavailable_folder_number",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [
+        {
+          "name": "count",
+          "type": "integer"
+        }
+      ],
+      "translations": {
+        "en": "Unavailable folder {count}",
+        "zh-Hans": "不可用文件夹 {count}",
+        "ja": "利用できないフォルダ {count}"
+      }
+    },
+    {
+      "id": "app_reconnect_folder",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Choose Folder Again…",
+        "zh-Hans": "重新选择文件夹…",
+        "ja": "フォルダを再選択…"
+      }
+    },
+    {
+      "id": "app_remove_source_record",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Remove Record",
+        "zh-Hans": "移除记录",
+        "ja": "記録を削除"
+      }
+    },
+    {
+      "id": "app_retry_saved_folders",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Retry Saved Folders",
+        "zh-Hans": "重试已保存文件夹",
+        "ja": "保存済みフォルダを再試行"
+      }
+    },
+    {
+      "id": "app_unavailable_folder_explanation",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Unavailable folders are kept for retry and are not scanned. Removing or reconnecting a source does not remove its saved locks or read-only protection.",
+        "zh-Hans": "不可用文件夹会保留供重试，不参与扫描。移除或重新选择来源不会移除原有锁定或只读保护。",
+        "ja": "利用できないフォルダは再試行用に保持され、スキャンされません。削除や再選択をしても、保存済みのロックや読み取り専用の保護は解除されません。"
+      }
+    },
+    {
+      "id": "app_saved_protection",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Saved Protection",
+        "zh-Hans": "已保存的保护",
+        "ja": "保存済みの保護"
+      }
+    },
+    {
+      "id": "app_remove_saved_lock",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Remove This Saved Lock",
+        "zh-Hans": "移除此锁定记录",
+        "ja": "このロック記録を削除"
+      }
+    },
+    {
+      "id": "app_saved_protection_explanation",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Saved locks also protect linked paths, including photos outside current results. Remove a lock only if you intend to release its protection.",
+        "zh-Hans": "已保存的锁定也保护关联路径，包括当前结果以外的照片。仅在确定要解除保护时移除。",
+        "ja": "保存済みのロックは、現在の結果に含まれない写真のリンク先も保護します。保護を解除する場合にのみ削除してください。"
+      }
+    },
+    {
+      "id": "app_saved_lock_confirmation",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [
+        {
+          "name": "path",
+          "type": "text"
+        }
+      ],
+      "translations": {
+        "en": "Remove the saved lock for {path}? Other locks remain. No cleanup candidates are restored and no photos are deleted.",
+        "zh-Hans": "移除 {path} 的锁定记录？其他锁定保留，不会恢复清理候选，也不会删除照片。",
+        "ja": "{path} のロック記録を削除しますか？他のロックは保持されます。削除候補は復元されず、写真も削除されません。"
+      }
+    },
+    {
+      "id": "app_remove_invalid_decisions",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [
+        {
+          "name": "count",
+          "type": "integer"
+        }
+      ],
+      "translations": {
+        "en": "Remove Invalid Decisions ({count})",
+        "zh-Hans": "移除失效决定（{count}）",
+        "ja": "無効な判断を削除（{count}）"
+      }
+    },
+    {
+      "id": "app_invalid_decisions_confirmation",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Removes only decisions invalidated by changed photos or group evidence. Valid choices, locks and read-only protection remain. No photos are deleted.",
+        "zh-Hans": "仅移除因照片或分组依据变化而失效的决定。有效选择、锁定和只读保护保留，不删除照片。",
+        "ja": "写真やグループの根拠が変わったため無効になった判断のみ削除します。有効な選択、ロック、読み取り専用の保護は保持されます。写真は削除されません。"
+      }
+    },
+    {
+      "id": "app_unlock_linked_photo",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [],
+      "translations": {
+        "en": "Unlock Linked Photo",
+        "zh-Hans": "解锁关联照片",
+        "ja": "リンクされた写真のロックを解除"
+      }
+    },
+    {
+      "id": "app_unlock_linked_confirmation",
+      "context": "Source recovery and saved protection management; no automatic cleanup.",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "parameters": [
+        {
+          "name": "paths",
+          "type": "text"
+        }
+      ],
+      "translations": {
+        "en": "This photo inherits protection from these saved paths:\n{paths}\nRemove their locks? Other locks remain. Cleanup candidates are not restored.",
+        "zh-Hans": "此照片继承以下已保存路径的保护：\n{paths}\n移除这些锁定？其他锁定保留，不会恢复清理候选。",
+        "ja": "この写真は次の保存済みパスの保護を継承しています：\n{paths}\nこれらのロックを解除しますか？他のロックは保持され、削除候補は復元されません。"
+      }
+    },
+    {
+      "id": "v2_setup_title",
+      "context": "First v2 setup notice",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Set up AlbumWinnow 2",
+        "zh-Hans": "设置 AlbumWinnow 2",
+        "ja": "AlbumWinnow 2 の設定"
+      }
+    },
+    {
+      "id": "v2_setup_message",
+      "context": "Fresh v2 workspace, no legacy import or automatic actions",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Version 2 starts with a new workspace. Choose your scan sources and set up photo locks and read-only sources again, then scan. Previous review decisions and cleanup candidates are not imported. Previous data is left untouched. Nothing is scanned, downloaded or moved automatically.",
+        "zh-Hans": "版本 2 使用全新工作区。请重新选择扫描来源、设置照片锁和只读来源，然后重新扫描。旧版核对决定和删除候选不会导入，旧数据保持原样。应用不会自动扫描、下载或移动照片。",
+        "ja": "バージョン 2 は新しい作業領域で開始します。スキャン対象、写真のロック、読み取り専用の対象を設定し直してからスキャンしてください。以前の確認結果や削除候補は読み込まれません。以前のデータはそのまま残ります。自動でスキャン、ダウンロード、写真の移動を行うことはありません。"
+      }
+    },
+    {
+      "id": "core_state_changed",
+      "context": "Rust rejected a stale state command",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "The review state changed. Check the current group and try again.",
+        "zh-Hans": "核对状态已更改。请检查当前组后重试。",
+        "ja": "確認状態が変更されました。現在のグループを確認して、もう一度お試しください。"
+      }
+    },
+    {
+      "id": "core_write_failed",
+      "context": "Rust transaction did not commit",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "Your change could not be saved. Cleanup is disabled. Check available storage and reopen the app.",
+        "zh-Hans": "无法保存本次更改，清理已停用。请检查可用存储空间后重新打开应用。",
+        "ja": "変更を保存できませんでした。クリーンアップは無効です。空き容量を確認してアプリを開き直してください。"
+      }
+    },
+    {
+      "id": "core_request_rejected",
+      "context": "Typed core validation error",
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "translations": {
+        "en": "This action could not be accepted. Check your selection and settings, then try again.",
+        "zh-Hans": "无法接受本次操作。请检查所选照片和设置后重试。",
+        "ja": "この操作は受け付けられませんでした。選択した写真と設定を確認して、もう一度お試しください。"
+      }
+    }
+  ]
+}

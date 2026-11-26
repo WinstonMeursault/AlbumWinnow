@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import CoreGraphics
 import Foundation
 
@@ -43,14 +43,18 @@ actor GalleryThumbnails {
         let cacheKey = CacheKey(key)
         if let cached = cache.object(forKey: cacheKey) { return cached }
 
-        try await acquire()
-        defer { release(units: 1) }
+        let units = key.pixelSize > 1024 ? 4 : 1
+        try await acquire(units: units)
+        defer { release(units: units) }
         try Task.checkCancellation()
         if let cached = cache.object(forKey: cacheKey) { return cached }
 
         let image = try await load()
         try Task.checkCancellation()
-        cache.setObject(image, forKey: cacheKey, cost: image.bytesPerRow * image.height)
+        // Detail images belong to their visible view and are released when zoom ends.
+        if key.pixelSize <= 1024 {
+            cache.setObject(image, forKey: cacheKey, cost: image.bytesPerRow * image.height)
+        }
         return image
     }
 

@@ -1,0 +1,30 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSPhotoLibraryUsageDescription": {
+      "comment": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AlbumWinnowはアクセスを許可した写真をスキャンし、確認後に選択した重複写真を「最近削除した項目」に移動します。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AlbumWinnow 扫描你允许访问的照片，仅在你确认后将所选重复照片移到“最近删除”。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

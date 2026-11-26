@@ -1,0 +1,37 @@
+AlbumWinnow Android core smoke host notices
+
+Resolved main/instrumentation runtime coordinates are pinned in core/gradle.lockfile.
+This inventory includes metadata-only and empty compatibility artifacts as well as
+packaged code. Android system framework and build-time Gradle plugins are not APK
+runtime dependencies. Shared Rust dependency and standard-library notices are in
+THIRD-PARTY-NOTICES.txt; AlbumWinnow is covered by LICENSE.
+
+The following components use the included Apache-2.0.txt unless stated otherwise.
+Kotlin's upstream NOTICE is retained in Kotlin-NOTICE.txt. JNA's dual-license
+statement is retained in JNA-LICENSE.txt; this distribution selects Apache-2.0.
+JNA native support also incorporates libffi (libffi-LICENSE.txt, MIT).
+
+androidx.annotation:annotation-jvm:1.7.0-beta01 — Apache-2.0
+androidx.annotation:annotation:1.7.0-beta01 — Apache-2.0
+androidx.concurrent:concurrent-futures-ktx:1.1.0 — Apache-2.0
+androidx.concurrent:concurrent-futures:1.1.0 — Apache-2.0
+androidx.lifecycle:lifecycle-common:2.3.1 — Apache-2.0
+androidx.test.ext:junit:1.2.1 — Apache-2.0
+androidx.test.services:storage:1.5.0 — Apache-2.0
+androidx.test:core:1.6.1 — Apache-2.0
+androidx.test:monitor:1.7.2 — Apache-2.0
+androidx.test:runner:1.6.2 — Apache-2.0
+androidx.tracing:tracing:1.1.0 — Apache-2.0
+com.google.guava:listenablefuture:1.0 — Apache-2.0
+junit:junit:4.13.2 — EPL-1.0 (JUnit-LICENSE.txt)
+net.java.dev.jna:jna:5.17.0 — Apache-2.0
+org.hamcrest:hamcrest-core:1.3 — BSD-3-Clause (Hamcrest-LICENSE.txt)
+org.jetbrains.kotlin:kotlin-stdlib-common:2.1.20 — Apache-2.0
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20 — Apache-2.0
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.20 — Apache-2.0
+org.jetbrains.kotlin:kotlin-stdlib:2.1.20 — Apache-2.0
+org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.7.1 — Apache-2.0
+org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1 — Apache-2.0
+org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1 — Apache-2.0
+org.jetbrains:annotations:13.0 — Apache-2.0
+org.jetbrains:annotations:23.0.0 — Apache-2.0

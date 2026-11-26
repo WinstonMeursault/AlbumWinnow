@@ -1,0 +1,279 @@
+{
+  "grid_size" : 128,
+  "images" : [
+    {
+      "bit_depth" : 8,
+      "dhash" : "13249437237248",
+      "edge_detail" : 429.47538603391911,
+      "height" : 384,
+      "mean_rgba" : [
+        79,
+        131,
+        133,
+        255
+      ],
+      "name" : "burst-a.png",
+      "phash" : "3015659295028627770",
+      "pixels" : "burst-a.png.rgba",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "4418984476672",
+      "edge_detail" : 429.90688924796052,
+      "height" : 384,
+      "mean_rgba" : [
+        79,
+        131,
+        133,
+        255
+      ],
+      "name" : "burst-b.png",
+      "phash" : "3015659295012899130",
+      "pixels" : "burst-b.png.rgba",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "12343023193694803881",
+      "edge_detail" : 2119.9621544177667,
+      "height" : 3024,
+      "mean_rgba" : [
+        129,
+        127,
+        128,
+        255
+      ],
+      "name" : "detail-a.png",
+      "phash" : "457147647405502384",
+      "pixels" : "detail-a.png.rgba",
+      "wide_color" : false,
+      "width" : 4032
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "12343023193694803881",
+      "edge_detail" : 2122.0048929886684,
+      "height" : 3024,
+      "mean_rgba" : [
+        129,
+        127,
+        128,
+        255
+      ],
+      "name" : "detail-b.png",
+      "phash" : "457147647405502384",
+      "pixels" : "detail-b.png.rgba",
+      "wide_color" : false,
+      "width" : 4032
+    },
+    {
+      "bit_depth" : 16,
+      "dhash" : "0",
+      "edge_detail" : 0,
+      "height" : 128,
+      "mean_rgba" : [
+        128,
+        128,
+        128,
+        255
+      ],
+      "name" : "depth16-a.png",
+      "phash" : "0",
+      "pixels" : "depth16-a.png.rgba",
+      "wide_color" : false,
+      "width" : 128
+    },
+    {
+      "bit_depth" : 16,
+      "dhash" : "0",
+      "edge_detail" : 0,
+      "height" : 128,
+      "mean_rgba" : [
+        128,
+        128,
+        128,
+        255
+      ],
+      "name" : "depth16-b.png",
+      "phash" : "0",
+      "pixels" : "depth16-b.png.rgba",
+      "wide_color" : false,
+      "width" : 128
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "0",
+      "edge_detail" : 0,
+      "height" : 128,
+      "mean_rgba" : [
+        78,
+        83,
+        93,
+        255
+      ],
+      "name" : "flat-a.png",
+      "phash" : "0",
+      "pixels" : "flat-a.png.rgba",
+      "wide_color" : false,
+      "width" : 128
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "0",
+      "edge_detail" : 0,
+      "height" : 128,
+      "mean_rgba" : [
+        93,
+        83,
+        78,
+        255
+      ],
+      "name" : "flat-b.png",
+      "phash" : "0",
+      "pixels" : "flat-b.png.rgba",
+      "wide_color" : false,
+      "width" : 128
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "18446744043375296511",
+      "edge_detail" : 429.06350838998952,
+      "height" : 960,
+      "mean_rgba" : [
+        79,
+        131,
+        133,
+        255
+      ],
+      "name" : "landscape.jpg",
+      "phash" : "8967673516394749072",
+      "pixels" : "landscape.jpg.rgba",
+      "wide_color" : false,
+      "width" : 1280
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "18446744043375296511",
+      "edge_detail" : 426.36419513026874,
+      "height" : 480,
+      "mean_rgba" : [
+        79,
+        131,
+        132,
+        255
+      ],
+      "name" : "landscape-small.png",
+      "phash" : "8967673516394749072",
+      "pixels" : "landscape-small.png.rgba",
+      "wide_color" : false,
+      "width" : 640
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "13249437237248",
+      "edge_detail" : 429.47538603391911,
+      "height" : 384,
+      "mean_rgba" : [
+        79,
+        131,
+        133,
+        255
+      ],
+      "name" : "pixel-copy.png",
+      "phash" : "3015659295028627770",
+      "pixels" : "pixel-copy.png.rgba",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "13249437237248",
+      "edge_detail" : 429.47538603391911,
+      "height" : 384,
+      "mean_rgba" : [
+        79,
+        131,
+        133,
+        255
+      ],
+      "name" : "pixel-copy.tiff",
+      "phash" : "3015659295028627770",
+      "pixels" : "pixel-copy.tiff.rgba",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "13249437237248",
+      "edge_detail" : 429.50348117755522,
+      "height" : 384,
+      "mean_rgba" : [
+        79,
+        131,
+        133,
+        255
+      ],
+      "name" : "orientation.png",
+      "phash" : "3015659295028627770",
+      "pixels" : "orientation.png.rgba",
+      "wide_color" : false,
+      "width" : 512
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "13232257368064",
+      "edge_detail" : 428.45582150969238,
+      "height" : 3024,
+      "mean_rgba" : [
+        79,
+        131,
+        133,
+        255
+      ],
+      "name" : "scene.png",
+      "phash" : "3015659295028627770",
+      "pixels" : "scene.png.rgba",
+      "wide_color" : false,
+      "width" : 4032
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "13232257368064",
+      "edge_detail" : 429.06755638566284,
+      "height" : 960,
+      "mean_rgba" : [
+        79,
+        131,
+        133,
+        255
+      ],
+      "name" : "scene-small.jpg",
+      "phash" : "3015659295028627770",
+      "pixels" : "scene-small.jpg.rgba",
+      "wide_color" : false,
+      "width" : 1280
+    },
+    {
+      "bit_depth" : 8,
+      "dhash" : "13232257368064",
+      "edge_detail" : 425.34344813750852,
+      "height" : 960,
+      "mean_rgba" : [
+        79,
+        131,
+        132,
+        255
+      ],
+      "name" : "scene-small.heic",
+      "phash" : "3015659295012899130",
+      "pixels" : "scene-small.heic.rgba",
+      "wide_color" : false,
+      "width" : 1280
+    }
+  ],
+  "metric_absolute_tolerance" : 1e-10,
+  "reference_commit" : "ba4f125a69ea148849117fe026ff234a04bd5468"
+}

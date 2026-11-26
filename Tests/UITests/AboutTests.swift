@@ -5,8 +5,8 @@ final class AboutTests: XCTestCase {
     func testSettingsProvidesVersionAndOfflineLicenseTexts() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO"]
-        app.launch()
+        app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchInEnglish()
         app.buttons["Settings"].tap()
 
         let about = app.buttons["about-open-source"]
@@ -39,8 +39,10 @@ final class AboutTests: XCTestCase {
         XCTAssertTrue(notices.isHittable, app.debugDescription)
         notices.tap()
         XCTAssertTrue(license.waitForExistence(timeout: 8), app.debugDescription)
-        for text in ["GRDB.swift", "BLAKE3 Swift", "CC0 1.0 Universal"] {
+        for text in ["rusqlite 0.37.0", "blake3 1.8.2", "uniffi 0.29.4", "Mozilla Public License Version 2.0", "CC0 1.0 Universal"] {
             XCTAssertTrue(license.label.contains(text), text)
         }
+        XCTAssertFalse(license.label.contains("GRDB.swift"))
+        XCTAssertFalse(license.label.contains("BLAKE3 Swift"))
     }
 }

@@ -2,7 +2,7 @@ name: Test and Build
 
 on:
   push:
-    branches: [main, dev, 'feature/**', 'fix/**', 'perf/**']
+    branches: [main, dev, 'feature/**', 'fix/**', 'perf/**', 'codex/**']
   pull_request:
     branches: [main, dev]
   workflow_dispatch:
@@ -25,14 +25,53 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      - name: Validate localization sources and generated catalogs
+        run: |
+          python3 -m unittest discover -s Tests/Localization
+          python3 -m unittest discover -s Tests/Release
+          python3 Tools/Localization/export.py --check
       - name: Show toolchain
         run: |
           xcodebuild -version
           swift --version
+      - name: Prepare Rust core and generated Apple bindings
+        run: |
+          Tools/Core/build-apple.sh release
+          git diff --exit-code -- Packages/AlbumWinnowRust Tests/AndroidCoreSmoke/core/src/main/kotlin
+      - name: Check Rust core
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets --locked -- -D warnings
+          cargo test --workspace --locked
+          cargo test --workspace --release --locked
+      - name: Check locked dependency notices
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cargo fetch --locked
+          python3 Tools/Core/notices.py --check
       - name: Run core regression tests
+        env:
+          NSUnbufferedIO: 'YES'
         run: |
           mkdir -p "$HOME/.Trash"
-          swift test --package-path Packages/AlbumWinnowCore -c release
+          swift build --package-path Packages/AlbumWinnowApple -c release --build-tests -Xswiftc -enable-testing
+          swift test --package-path Packages/AlbumWinnowApple -c release --skip-build &
+          test_pid=$!
+          (
+            for attempt in 1 2 3 4; do sleep 30; done
+            mkdir -p .local
+            for stalled_pid in $(pgrep -x swiftpm-testing || true); do
+              sample "$stalled_pid" 1 -file ".local/core-stall-$stalled_pid.txt" || true
+              cat ".local/core-stall-$stalled_pid.txt" || true
+            done
+            kill -TERM "$test_pid" 2>/dev/null || true
+          ) &
+          watchdog_pid=$!
+          trap 'kill "$watchdog_pid" 2>/dev/null || true' EXIT
+          wait "$test_pid"
+      - name: Run Swift bridge regressions
+        run: swift test --package-path Packages/AlbumWinnowRust -c release -Xswiftc -strict-concurrency=complete -Xswiftc -warnings-as-errors
 
   app-builds:
     name: Apple app builds
@@ -40,30 +79,133 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
+      - name: Prepare Rust core and generated Apple bindings
+        run: |
+          Tools/Core/build-apple.sh release
+          git diff --exit-code -- Packages/AlbumWinnowRust Tests/AndroidCoreSmoke/core/src/main/kotlin
       - name: Build macOS app
-        run: xcodebuild -project AlbumWinnow.xcodeproj -scheme AlbumWinnow -configuration Release CODE_SIGNING_ALLOWED=NO build
+        run: xcodebuild -project AlbumWinnow.xcodeproj -scheme AlbumWinnow -configuration Release ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO build
       - name: Build iOS and iPadOS app for Simulator
         run: xcodebuild -project AlbumWinnow.xcodeproj -scheme AlbumWinnowMobile -configuration Release -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+      - name: Build iOS and iPadOS app for device
+        run: xcodebuild -project AlbumWinnow.xcodeproj -scheme AlbumWinnowMobile -configuration Release -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build
 
   app-tests:
-    name: Simulator regression tests
+    name: Simulator regression tests (${{ matrix.family }})
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [iPhone, iPad]
     runs-on: macos-26
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - name: Prepare test generator
         run: command -v xcodegen || brew install xcodegen
-      - name: Select a standard iPhone simulator
+      - name: Prepare Rust core and generated Apple bindings
+        run: |
+          Tools/Core/build-apple.sh release --if-needed
+          git diff --exit-code -- Packages/AlbumWinnowRust Tests/AndroidCoreSmoke/core/src/main/kotlin
+      - name: Select a standard simulator
+        env:
+          SIMULATOR_FAMILY: ${{ matrix.family }}
         run: |
           python3 - <<'PY'
           import json, os, subprocess
           devices = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', 'available', '--json']))
           candidates = [device for runtime, rows in devices['devices'].items()
                         if '.iOS-26-' in runtime for device in rows
-                        if device['name'].startswith('iPhone') and 'Duo' not in device['name']]
-          assert candidates, 'An iOS 26 iPhone simulator is required'
+                        if device['name'].startswith(os.environ['SIMULATOR_FAMILY']) and 'Duo' not in device['name']]
+          assert candidates, 'An iOS 26 standard simulator is required'
           with open(os.environ['GITHUB_ENV'], 'a') as output:
               output.write('TEST_SIMULATOR_ID=' + candidates[0]['udid'] + '\n')
           PY
+      - name: Authorize generated Photos fixtures and verify album scope
+        if: matrix.family == 'iPhone'
+        env:
+          TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE: '1'
+        run: |
+          Tests/run-app-tests.sh "$TEST_SIMULATOR_ID" -only-testing:AppUITests/SimulatorPhotosPermissionTests -resultBundlePath .local/ci-photos-permission.xcresult
+          Tests/run-app-tests.sh "$TEST_SIMULATOR_ID" -only-testing:AppModelTests/PhotoScopeTests -resultBundlePath .local/ci-photos-scope.xcresult
       - name: Run app model and UI regressions
-        run: Tests/run-app-tests.sh "$TEST_SIMULATOR_ID"
+        run: Tests/run-app-tests.sh "$TEST_SIMULATOR_ID" -resultBundlePath .local/ci-app-tests.xcresult
+      - name: Preserve simulator validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: acceptance-${{ matrix.family }}
+          path: |
+            .local/ci-app-tests.xcresult
+            .local/ci-photos-permission.xcresult
+            .local/ci-photos-scope.xcresult
+          include-hidden-files: true
+          retention-days: 3
+
+  mac-app-tests:
+    name: macOS model and UI regressions
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prepare test generator
+        run: command -v xcodegen || brew install xcodegen
+      - name: Prepare Rust core and generated Apple bindings
+        run: |
+          Tools/Core/build-apple.sh release --if-needed
+          git diff --exit-code -- Packages/AlbumWinnowRust Tests/AndroidCoreSmoke/core/src/main/kotlin
+      - name: Run macOS regressions
+        run: Tests/run-macos-tests.sh -resultBundlePath .local/ci-mac-tests.xcresult
+      - name: Preserve macOS validation evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: acceptance-macOS
+          path: .local/ci-mac-tests.xcresult
+          include-hidden-files: true
+          retention-days: 3
+
+  android-core-smoke:
+    name: Android core bindings and native smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+      - name: Install pinned Android components
+        run: sdkmanager 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0' 'ndk;28.2.13676358'
+      - name: Prepare both native ABIs and check bindings
+        run: |
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          Tools/Core/build-android.sh debug
+          git diff --exit-code -- Packages/AlbumWinnowRust Tests/AndroidCoreSmoke/core/src/main/kotlin
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run actual Kotlin/native instrumentation
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: Tests/AndroidCoreSmoke/gradlew -p Tests/AndroidCoreSmoke --no-daemon :core:assembleDebug :core:connectedDebugAndroidTest
+      - name: Verify all APK native libraries and alignment
+        run: python3 Tools/Core/verify-android.py Tests/AndroidCoreSmoke/core/build/outputs/apk/androidTest/debug/core-debug-androidTest.apk --zipalign "$ANDROID_HOME/build-tools/35.0.0/zipalign"
+      - name: Preserve Android core smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-core-smoke
+          path: |
+            .local/core/android/manifest.json
+            Tests/AndroidCoreSmoke/core/build/outputs/apk/androidTest/debug/core-debug-androidTest.apk
+            Tests/AndroidCoreSmoke/core/build/reports/androidTests
+            Tests/AndroidCoreSmoke/core/build/outputs/androidTest-results
+          include-hidden-files: true
+          retention-days: 3

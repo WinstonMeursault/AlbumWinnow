@@ -3,6 +3,12 @@ import XCTest
 @testable import AlbumWinnowAcceptance
 
 final class PreviewLayoutTests: XCTestCase {
+    func testLargeCaptionsRetainUsableImageHeightByScrolling() {
+        let frames = ReviewPreviewLayout.frames(width: 370, height: 330, aspects: [4.0 / 3, 1.23],
+                                                minimumColumnWidth: 400) { _, _ in 168 }
+        for frame in frames { XCTAssertGreaterThanOrEqual(frame.height - 168, 128) }
+    }
+
     func testReviewUsesImageAreaAndCleanupKeepsCompactRows() {
         let landscape: [CGFloat] = [16 / 9, 16 / 9]
         let portrait: [CGFloat] = [0.2, 0.2]

@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import CoreGraphics
 import ImageIO
 import SwiftUI
@@ -8,33 +8,74 @@ import SwiftUI
     @State private var model: ReviewModel
     @Environment(\.scenePhase) private var scenePhase
 
+    private static let suite = "org.albumwinnow.acceptance.v2"
+
     init() {
         do { try Self.prepareFixtures() } catch { fatalError("Test fixture setup failed: \(error)") }
-        let folder = URL.documentsDirectory.appending(path: "AppTestFixtures", directoryHint: .isDirectory)
-        if FileManager.default.fileExists(atPath: folder.path), let scope = try? FolderScope(url: folder) {
-            UserDefaults.standard.set([scope.bookmark], forKey: "AlbumWinnow.folderBookmarks")
+        let testState = URL.acceptanceDocumentsDirectory.appending(path: "AcceptanceReview-v2")
+        if !ProcessInfo.processInfo.arguments.contains("--preserve-review-state") {
+            try? FileManager.default.removeItem(at: testState)
+            UserDefaults(suiteName: Self.suite)?.removePersistentDomain(forName: Self.suite)
         }
-        _model = State(initialValue: ReviewModel())
+        _model = State(initialValue: ReviewModel(dataDirectory: testState, preferencesSuite: Self.suite))
     }
 
     var body: some Scene {
         WindowGroup {
             LibraryView(model: model)
+                .defaultAppStorage(UserDefaults(suiteName: Self.suite)!)
+                .preferredColorScheme(ProcessInfo.processInfo.arguments.contains("--dark-appearance") ? .dark : nil)
                 .task {
+                    await prepareModel()
                     model.sceneChanged(scenePhase)
-                    if ProcessInfo.processInfo.arguments.contains("--cleanup-outcome-fixture") {
-                        await prepareCleanupOutcome()
-                    }
+                    if ProcessInfo.processInfo.arguments.contains("--cleanup-outcome-fixture") { await prepareCleanupOutcome() }
                 }
                 .onChange(of: scenePhase) { _, phase in model.sceneChanged(phase) }
         }
+        #if os(macOS)
+        Settings {
+            ScanSourcesView(model: model)
+                .defaultAppStorage(UserDefaults(suiteName: Self.suite)!)
+                .frame(minWidth: 560, minHeight: 600)
+        }
+        #endif
+    }
+
+    @MainActor
+    private func prepareModel() async {
+        await model.bootstrap()
+        // Most UI fixtures begin after setup. The explicit notice fixture keeps
+        // the real product notice visible and asserts it independently.
+        if !ProcessInfo.processInfo.arguments.contains("--v2-setup-notice") { await model.acknowledgeSetupNotice() }
+        model.addFolder(Self.fixtureFolder)
+        await waitForPolicy()
+        if ProcessInfo.processInfo.arguments.contains("--scene-fixture") {
+            model.setSimilarScenesEnabled(true)
+            await waitForPolicy()
+        }
+        if ProcessInfo.processInfo.arguments.contains("--unavailable-folder-fixture") {
+            let missing = URL.acceptanceDocumentsDirectory.appending(path: "Unavailable-v2-fixture")
+            do {
+                try FileManager.default.createDirectory(at: missing, withIntermediateDirectories: true)
+                model.addFolder(missing)
+                await waitForPolicy()
+                try FileManager.default.removeItem(at: missing)
+                model.retryFolders()
+                await waitForPolicy()
+            } catch { model.sourceErrorMessage = L10n.error(error) }
+        }
+    }
+
+    @MainActor
+    private func waitForPolicy() async {
+        while model.updatingPolicy { try? await Task.sleep(for: .milliseconds(20)) }
     }
 
     @MainActor
     private func prepareCleanupOutcome() async {
         do {
-            for folder in model.folders { model.removeFolder(folder.id) }
-            let folder = URL.documentsDirectory.appending(path: "CleanupOutcomeFixture")
+            for folder in model.folders { model.removeFolder(folder.id); await waitForPolicy() }
+            let folder = URL.acceptanceDocumentsDirectory.appending(path: "CleanupOutcomeFixture")
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             for name in ["missing.png", "protected.png.AAE"] {
                 try? FileManager.default.removeItem(at: folder.appending(path: name))
@@ -43,15 +84,18 @@ import SwiftUI
             let bytes = try Data(contentsOf: fixture)
             for name in ["keep.png", "missing.png", "protected.png"] { try bytes.write(to: folder.appending(path: name)) }
             model.addFolder(folder)
+            await waitForPolicy()
             model.scan()
             while model.running { try await Task.sleep(for: .milliseconds(20)) }
-            let group = try Self.require(model.result?.groups.first)
-            let keep = try Self.require(([group.preferred] + group.duplicates.map(\.asset)).first { $0.name == "keep.png" })
+            let summary = try Self.require(model.visibleGroups.first)
+            await model.loadDetails(for: [summary])
+            let group = try Self.require(model.details[summary.id])
+            let keep = try Self.require(group.assets.first { $0.name == "keep.png" })
             guard await model.confirmSelection(in: group, keepID: keep.id, deleteAll: false) else { return }
-            let pairs = model.cleanupGroups.flatMap(\.pairs)
+            await model.prepareCleanup()
             try FileManager.default.removeItem(at: folder.appending(path: "missing.png"))
             try Data([0]).write(to: folder.appending(path: "protected.png.AAE"))
-            await model.applyCleanup(pairs)
+            await model.applyCleanup()
         } catch { model.errorMessage = error.localizedDescription }
     }
 
@@ -60,9 +104,26 @@ import SwiftUI
         return value
     }
 
+    private static var fixtureFolder: URL {
+        URL.acceptanceDocumentsDirectory.appending(path: ProcessInfo.processInfo.arguments.contains("--scene-fixture") ? "SceneUITestFixtures" : "AppTestFixtures", directoryHint: .isDirectory)
+    }
+
     private static func prepareFixtures() throws {
-        let folder = URL.documentsDirectory.appending(path: "AppTestFixtures", directoryHint: .isDirectory)
+        let folder = fixtureFolder
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        if ProcessInfo.processInfo.arguments.contains("--scene-fixture") {
+            let bytes = try Data(contentsOf: require(Bundle.main.resourceURL).appending(path: "Fixtures/scene.png"))
+            try bytes.write(to: folder.appending(path: "scene-a.png"))
+            let source = try require(CGImageSourceCreateWithData(bytes as CFData, nil))
+            let image = try require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+            let cropped = try require(image.cropping(to: CGRect(x: Double(image.width) * 0.04, y: 0,
+                width: Double(image.width) * 0.92, height: Double(image.height))))
+            let encoded = NSMutableData()
+            let destination = try require(CGImageDestinationCreateWithData(encoded, "public.png" as CFString, 1, nil))
+            CGImageDestinationAddImage(destination, cropped, nil)
+            guard CGImageDestinationFinalize(destination) else { throw CocoaError(.fileWriteUnknown) }
+            try (encoded as Data).write(to: folder.appending(path: "scene-b.png"))
+        }
         if FileManager.default.fileExists(atPath: folder.appending(path: "review-detail-b.png").path) { return }
         for (name, width, height, red, green, blue) in [
             ("landscape", 1600, 900, 0.2, 0.5, 0.9),

@@ -15,37 +15,38 @@ struct AboutView: View {
             Form {
                 Section("AlbumWinnow") {
                     if let version {
-                        LabeledContent("Version", value: version)
+                        LabeledContent(L10n.text("app_version"), value: version)
                     }
-                    Text("Copyright © 2026 Winston Meursault")
-                    Text("AlbumWinnow’s public source code is available under the GNU Affero General Public License, version 3.")
+                    Text(L10n.text("app_copyright_2026_winston_meursault"))
+                    Text(L10n.text("app_albumwinnow_s_public_source_code_is_available_under_the_gnu_affero_general_public_license_version_3"))
                 }
 
-                Section("Open Source") {
+                Section(L10n.text("app_open_source")) {
                     if let version {
-                        Link("Source Code for This Version",
+                        Link(L10n.text("app_source_code_for_this_version"),
                              destination: Self.repository.appending(path: "tree/v\(version)"))
                             .accessibilityIdentifier("release-source-code")
                     } else {
-                        Link("Source Code", destination: Self.repository)
+                        Link(L10n.text("app_source_code"), destination: Self.repository)
                     }
-                    NavigationLink("AGPL-3.0 License") {
-                        licenseDocument("AGPL-3.0 License", resource: "LICENSE", ext: nil)
+                    NavigationLink(L10n.text("app_agpl_3_0_license")) {
+                        licenseDocument(L10n.text("app_agpl_3_0_license"), resource: "LICENSE", ext: nil)
                     }
-                    NavigationLink("Third-Party Notices") {
-                        licenseDocument("Third-Party Notices", resource: "THIRD-PARTY-NOTICES", ext: "txt")
+                    NavigationLink(L10n.text("app_third_party_notices")) {
+                        licenseDocument(L10n.text("app_third_party_notices"), resource: "THIRD-PARTY-NOTICES", ext: "txt")
                     }
                 }
 
-                Section("Privacy") {
-                    Link("Privacy Policy", destination: Self.privacyURL)
+                Section(L10n.text("app_privacy")) {
+                    Link(L10n.text("app_privacy_policy"), destination: Self.privacyURL)
                 }
             }
             .formStyle(.grouped)
-            .navigationTitle("About & Open Source")
+            .navigationTitle(L10n.text("app_about_open_source"))
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(L10n.text("app_done")) { dismiss() }
+                        .accessibilityIdentifier("about-done")
                 }
             }
         }
@@ -54,7 +55,7 @@ struct AboutView: View {
         #endif
     }
 
-    private func licenseDocument(_ title: LocalizedStringKey, resource: String, ext: String?) -> some View {
+    private func licenseDocument(_ title: String, resource: String, ext: String?) -> some View {
         ScrollView {
             if let url = Bundle.main.url(forResource: resource, withExtension: ext),
                let contents = try? String(contentsOf: url, encoding: .utf8) {
@@ -64,7 +65,7 @@ struct AboutView: View {
                     .padding()
                     .accessibilityIdentifier("license-document")
             } else {
-                Text("License text is unavailable.")
+                Text(L10n.text("app_license_text_is_unavailable"))
                     .foregroundStyle(.secondary)
                     .padding()
             }
