@@ -1,90 +1,104 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import Foundation
 import XCTest
 @testable import AlbumWinnowAcceptance
 
 final class ScanLifecycleTests: XCTestCase {
-    private let dataDirectory = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
-
-    override func tearDownWithError() throws {
-        try? FileManager.default.removeItem(at: dataDirectory)
-    }
-
     #if os(iOS)
     @MainActor
     func testRelaunchResumesFolderScanFromPersistedSelection() async throws {
-        let defaults = UserDefaults.standard
-        let folderKey = "AlbumWinnow.folderBookmarks"
-        let scanKey = "AlbumWinnow.interruptedScan"
-        let photoKey = "AlbumWinnow.photosEnabled"
-        let savedFolders = defaults.object(forKey: folderKey)
-        let savedScan = defaults.object(forKey: scanKey)
-        let savedPhotos = defaults.object(forKey: photoKey)
-        defer {
-            defaults.set(savedFolders, forKey: folderKey)
-            defaults.set(savedScan, forKey: scanKey)
-            defaults.set(savedPhotos, forKey: photoKey)
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder(files: (0..<48).map { "sample-\($0).png" })
+        let source = try await workspace.withModel { initial in
+            initial.addFolder(folder)
+            try await awaitModel(initial)
+            initial.sceneChanged(.active)
+            initial.scan()
+            XCTAssertTrue(workspace.preferences.bool(forKey: "interruptedScan"))
+            initial.sceneChanged(.background)
+            try await awaitModel(initial)
+            XCTAssertNil(initial.result)
+            XCTAssertTrue(workspace.preferences.bool(forKey: "interruptedScan"))
+            return try XCTUnwrap(initial.folders.first).id
         }
-        defaults.removeObject(forKey: folderKey)
-        defaults.removeObject(forKey: scanKey)
-        defaults.set(false, forKey: photoKey)
-        let base = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: base) }
-        let png = try XCTUnwrap(Data(base64Encoded:
-            "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNIaFiAFTEMLQkAcvNgAZRk9dYAAAAASUVORK5CYII="))
-        for i in 0..<48 { try png.write(to: base.appending(path: "sample-\(i).png")) }
-
-        let initial = ReviewModel(dataDirectory: dataDirectory)
-        initial.addFolder(base)
-        XCTAssertTrue(initial.canScan)
-        initial.sceneChanged(.active)
-        initial.scan()
-        XCTAssertTrue(defaults.bool(forKey: scanKey))
-        initial.sceneChanged(.background)
-        await waitUntil { !initial.running }
-        XCTAssertNil(initial.result)
-        XCTAssertTrue(defaults.bool(forKey: scanKey))
-
-        let reopened = ReviewModel(dataDirectory: dataDirectory)
-        XCTAssertEqual(reopened.folders.map(\.name), [base.lastPathComponent])
+        let reopened = try await workspace.open()
+        XCTAssertEqual(reopened.folders.map(\.id), [source])
         reopened.sceneChanged(.active)
-        await waitUntil { reopened.result != nil }
-        XCTAssertEqual(reopened.result?.groups.first?.duplicates.count, 47)
-        XCTAssertFalse(defaults.bool(forKey: scanKey))
+        try await waitForModelCondition { reopened.result != nil && !reopened.running }
+        XCTAssertEqual(reopened.visibleGroups.first?.count, 48)
+        XCTAssertFalse(workspace.preferences.bool(forKey: "interruptedScan"))
     }
 
+    @MainActor
+    func testBackgroundPreservesDownloadConsentAndUserCancellationClearsIt() async throws {
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder(files: [])
+        let model = try await workspace.open()
+        model.addFolder(folder)
+        try await awaitModel(model)
+        model.sceneChanged(.active)
+        // Controlled consent marker only: this case makes no PhotoKit or network
+        // request and does not claim to validate an actual iCloud transfer.
+        let pending = AssetID(source: try XCTUnwrap(model.folders.first).id, item: "pending-cloud")
+        model.startScan(downloads: [pending])
+        model.sceneChanged(.background)
+        try await awaitModel(model)
+        XCTAssertTrue(workspace.preferences.bool(forKey: "interruptedScan"))
+        let data = try XCTUnwrap(workspace.preferences.data(forKey: "interruptedDownloads"))
+        XCTAssertEqual(try JSONDecoder().decode(Set<AssetID>.self, from: data), [pending])
+        model.cancelScan()
+        XCTAssertNil(workspace.preferences.object(forKey: "interruptedDownloads"))
+        XCTAssertFalse(workspace.preferences.bool(forKey: "interruptedScan"))
+        try await waitForModelCondition { model.header?.settings.scanCancelledByUser == true }
+        model.sceneChanged(.active)
+        XCTAssertFalse(model.running)
+    }
+    @MainActor
+    func testManualRetryAfterUserCancellationCanResumeFromBackground() async throws {
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder()
+        let model = try await workspace.open()
+        model.addFolder(folder)
+        try await awaitModel(model)
+        model.scan()
+        model.cancelScan()
+        try await awaitModel(model)
+        XCTAssertTrue(model.header?.settings.scanCancelledByUser == true)
+        model.sceneChanged(.active)
+        model.scan()
+        model.sceneChanged(.background)
+        try await awaitModel(model)
+        XCTAssertTrue(workspace.preferences.bool(forKey: "interruptedScan"))
+        guard model.header?.settings.scanCancelledByUser == false else {
+            XCTFail("A new explicit scan must supersede the previous user-cancelled marker even if backgrounded immediately")
+            return
+        }
+        model.sceneChanged(.active)
+        try await waitForModelCondition { model.result != nil && !model.running }
+        XCTAssertFalse(workspace.preferences.bool(forKey: "interruptedScan"))
+        XCTAssertTrue(model.canClean)
+    }
     #endif
 
     @MainActor
     func testLibraryChangeDoesNotCancelActiveScanButRequiresRescan() async throws {
-        let defaults = UserDefaults.standard
-        let folderKey = "AlbumWinnow.folderBookmarks"
-        let photoKey = "AlbumWinnow.photosEnabled"
-        let savedFolders = defaults.object(forKey: folderKey)
-        let savedPhotos = defaults.object(forKey: photoKey)
-        defaults.removeObject(forKey: folderKey)
-        defaults.set(false, forKey: photoKey)
-        let base = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        defer {
-            defaults.set(savedFolders, forKey: folderKey)
-            defaults.set(savedPhotos, forKey: photoKey)
-            try? FileManager.default.removeItem(at: base)
-        }
-        let png = try XCTUnwrap(Data(base64Encoded:
-            "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNIaFiAFTEMLQkAcvNgAZRk9dYAAAAASUVORK5CYII="))
-        for i in 0..<48 { try png.write(to: base.appending(path: "sample-\(i).png")) }
-        let model = ReviewModel(dataDirectory: dataDirectory)
-        model.addFolder(base)
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder(files: (0..<48).map { "sample-\($0).png" })
+        let model = try await workspace.open()
+        model.addFolder(folder)
+        try await awaitModel(model)
         model.scan()
         model.libraryDidChange()
-        await waitUntil { !model.running }
+        try await awaitModel(model)
         XCTAssertEqual(model.result?.scanned, 48)
         XCTAssertTrue(model.resultsStale)
         XCTAssertFalse(model.canClean)
         model.scan()
-        await waitUntil { !model.running }
+        try await awaitModel(model)
         XCTAssertEqual(model.result?.reused, 48)
         XCTAssertFalse(model.resultsStale)
         XCTAssertTrue(model.canClean)
@@ -93,208 +107,150 @@ final class ScanLifecycleTests: XCTestCase {
         XCTAssertFalse(model.canClean)
     }
 
-    #if os(iOS)
-    @MainActor
-    func testBackgroundPreservesDownloadConsentAndUserCancellationClearsIt() async throws {
-        let defaults = UserDefaults.standard
-        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled",
-                    "AlbumWinnow.interruptedScan", "AlbumWinnow.interruptedDownloads"]
-        let saved = keys.map { defaults.object(forKey: $0) }
-        for key in keys { defaults.removeObject(forKey: key) }
-        let base = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        defer {
-            for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
-            try? FileManager.default.removeItem(at: base)
-        }
-        let model = ReviewModel(dataDirectory: dataDirectory)
-        model.addFolder(base)
-        model.sceneChanged(.active)
-        // Exercise saved consent without requiring a Photos account or making network requests.
-        model.startScan(downloads: [AssetID(source: "photos-library", item: "pending-cloud")])
-        model.sceneChanged(.background)
-        await waitUntil { !model.running }
-        XCTAssertTrue(defaults.bool(forKey: "AlbumWinnow.interruptedScan"))
-        XCTAssertEqual(defaults.stringArray(forKey: "AlbumWinnow.interruptedDownloads"), ["pending-cloud"])
-        model.cancelScan()
-        XCTAssertNil(defaults.object(forKey: "AlbumWinnow.interruptedDownloads"))
-        XCTAssertFalse(defaults.bool(forKey: "AlbumWinnow.interruptedScan"))
-        model.sceneChanged(.active)
-        XCTAssertFalse(model.running)
-    }
-
-    #endif
-
     @MainActor
     func testRetryAndCancellationPreserveStaleResultsUntilSuccessfulScan() async throws {
-        let defaults = UserDefaults.standard
-        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled",
-                    "AlbumWinnow.interruptedScan", "AlbumWinnow.interruptedDownloads"]
-        let saved = keys.map { defaults.object(forKey: $0) }
-        for key in keys { defaults.removeObject(forKey: key) }
-        let folder = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        defer {
-            for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
-            try? FileManager.default.removeItem(at: folder)
-        }
-        let fixtures = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures")
-        let bytes = try Data(contentsOf: fixtures.appending(path: "burst-a.png"))
-        for name in ["a.png", "b.png"] { try bytes.write(to: folder.appending(path: name)) }
-        let model = ReviewModel(dataDirectory: dataDirectory)
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder()
+        let model = try await workspace.open()
         model.addFolder(folder)
+        try await awaitModel(model)
         model.scan()
-        await waitUntil { !model.running }
+        try await awaitModel(model)
         XCTAssertTrue(model.canClean)
-        let downloads: Set<AssetID> = [AssetID(source: "photos-library", item: "pending")]
-        model.startScan(downloads: downloads)
+        let pending = AssetID(source: try XCTUnwrap(model.folders.first).id, item: "controlled-pending")
+        model.startScan(downloads: [pending])
         model.libraryDidChange()
         model.cancelScan()
-        await waitUntil { !model.running }
+        try await awaitModel(model)
         XCTAssertTrue(model.resultsStale)
-        model.startScan(downloads: downloads)
+        model.startScan(downloads: [pending])
         model.cancelScan()
-        await waitUntil { !model.running }
+        try await awaitModel(model)
         XCTAssertTrue(model.resultsStale)
         XCTAssertFalse(model.canClean)
         model.scan()
-        await waitUntil { !model.running }
+        try await awaitModel(model)
+        XCTAssertNil(model.errorMessage)
         XCTAssertFalse(model.resultsStale)
         XCTAssertTrue(model.canClean)
     }
 
     @MainActor
     func testClearingCachePreservesFolderAccessAndPhotos() async throws {
-        let defaults = UserDefaults.standard
-        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled",
-                    "AlbumWinnow.interruptedScan", "AlbumWinnow.interruptedDownloads"]
-        let saved = keys.map { defaults.object(forKey: $0) }
-        for key in keys { defaults.removeObject(forKey: key) }
-        let folder = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        defer {
-            for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
-            try? FileManager.default.removeItem(at: folder)
-        }
-        let fixture = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/burst-a.png")
-        let bytes = try Data(contentsOf: fixture)
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder(files: ["photo.png"])
         let photo = folder.appending(path: "photo.png")
-        try bytes.write(to: photo)
-        let model = ReviewModel(dataDirectory: dataDirectory)
+        let bytes = try Data(contentsOf: photo)
+        let model = try await workspace.open()
         model.addFolder(folder)
+        try await awaitModel(model)
         model.scan()
-        await waitUntil { !model.running }
-        let bookmarks = defaults.array(forKey: "AlbumWinnow.folderBookmarks") as? [Data]
+        try await awaitModel(model)
+        let sources = model.registeredSources
         await model.clearScanCache()
         XCTAssertFalse(model.clearingCache)
         XCTAssertNil(model.result)
         XCTAssertNotNil(model.cacheStatus)
         XCTAssertTrue(model.canScan)
-        XCTAssertEqual(defaults.array(forKey: "AlbumWinnow.folderBookmarks") as? [Data], bookmarks)
+        XCTAssertEqual(model.registeredSources, sources)
         XCTAssertEqual(try Data(contentsOf: photo), bytes)
         model.scan()
-        await waitUntil { !model.running }
+        try await awaitModel(model)
         XCTAssertEqual(model.result?.scanned, 1)
         XCTAssertEqual(model.result?.reused, 0)
     }
 
     @MainActor
     func testFolderCleanupIsRecoverableOrLeavesBothOriginals() async throws {
-        let base = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: base) }
-        let png = try XCTUnwrap(Data(base64Encoded:
-            "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEUlEQVR4nGNIaFiAFTEMLQkAcvNgAZRk9dYAAAAASUVORK5CYII="))
-        let folder = base.appending(path: "Folder", directoryHint: .isDirectory)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let keep = folder.appending(path: "a-keep.png")
-        let copy = folder.appending(path: "b-copy.png")
-        try png.write(to: keep)
-        try png.write(to: copy)
-        let source = FileSystemSource(directory: folder)
-        let engine = try ScanEngine(cacheURL: base.appending(path: "scan.sqlite"))
-        let scan = try await engine.scan([source])
-        let group = try XCTUnwrap(scan.groups.first)
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder(files: ["a-keep.png", "b-copy.png"])
+        let keep = folder.appending(path: "a-keep.png"), copy = folder.appending(path: "b-copy.png")
+        let bytes = try Data(contentsOf: copy)
+        let model = try await workspace.open()
+        model.addFolder(folder)
+        try await awaitModel(model)
+        model.scan()
+        try await awaitModel(model)
+        let group = try await scannedGroup(model)
         XCTAssertEqual(group.preferred.name, "a-keep.png")
-        let service = AssetMutationService()
-        let pair = CleanupPair(keep: group.preferred, remove: try XCTUnwrap(group.duplicates.first).asset)
-        let run = try await service.apply([pair], sources: [source], protection: CleanupProtection())
-        if run.first?.status == .movedToTrash {
-            let path = try XCTUnwrap(run.first?.detail)
-            let trash = URL(fileURLWithPath: path)
+        let confirmed = await model.confirmSelection(in: group, keepID: group.preferred.id, deleteAll: false)
+        XCTAssertTrue(confirmed)
+        await model.prepareCleanup()
+        XCTAssertEqual(model.cleanupPlan?.itemCount, 1)
+        await model.applyCleanup()
+        let outcome = try XCTUnwrap(model.lastCleanup?.first)
+        #if os(macOS)
+        XCTAssertTrue(outcome.moved, outcome.detail ?? "Native macOS fixture must actually move to Trash")
+        #endif
+        print("V2_MODEL_CLEANUP moved=\(outcome.moved) trashReceipt=\(outcome.trashLocation != nil)")
+        if outcome.moved {
+            let trash = try XCTUnwrap(outcome.trashLocation)
             XCTAssertFalse(FileManager.default.fileExists(atPath: copy.path))
-            XCTAssertEqual(try Data(contentsOf: trash), png)
+            XCTAssertEqual(try Data(contentsOf: trash), bytes)
             try FileManager.default.moveItem(at: trash, to: copy)
         } else {
-            XCTAssertEqual(run.first?.status, .failed)
-            // Some simulator file providers do not support Trash. Failure must preserve both files.
-            XCTAssertFalse(run.first?.detail?.isEmpty ?? true)
+            // Some simulator file providers do not support recoverable Trash.
+            // A real failed outcome is asserted; it is not counted as moved.
+            XCTAssertFalse(outcome.detail?.isEmpty ?? true)
         }
-        XCTAssertTrue(FileManager.default.fileExists(atPath: keep.path))
-        XCTAssertEqual(try Data(contentsOf: copy), png)
-        XCTAssertEqual(try Data(contentsOf: keep), png)
-        let rescan = try await engine.scan([source])
-        XCTAssertEqual(rescan.groups.map(\.id), scan.groups.map(\.id))
-        XCTAssertEqual(rescan.groups.flatMap(\.duplicates).map(\.id), scan.groups.flatMap(\.duplicates).map(\.id))
+        XCTAssertEqual(try Data(contentsOf: copy), bytes)
+        XCTAssertEqual(try Data(contentsOf: keep), bytes)
+        model.scan()
+        try await awaitModel(model)
+        let rescanned = try await scannedGroup(model)
+        XCTAssertEqual(rescanned.id, group.id)
+        XCTAssertEqual(rescanned.duplicates.map(\.id), group.duplicates.map(\.id))
     }
 
     @MainActor
     func testCancellingSupplementRequiresManualRescanBeforeRestoringCleanup() async throws {
-        let defaults = UserDefaults.standard
-        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled", "AlbumWinnow.interruptedScan",
-                    "AlbumWinnow.interruptedDownloads", "AlbumWinnow.interruptedCloudPolicy"]
-        let saved = keys.map { defaults.object(forKey: $0) }
-        keys.forEach { defaults.removeObject(forKey: $0) }
-        defer { for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) } }
-        let folder = dataDirectory.appending(path: "photos")
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let fixture = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/burst-a.png")
-        let bytes = try Data(contentsOf: fixture)
-        for name in ["a.png", "b.png"] { try bytes.write(to: folder.appending(path: name)) }
-        let model = ReviewModel(dataDirectory: dataDirectory)
-        model.addFolder(folder)
-        model.scan()
-        await waitUntil { !model.running }
-        let group = try XCTUnwrap(model.result?.groups.first)
-        let confirmed = await model.confirmSelection(in: group, keepID: group.preferred.id, deleteAll: false)
-        XCTAssertTrue(confirmed)
-        // Synthetic consent IDs exercise cancellation without a Photos account or network request.
-        model.startScan(downloads: [AssetID(source: "photos-library", item: "synthetic-pending")])
-        model.cancelScan()
-        await waitUntil { !model.running }
-        XCTAssertTrue(model.resultsStale, "A cancelled supplement has not revalidated changed group membership")
-        XCTAssertFalse(model.canClean)
-        XCTAssertEqual(model.selectedCount, 1, "Saved decisions remain pending revalidation")
-        let reopened = ReviewModel(dataDirectory: dataDirectory)
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder()
+        try await workspace.withModel { model in
+            model.addFolder(folder)
+            try await awaitModel(model)
+            model.scan()
+            try await awaitModel(model)
+            let group = try await scannedGroup(model)
+            let confirmed = await model.confirmSelection(in: group, keepID: group.preferred.id, deleteAll: false)
+            XCTAssertTrue(confirmed)
+            let pending = AssetID(source: group.id.source, item: "controlled-pending")
+            model.startScan(downloads: [pending])
+            model.cancelScan()
+            try await awaitModel(model)
+            XCTAssertTrue(model.resultsStale, "A cancelled supplement has not revalidated changed group membership")
+            XCTAssertFalse(model.canClean)
+            XCTAssertEqual(model.selectedCount, 1, "Saved decisions remain pending revalidation")
+            try await waitForModelCondition { model.header?.settings.scanCancelledByUser == true }
+        }
+        let reopened = try await workspace.open()
         reopened.sceneChanged(.active)
-        XCTAssertFalse(reopened.running, "A user cancellation must not restart on relaunch")
+        XCTAssertFalse(reopened.running, "User cancellation must not restart on relaunch")
         reopened.scan()
-        await waitUntil { !reopened.running }
+        try await awaitModel(reopened)
         XCTAssertEqual(reopened.selectedCount, 1)
         XCTAssertTrue(reopened.canClean)
         XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appending(path: "b.png").path))
     }
 
     @MainActor
-    private func waitUntil(_ ready: () -> Bool) async {
-        for _ in 0..<300 {
-            if ready() { return }
-            try? await Task.sleep(for: .milliseconds(50))
+    func testLegacyCleanupHistoryIsLeftUntouchedOnV2Launch() async throws {
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        // Even additional files in the explicitly supplied directory are not
+        // opportunistically removed; no legacy history is opened or imported.
+        try FileManager.default.createDirectory(at: workspace.data, withIntermediateDirectories: true)
+        let names = ["cleanup.sqlite", "cleanup.sqlite-wal", "cleanup.sqlite-shm"]
+        for name in names { try Data("legacy history".utf8).write(to: workspace.data.appending(path: name)) }
+        let model = try await workspace.open()
+        for name in names {
+            XCTAssertEqual(try Data(contentsOf: workspace.data.appending(path: name)), Data("legacy history".utf8))
         }
-        XCTFail("Timed out waiting for scan state")
-    }
-    @MainActor
-    func testLegacyCleanupHistoryIsRemovedOnLaunch() throws {
-        let folder = dataDirectory
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let legacyFiles = ["cleanup.sqlite", "cleanup.sqlite-wal", "cleanup.sqlite-shm"].map {
-            folder.appending(path: $0)
-        }
-        for url in legacyFiles { try Data("legacy history".utf8).write(to: url) }
-        let model = ReviewModel(dataDirectory: dataDirectory)
-        for url in legacyFiles { XCTAssertFalse(FileManager.default.fileExists(atPath: url.path)) }
         XCTAssertNil(model.lastCleanup)
-        XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appending(path: "scan.sqlite").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: workspace.data.appending(path: "scan.sqlite").path))
     }
-
 }

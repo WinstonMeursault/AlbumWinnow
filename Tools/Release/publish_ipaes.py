@@ -11,7 +11,7 @@ def arguments(argv=None):
     parser.add_argument('--upload-directory', required=True)
     parser.add_argument('--repository-url', required=True)
     args = parser.parse_args(argv)
-    if not re.fullmatch(r'1\.[0-9]+\.[0-9]+', args.version):
+    if not re.fullmatch(r'2\.[0-9]+\.[0-9]+', args.version):
         parser.error('Invalid release version')
     if not re.fullmatch(r'[A-Za-z0-9_.@-]+', args.host) or args.host.startswith('-'):
         parser.error('Invalid SSH host')

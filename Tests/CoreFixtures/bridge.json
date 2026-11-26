@@ -1,0 +1,10 @@
+{
+  "contract": 1,
+  "hash": {
+    "utf8": "abc",
+    "blake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
+  },
+  "maximum_buffer_bytes": 4194304,
+  "uint64": "18446744073709551615",
+  "identity": {"source_id": "source-v2", "item_id": "opaque:照片/é", "revision": null}
+}

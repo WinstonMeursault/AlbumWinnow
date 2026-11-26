@@ -8,7 +8,7 @@ final class SimulatorPhotosPermissionTests: XCTestCase {
         }
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO"]
+        app.launchArguments = []
         app.launchInEnglish()
         let settings = app.buttons["open-settings"]
         XCTAssertTrue(settings.waitForExistence(timeout: 20))

@@ -1,10 +1,10 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import CoreGraphics
 import SwiftUI
 
 struct PhotoDifferenceView: View {
     let model: ReviewModel
-    let group: DuplicateGroup
+    let group: ReviewGroupDetail
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
     @State private var referenceID: AssetID?

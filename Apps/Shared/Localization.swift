@@ -1,12 +1,22 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
+import AlbumWinnowRust
 import Foundation
 
 enum L10n {
-    static func cleanupFailure(_ reason: CleanupFailureReason) -> String {
+    static func cleanupReason(_ reason: CoreCleanupReason) -> String {
         switch reason {
-        case .cleanup(let failure): error(failure)
-        case .cancelled: text("operation_cancelled")
+        case .stalePlan, .changedAsset: error(CleanupError.changedAsset)
+        case .invalidSelection: error(CleanupError.invalidSelection)
+        case .unavailableSource: error(CleanupError.unavailableSource)
+        case .unavailableProtection: error(CleanupError.unavailableProtection)
+        case .protectedResources: error(CleanupError.protectedResources)
+        case .userProtected: error(CleanupError.userProtected)
+        case .readOnlySource: error(CleanupError.readOnlySource)
+        case .sameFile: error(CleanupError.sameFile)
+        case .noLongerDuplicate: error(CleanupError.noLongerDuplicate)
         case .inaccessible: text("cleanup_error_inaccessible")
+        case .cancelled: text("operation_cancelled")
+        case .operationInProgress: error(CleanupError.operationInProgress)
         }
     }
 
@@ -21,6 +31,18 @@ enum L10n {
 
     static func error(_ error: Error) -> String {
         switch error {
+        case let failure as RustCoreFailure: return self.error(failure.underlying)
+        case let error as BridgeError:
+            switch error {
+            case .Cancelled: return text("operation_cancelled")
+            case .StaleOperation: return text("core_state_changed")
+            case .WriteFailed: return text("core_write_failed")
+            case .ProtectionUnavailable, .StorageUnavailable, .StorageCorrupt, .UnsupportedSchema:
+                return text("cleanup_error_unavailable_protection")
+            case .InvalidState: return text("core_state_changed")
+            case .InternalFailure, .InvalidPixels, .InvalidValue, .InvalidBuffer:
+                return text("core_request_rejected")
+            }
         case let error as CleanupError:
             switch error {
             case .invalidSelection: return text("cleanup_error_invalid_selection")

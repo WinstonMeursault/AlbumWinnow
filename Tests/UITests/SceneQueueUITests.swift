@@ -6,8 +6,7 @@ final class SceneQueueUITests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["--scene-fixture", "-AlbumWinnow.photosEnabled", "NO",
-                               "-AlbumWinnow.reviewAnimation", "none", "-AlbumWinnow.showReviewFilenames", "YES",
+        app.launchArguments = ["--scene-fixture", "-reviewAnimation", "none", "-showReviewFilenames", "YES",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launchInEnglish()
         let scan = app.buttons["start-scan"]

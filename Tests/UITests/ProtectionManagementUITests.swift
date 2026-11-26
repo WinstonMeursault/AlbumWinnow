@@ -5,12 +5,14 @@ final class ProtectionManagementUITests: XCTestCase {
     func testUnavailableSourceCanRetryAndBeExplicitlyRemoved() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--unavailable-folder-fixture", "-AlbumWinnow.photosEnabled", "NO"]
+        app.launchArguments = ["--unavailable-folder-fixture", ]
         app.launchInEnglish()
-        let alert = app.alerts["AlbumWinnow"]
+        let settings = app.buttons["open-settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 15))
+        settings.tap()
+        let alert = app.alerts["Scan Sources"]
         XCTAssertTrue(alert.waitForExistence(timeout: 15))
         alert.buttons["OK"].tap()
-        app.buttons["open-settings"].tap()
         let retry = app.buttons["Retry Saved Folders"]
         XCTAssertTrue(retry.waitForExistence(timeout: 5))
         retry.tap()
@@ -30,7 +32,7 @@ final class ProtectionManagementUITests: XCTestCase {
     func testCancellingSavedLockRemovalPreservesFinalProtection() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none"]
+        app.launchArguments = ["-reviewAnimation", "none"]
         app.launchInEnglish()
         app.buttons["start-scan"].tap()
         let cover = app.buttons["duplicate-group-gallery-landscape-a.png"]
@@ -38,8 +40,7 @@ final class ProtectionManagementUITests: XCTestCase {
         cover.tap()
         let photo = app.buttons["review-photo-gallery-landscape-a.png"]
         XCTAssertTrue(photo.waitForExistence(timeout: 10))
-        photo.press(forDuration: 1)
-        app.buttons["Lock Photo"].tap()
+        app.reviewContextAction("Lock Photo", on: photo).tap()
         XCTAssertTrue(photo.waitForReviewValue("Locked, must be kept"))
         if app.buttons["close-review"].exists { app.buttons["close-review"].tap() }
         else { app.navigationBars.firstMatch.buttons.firstMatch.tap() }

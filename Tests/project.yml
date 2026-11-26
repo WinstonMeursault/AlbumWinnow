@@ -8,8 +8,10 @@ settings:
   MARKETING_VERSION: ${ALBUMWINNOW_VERSION}
   CURRENT_PROJECT_VERSION: 1
 packages:
-  AlbumWinnowCore:
-    path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowCore
+  AlbumWinnowRust:
+    path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowRust
+  AlbumWinnowApple:
+    path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowApple
 targets:
   AlbumWinnowAcceptance:
     type: application
@@ -22,11 +24,12 @@ targets:
         buildPhase: resources
       - path: ${ALBUMWINNOW_ROOT}/THIRD-PARTY-NOTICES.txt
         buildPhase: resources
-      - path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowCore/Tests/AlbumWinnowCoreTests/Fixtures
+      - path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowApple/Tests/AlbumWinnowAppleTests/Fixtures
         type: folder
         buildPhase: resources
     dependencies:
-      - package: AlbumWinnowCore
+      - package: AlbumWinnowApple
+      - package: AlbumWinnowRust
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.acceptance
       TARGETED_DEVICE_FAMILY: '1,2'
@@ -41,7 +44,8 @@ targets:
         buildPhase: resources
     dependencies:
       - target: AlbumWinnowAcceptance
-      - package: AlbumWinnowCore
+      - package: AlbumWinnowApple
+      - package: AlbumWinnowRust
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.acceptance.model
   AppUITests:

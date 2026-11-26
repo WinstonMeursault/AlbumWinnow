@@ -1,66 +1,55 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
+import AlbumWinnowRust
 import XCTest
 @testable import AlbumWinnowAcceptance
 
 final class ResultQueryTests: XCTestCase {
     @MainActor
     func testFiltersPersistWithoutDroppingHiddenManualCandidates() async throws {
-        let defaults = UserDefaults.standard
-        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled", "AlbumWinnow.interruptedScan"]
-        let saved = keys.map { defaults.object(forKey: $0) }
-        keys.forEach { defaults.removeObject(forKey: $0) }
-        let root = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
-        let folder = root.appending(path: "photos"), data = root.appending(path: "state")
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        defer {
-            for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
-            try? FileManager.default.removeItem(at: root)
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = try workspace.folder()
+        let saved = try await workspace.withModel { model in
+            model.addFolder(folder)
+            try await awaitModel(model)
+            model.scan()
+            try await awaitModel(model)
+            let group = try await scannedGroup(model)
+            model.downloadAndRescan(group.preferred)
+            XCTAssertFalse(model.running, "A folder item cannot authorize a Photos download")
+            let manualKeep = try XCTUnwrap(group.duplicates.first?.id)
+            let confirmed = await model.confirmSelection(in: group, keepID: manualKeep, deleteAll: false)
+            XCTAssertTrue(confirmed)
+            var query = model.resultQuery
+            query.status = .kept
+            query.sort = .bytes
+            model.setResultQuery(query)
+            try await awaitModel(model)
+            XCTAssertTrue(model.visibleGroups.isEmpty)
+            XCTAssertEqual(model.hiddenCandidateCount, 1)
+            let previews = try await preparedPreviews(model)
+            XCTAssertEqual(previews.flatMap(\.removing).count, 1)
+            XCTAssertEqual(model.selection(for: group.id).keepID, manualKeep)
+            return (query, manualKeep)
         }
-        let fixture = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/burst-a.png")
-        let bytes = try Data(contentsOf: fixture)
-        for name in ["a.png", "b.png"] { try bytes.write(to: folder.appending(path: name)) }
-        let model = ReviewModel(dataDirectory: data)
-        model.addFolder(folder)
-        model.scan()
-        await waitUntil { !model.running }
-        let group = try XCTUnwrap(model.result?.groups.first)
-        model.downloadAndRescan(group.preferred)
-        XCTAssertFalse(model.running, "A folder item cannot authorize a Photos download")
-        let manualKeep = try XCTUnwrap(group.duplicates.first?.id)
-        let confirmed = await model.confirmSelection(in: group, keepID: manualKeep, deleteAll: false)
-        XCTAssertTrue(confirmed)
-        var query = ReviewResultQuery()
-        query.status = .kept
-        query.sort = .bytes
-        model.setResultQuery(query)
-        XCTAssertTrue(model.visibleGroups.isEmpty)
-        XCTAssertEqual(model.hiddenCandidateCount, 1)
-        XCTAssertEqual(model.cleanupGroups.flatMap(\.pairs).count, 1)
-        XCTAssertEqual(model.selection(for: group.id).keepID, manualKeep)
-
-        let reopened = ReviewModel(dataDirectory: data)
-        XCTAssertEqual(reopened.resultQuery, query)
+        let reopened = try await workspace.open()
+        XCTAssertEqual(reopened.resultQuery, saved.0)
         XCTAssertFalse(reopened.canClean)
-        reopened.sceneChanged(.active)
-        await waitUntil { !reopened.running }
+        reopened.scan()
+        try await awaitModel(reopened)
         XCTAssertEqual(reopened.hiddenCandidateCount, 1)
-        XCTAssertEqual(reopened.selection(for: group.id).keepID, manualKeep)
-        XCTAssertEqual(reopened.cleanupGroups.flatMap(\.pairs).first?.keep?.id, manualKeep)
+        let restored = try await preparedPreviews(reopened)
+        XCTAssertEqual(restored.first?.keep?.id, saved.1)
         await reopened.clearScanCache()
         reopened.scan()
-        await waitUntil { !reopened.running }
-        XCTAssertEqual(reopened.resultQuery, query)
+        try await awaitModel(reopened)
+        XCTAssertEqual(reopened.resultQuery, saved.0)
         XCTAssertEqual(reopened.selectedCount, 1)
-        reopened.setResultQuery(ReviewResultQuery())
+        reopened.clearResultFilters()
+        try await awaitModel(reopened)
+        let group = try await scannedGroup(reopened)
+        XCTAssertEqual(reopened.selection(for: group.id).keepID, saved.1)
         XCTAssertEqual(reopened.visibleGroups.count, 1)
         XCTAssertEqual(reopened.hiddenCandidateCount, 0)
-    }
-
-    @MainActor private func waitUntil(_ condition: () -> Bool) async {
-        for _ in 0..<500 {
-            if condition() { return }
-            try? await Task.sleep(for: .milliseconds(20))
-        }
-        XCTFail("Timed out waiting for scan")
     }
 }

@@ -1,0 +1,82 @@
+{
+  "algorithm_source" : "ba4f125 (PhotoDifference unchanged)",
+  "cases" : [
+    {
+      "first" : "scene.png.rgba",
+      "first_height" : 384,
+      "first_width" : 512,
+      "regions" : [
+
+      ],
+      "second" : "scene-small.jpg.rgba",
+      "second_height" : 384,
+      "second_width" : 512,
+      "unavailable" : null
+    },
+    {
+      "first" : "detail-a.png.rgba",
+      "first_height" : 384,
+      "first_width" : 512,
+      "regions" : [
+        {
+          "height" : 0.03125,
+          "width" : 0.03125,
+          "x" : 0.484375,
+          "y" : 0.484375
+        }
+      ],
+      "second" : "detail-b.png.rgba",
+      "second_height" : 384,
+      "second_width" : 512,
+      "unavailable" : null
+    },
+    {
+      "first" : "burst-a.png.rgba",
+      "first_height" : 384,
+      "first_width" : 512,
+      "regions" : [
+
+      ],
+      "second" : "burst-b.png.rgba",
+      "second_height" : 384,
+      "second_width" : 512,
+      "unavailable" : "alignment"
+    },
+    {
+      "first" : "flat-a.png.rgba",
+      "first_height" : 128,
+      "first_width" : 128,
+      "regions" : [
+
+      ],
+      "second" : "flat-b.png.rgba",
+      "second_height" : 128,
+      "second_width" : 128,
+      "unavailable" : "insufficientDetail"
+    },
+    {
+      "first" : "landscape.jpg.rgba",
+      "first_height" : 384,
+      "first_width" : 512,
+      "regions" : [
+
+      ],
+      "second" : "landscape-small.png.rgba",
+      "second_height" : 384,
+      "second_width" : 512,
+      "unavailable" : null
+    },
+    {
+      "first" : "burst-a.png.rgba",
+      "first_height" : 384,
+      "first_width" : 512,
+      "regions" : [
+
+      ],
+      "second" : "orientation.png.rgba",
+      "second_height" : 384,
+      "second_width" : 512,
+      "unavailable" : null
+    }
+  ]
+}

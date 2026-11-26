@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import Foundation
 import XCTest
 @testable import AlbumWinnowAcceptance

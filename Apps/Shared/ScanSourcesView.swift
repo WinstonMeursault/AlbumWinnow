@@ -14,7 +14,7 @@ struct ScanSourcesView: View {
     @AppStorage(ReviewHand.defaultsKey) private var reviewHand = ReviewHand.right.rawValue
     @State private var resettingReview = false
     @State private var showingAbout = false
-    @State private var reconnectingFolder: Data?
+    @State private var reconnectingFolder: String?
     #if os(iOS)
     @State private var importing = false
     #endif
@@ -178,12 +178,12 @@ struct ScanSourcesView: View {
         }
         #endif
         .alert(L10n.text("app_scan_sources"), isPresented: Binding(
-            get: { model.sourceErrorMessage != nil },
-            set: { if !$0 { model.sourceErrorMessage = nil } }
+            get: { model.sourceErrorMessage != nil || model.errorMessage != nil },
+            set: { if !$0 { model.sourceErrorMessage = nil; model.errorMessage = nil } }
         )) {
-            Button(L10n.text("app_ok"), role: .cancel) { model.sourceErrorMessage = nil }
+            Button(L10n.text("app_ok"), role: .cancel) { model.sourceErrorMessage = nil; model.errorMessage = nil }
         } message: {
-            Text(model.sourceErrorMessage ?? "")
+            Text(model.sourceErrorMessage ?? model.errorMessage ?? "")
         }
     }
 

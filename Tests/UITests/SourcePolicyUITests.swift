@@ -6,7 +6,7 @@ final class SourcePolicyUITests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
+        app.launchArguments = ["-reviewAnimation", "none",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
         XCTAssertTrue(app.buttons["start-scan"].waitForExistence(timeout: 15))

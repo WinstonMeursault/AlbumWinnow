@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import SwiftUI
 #if os(macOS)
 import AppKit
@@ -7,7 +7,7 @@ import UIKit
 #endif
 
 enum ReviewAnimation: String, CaseIterable, Identifiable {
-    static let defaultsKey = "AlbumWinnow.reviewAnimation"
+    static let defaultsKey = "reviewAnimation"
     case slide, cover, fade, none
 
     var id: String { rawValue }
@@ -23,7 +23,7 @@ enum ReviewAnimation: String, CaseIterable, Identifiable {
 }
 
 struct ReviewPager: View {
-    let groups: [DuplicateGroup]
+    let groups: [ReviewGroupSummary]
     @Binding var selectedID: AssetID?
     let model: ReviewModel
     let finishReview: () -> Void
@@ -53,8 +53,12 @@ struct ReviewPager: View {
                     background
                     ForEach(neighbors) { group in
                         let relative = group.id == selectedID ? 0 : (group.id == previousID ? -1 : 1)
-                        GroupReviewView(group: group, model: model, isActive: relative == 0, zoomed: $zoomed) {
-                            navigate(forward: true, width: width, index: index)
+                        Group {
+                            if let detail = model.details[group.id] {
+                                GroupReviewView(group: detail, model: model, isActive: relative == 0, zoomed: $zoomed) {
+                                    navigate(forward: true, width: width, index: index)
+                                }
+                            } else { ProgressView() }
                         }
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .background { background }
@@ -106,6 +110,7 @@ struct ReviewPager: View {
                 .accessibilityAction(named: Text(L10n.text("app_previous_group"))) { navigate(forward: false, width: width, index: index) }
                 .accessibilityAction(named: Text(L10n.text("app_next_group"))) { navigate(forward: true, width: width, index: index) }
                 .onChange(of: geometry.size) { reset() }
+                .task(id: neighbors.map(\.signature)) { await model.loadDetails(for: Array(neighbors)) }
             }
         }
         .onChange(of: selectedID) { reset(); zoomed = false }
@@ -113,7 +118,7 @@ struct ReviewPager: View {
         .onChange(of: groups) { reset() }
         .onChange(of: preference) { reset() }
         .onChange(of: reduceMotion) { reset() }
-        .onDisappear { reset() }
+        .onDisappear { reset(); model.releaseDetails() }
     }
 
     private var background: Color {

@@ -7,20 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        200000000000000000000001 /* ReviewPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* ReviewPresentation.swift */; };
+        200000000000000000000002 /* ReviewPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* ReviewPresentation.swift */; };
+        200000000000000000000004 /* AlbumWinnowRust in Frameworks */ = {isa = PBXBuildFile; productRef = 200000000000000000000006 /* AlbumWinnowRust */; };
+        200000000000000000000005 /* AlbumWinnowRust in Frameworks */ = {isa = PBXBuildFile; productRef = 200000000000000000000007 /* AlbumWinnowRust */; };
 		170000000000000000000001 /* SavedProtectionSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000003 /* SavedProtectionSettings.swift */; };
 		170000000000000000000002 /* SavedProtectionSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 170000000000000000000003 /* SavedProtectionSettings.swift */; };
 		C102AA0905194B0180000042 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C102AA0905194B0180000041 /* Assets.xcassets */; };
 		C102AA0905194B0180000043 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C102AA0905194B0180000041 /* Assets.xcassets */; };
 		004544D8146902FB7745C798 /* GroupReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */; };
-		0E7D913A238401877DDEBED9 /* FolderScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277E3A7EDDA92B1545F436A8 /* FolderScope.swift */; };
 		56C93C2E206CD9F463BB7975 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1989BC72973BF9A3C13774EA /* LibraryView.swift */; };
 		84858ADCA1BE3815203516E7 /* AlbumWinnowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */; };
 		995C20DEF25F0E206436F678 /* GroupReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */; };
-		BD334C02554178A420275AC9 /* FolderScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277E3A7EDDA92B1545F436A8 /* FolderScope.swift */; };
 		C5273DA374B8EA1763C7A485 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1989BC72973BF9A3C13774EA /* LibraryView.swift */; };
-		CE291D1F225705633A065040 /* AlbumWinnowCore in Frameworks */ = {isa = PBXBuildFile; productRef = 99B03D7314E9092598247090 /* AlbumWinnowCore */; };
+		CE291D1F225705633A065040 /* AlbumWinnowApple in Frameworks */ = {isa = PBXBuildFile; productRef = 99B03D7314E9092598247090 /* AlbumWinnowApple */; };
 		D9E2D703945CD72AAA8735AB /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */; };
-		ECDE43020DC076132E7D0EA9 /* AlbumWinnowCore in Frameworks */ = {isa = PBXBuildFile; productRef = 6C75E88DE8098F1031C1D8CA /* AlbumWinnowCore */; };
+		ECDE43020DC076132E7D0EA9 /* AlbumWinnowApple in Frameworks */ = {isa = PBXBuildFile; productRef = 6C75E88DE8098F1031C1D8CA /* AlbumWinnowApple */; };
 		EDE4F3779D4526022A0C4FE6 /* ReviewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */; };
 		F18A76D3AFFDF7CF36EC83C4 /* AlbumWinnowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */; };
 		70120D57A2944BC22A000002 /* ScanSourcesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70120D57A2944BC22A000001 /* ScanSourcesView.swift */; };
@@ -56,15 +58,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+        200000000000000000000003 /* ReviewPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPresentation.swift; sourceTree = "<group>"; };
 		170000000000000000000003 /* SavedProtectionSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedProtectionSettings.swift; sourceTree = "<group>"; };
 		C102AA0905194B0180000041 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1989BC72973BF9A3C13774EA /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlbumWinnow.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		277E3A7EDDA92B1545F436A8 /* FolderScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderScope.swift; sourceTree = "<group>"; };
 		2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupReviewView.swift; sourceTree = "<group>"; };
 		3834DC4BEBE6D52E0C84C1A7 /* AlbumWinnowMobile.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AlbumWinnowMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumWinnowApp.swift; sourceTree = "<group>"; };
-		B487BAB2E5EE0544B5A14BE4 /* AlbumWinnowCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlbumWinnowCore; path = Packages/AlbumWinnowCore; sourceTree = SOURCE_ROOT; };
+		B487BAB2E5EE0544B5A14BE4 /* AlbumWinnowApple */ = {isa = PBXFileReference; lastKnownFileType = folder; name = AlbumWinnowApple; path = Packages/AlbumWinnowApple; sourceTree = SOURCE_ROOT; };
 		BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewModel.swift; sourceTree = "<group>"; };
 		F5A11BDE61564068D15F4050 /* AlbumWinnow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AlbumWinnow.entitlements; sourceTree = "<group>"; };
 		70120D57A2944BC22A000001 /* ScanSourcesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanSourcesView.swift; sourceTree = "<group>"; };
@@ -89,7 +91,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ECDE43020DC076132E7D0EA9 /* AlbumWinnowCore in Frameworks */,
+				ECDE43020DC076132E7D0EA9 /* AlbumWinnowApple in Frameworks */,
+                200000000000000000000004 /* AlbumWinnowRust in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -97,7 +100,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CE291D1F225705633A065040 /* AlbumWinnowCore in Frameworks */,
+				CE291D1F225705633A065040 /* AlbumWinnowApple in Frameworks */,
+                200000000000000000000005 /* AlbumWinnowRust in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,7 +129,7 @@
 		A591879E4EFACBF21E184D23 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				B487BAB2E5EE0544B5A14BE4 /* AlbumWinnowCore */,
+				B487BAB2E5EE0544B5A14BE4 /* AlbumWinnowApple */,
 			);
 			path = Packages;
 			sourceTree = "<group>";
@@ -134,7 +138,6 @@
 			isa = PBXGroup;
 			children = (
 				AC15DFCE8C6803A71FCD2F9B /* AlbumWinnowApp.swift */,
-				277E3A7EDDA92B1545F436A8 /* FolderScope.swift */,
 				2DDF2E5768038A6659CFE9DE /* GroupReviewView.swift */,
 				A89147F0CC422D8118E6B72F /* Localization.swift */,
 				25D0143F6609E57BB7EBA42A /* PhotoDifferenceView.swift */,
@@ -144,6 +147,7 @@
 				E4D08B3801E2EEFD81D41C52 /* ReviewToolsView.swift */,
 				1989BC72973BF9A3C13774EA /* LibraryView.swift */,
 				BC9A6C6A92B2A2E57A33D46F /* ReviewModel.swift */,
+                200000000000000000000003 /* ReviewPresentation.swift */,
 				70120D57A2944BC22A000001 /* ScanSourcesView.swift */,
 				C102AA0905194B0180000021 /* GalleryThumbnails.swift */,
 				C102AA0905194B0180000011 /* DuplicateGallery.swift */,
@@ -187,7 +191,8 @@
 			);
 			name = AlbumWinnow;
 			packageProductDependencies = (
-				99B03D7314E9092598247090 /* AlbumWinnowCore */,
+				99B03D7314E9092598247090 /* AlbumWinnowApple */,
+                200000000000000000000007 /* AlbumWinnowRust */,
 			);
 			productName = AlbumWinnow;
 			productReference = 1E3DB37CE88CAE1EA1B3BF8F /* AlbumWinnow.app */;
@@ -207,7 +212,8 @@
 			);
 			name = AlbumWinnowMobile;
 			packageProductDependencies = (
-				6C75E88DE8098F1031C1D8CA /* AlbumWinnowCore */,
+				6C75E88DE8098F1031C1D8CA /* AlbumWinnowApple */,
+                200000000000000000000006 /* AlbumWinnowRust */,
 			);
 			productName = AlbumWinnowMobile;
 			productReference = 3834DC4BEBE6D52E0C84C1A7 /* AlbumWinnowMobile.app */;
@@ -239,7 +245,8 @@
 			mainGroup = D663F01A0986CFD3CB94D518;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				CC59F96DE9A01B70A0F8E426 /* XCLocalSwiftPackageReference "Packages/AlbumWinnowCore" */,
+				CC59F96DE9A01B70A0F8E426 /* XCLocalSwiftPackageReference "Packages/AlbumWinnowApple" */,
+                200000000000000000000008 /* XCLocalSwiftPackageReference "Packages/AlbumWinnowRust" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8F9C1FBD4C9C24D3D73D900E /* Products */;
@@ -287,7 +294,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				84858ADCA1BE3815203516E7 /* AlbumWinnowApp.swift in Sources */,
-				0E7D913A238401877DDEBED9 /* FolderScope.swift in Sources */,
 				004544D8146902FB7745C798 /* GroupReviewView.swift in Sources */,
 				0051377EF5988DE713E60BFD /* Localization.swift in Sources */,
 				CDA4D097E2CBF078B0A7023E /* PhotoDifferenceView.swift in Sources */,
@@ -297,6 +303,7 @@
 				D19DD2B1E4DA7A157168A620 /* ReviewToolsView.swift in Sources */,
 				56C93C2E206CD9F463BB7975 /* LibraryView.swift in Sources */,
 				EDE4F3779D4526022A0C4FE6 /* ReviewModel.swift in Sources */,
+                200000000000000000000001 /* ReviewPresentation.swift in Sources */,
 				70120D57A2944BC22A000002 /* ScanSourcesView.swift in Sources */,
 				C102AA0905194B0180000022 /* GalleryThumbnails.swift in Sources */,
 				C102AA0905194B0180000012 /* DuplicateGallery.swift in Sources */,
@@ -310,7 +317,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F18A76D3AFFDF7CF36EC83C4 /* AlbumWinnowApp.swift in Sources */,
-				BD334C02554178A420275AC9 /* FolderScope.swift in Sources */,
 				995C20DEF25F0E206436F678 /* GroupReviewView.swift in Sources */,
 				B1689A1E3C160F99BD7BFFB7 /* Localization.swift in Sources */,
 				54E904A59D000CA6A6046D8C /* PhotoDifferenceView.swift in Sources */,
@@ -320,6 +326,7 @@
 				5DEDE1B758E583F1E31E294A /* ReviewToolsView.swift in Sources */,
 				C5273DA374B8EA1763C7A485 /* LibraryView.swift in Sources */,
 				D9E2D703945CD72AAA8735AB /* ReviewModel.swift in Sources */,
+                200000000000000000000002 /* ReviewPresentation.swift in Sources */,
 				70120D57A2944BC22A000003 /* ScanSourcesView.swift in Sources */,
 				C102AA0905194B0180000023 /* GalleryThumbnails.swift in Sources */,
 				C102AA0905194B0180000013 /* DuplicateGallery.swift in Sources */,
@@ -397,7 +404,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -413,7 +420,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.7.0;
+				MARKETING_VERSION = 2.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.winstonmeursault.albumwinnow;
@@ -421,6 +428,8 @@
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
+                SWIFT_STRICT_CONCURRENCY = complete;
+                SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 			};
 			name = Release;
 		};
@@ -474,7 +483,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -496,7 +505,7 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AlbumWinnow scans photos you allow it to access and moves selected duplicates to Recently Deleted after you confirm.";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.7.0;
+				MARKETING_VERSION = 2.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -505,6 +514,8 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
+                SWIFT_STRICT_CONCURRENCY = complete;
+                SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
 			};
 			name = Debug;
 		};
@@ -557,20 +568,23 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		CC59F96DE9A01B70A0F8E426 /* XCLocalSwiftPackageReference "Packages/AlbumWinnowCore" */ = {
+        200000000000000000000008 /* XCLocalSwiftPackageReference "Packages/AlbumWinnowRust" */ = {isa = XCLocalSwiftPackageReference; relativePath = Packages/AlbumWinnowRust; };
+		CC59F96DE9A01B70A0F8E426 /* XCLocalSwiftPackageReference "Packages/AlbumWinnowApple" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/AlbumWinnowCore;
+			relativePath = Packages/AlbumWinnowApple;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		6C75E88DE8098F1031C1D8CA /* AlbumWinnowCore */ = {
+        200000000000000000000006 /* AlbumWinnowRust */ = {isa = XCSwiftPackageProductDependency; productName = AlbumWinnowRust; };
+        200000000000000000000007 /* AlbumWinnowRust */ = {isa = XCSwiftPackageProductDependency; productName = AlbumWinnowRust; };
+		6C75E88DE8098F1031C1D8CA /* AlbumWinnowApple */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = AlbumWinnowCore;
+			productName = AlbumWinnowApple;
 		};
-		99B03D7314E9092598247090 /* AlbumWinnowCore */ = {
+		99B03D7314E9092598247090 /* AlbumWinnowApple */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = AlbumWinnowCore;
+			productName = AlbumWinnowApple;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -14,8 +14,8 @@ final class PhotoDifferenceUITests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
-                               "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", size]
+        app.launchArguments = ["-reviewAnimation", "none",
+                               "-showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", size]
         app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15))

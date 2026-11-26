@@ -1,0 +1,95 @@
+name: CoreBridge
+options:
+  deploymentTarget:
+    iOS: '26.0'
+settings:
+  GENERATE_INFOPLIST_FILE: YES
+  SWIFT_VERSION: '6.0'
+  SWIFT_STRICT_CONCURRENCY: complete
+  SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
+packages:
+  AlbumWinnowApple:
+    path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowApple
+  AlbumWinnowRust:
+    path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowRust
+targets:
+  CoreBridgeHost:
+    type: application
+    platform: iOS
+    sources:
+      - ${ALBUMWINNOW_ROOT}/Tests/BridgeHost
+      - ${ALBUMWINNOW_ROOT}/Tests/NativeCleanupHost
+      - path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowApple/Tests/AlbumWinnowAppleTests/Fixtures
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: AlbumWinnowRust
+      - package: AlbumWinnowApple
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.v2.bridge
+      TARGETED_DEVICE_FAMILY: '1,2'
+      INFOPLIST_KEY_UILaunchScreen_Generation: YES
+      INFOPLIST_KEY_NSPhotoLibraryUsageDescription: Generated simulator fixture verification.
+      INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription: Generated simulator fixture verification.
+  CoreBridgeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowRust/Tests/AlbumWinnowRustTests
+        excludes: [CoreFixtures]
+      - ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowApple/Tests/AlbumWinnowAppleTests/NormalizedInputTests.swift
+      - ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowApple/Tests/AlbumWinnowAppleTests/RustScanPipelineTests.swift
+      - ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowApple/Tests/AlbumWinnowAppleTests/AppleReviewOwnerTests.swift
+      - ${ALBUMWINNOW_ROOT}/Packages/AlbumWinnowApple/Tests/AlbumWinnowAppleTests/TestFiles.swift
+      - path: ${ALBUMWINNOW_ROOT}/Tests/CoreFixtures
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - target: CoreBridgeHost
+      - package: AlbumWinnowApple
+      - package: AlbumWinnowRust
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.v2.bridge.tests
+  CoreNativeCleanupTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - ${ALBUMWINNOW_ROOT}/Tests/NativeCleanupTests
+    dependencies:
+      - target: CoreBridgeHost
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.v2.nativecleanup.tests
+  CoreNativePermissionTests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: ["${ALBUMWINNOW_ROOT}/Tests/NativeCleanupUITests"]
+    dependencies:
+      - target: CoreBridgeHost
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: io.github.winstonmeursault.albumwinnow.v2.nativepermission.tests
+schemes:
+  CoreBridge:
+    build:
+      targets:
+        CoreBridgeHost: all
+        CoreBridgeTests: [test]
+    test:
+      targets: [CoreBridgeTests]
+  CoreNativeCleanup:
+    build:
+      targets:
+        CoreBridgeHost: all
+        CoreNativeCleanupTests: [test]
+    test:
+      targets: [CoreNativeCleanupTests]
+      environmentVariables:
+        ALBUMWINNOW_PHOTOS_FIXTURE: '1'
+  CoreNativePermission:
+    build:
+      targets:
+        CoreBridgeHost: all
+        CoreNativePermissionTests: [test]
+    test:
+      targets: [CoreNativePermissionTests]
+      environmentVariables:
+        ALBUMWINNOW_PHOTOS_FIXTURE: '1'

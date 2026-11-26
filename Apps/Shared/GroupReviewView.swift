@@ -1,11 +1,12 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
+import AlbumWinnowRust
 import CoreImage
 import ImageIO
 import SwiftUI
 import UniformTypeIdentifiers
 
 enum ReviewHand: String {
-    static let defaultsKey = "AlbumWinnow.reviewHand"
+    static let defaultsKey = "reviewHand"
     case left, right
 }
 
@@ -15,7 +16,7 @@ struct GroupReviewView: View {
         case changed(AssetID?)
     }
 
-    let group: DuplicateGroup
+    let group: ReviewGroupDetail
     let model: ReviewModel
     let isActive: Bool
     @Binding var zoomed: Bool
@@ -29,6 +30,7 @@ struct GroupReviewView: View {
     @State private var lastZoomedID: AssetID?
     @State private var showingInformation = false
     @State private var unlocking: PhotoAsset?
+    @State private var unlockingOwners: [AssetID] = []
     @State private var keepDraft = KeepDraft.unchanged
     @State private var deleteAllDraft: Bool?
     @State private var deleteAllUnavailable: String?
@@ -75,7 +77,7 @@ struct GroupReviewView: View {
             HStack {
                 Text(model.status(for: group).title).font(.caption)
                 if selection.keepID != nil || selection.deleteAll {
-                    Text(L10n.text("app_arg1_kept_arg2_pending_cleanup", Int64(assets.count - selection.selected.count), Int64(selection.selected.count)))
+                    Text(L10n.text("app_arg1_kept_arg2_pending_cleanup", Int64(assets.count - selection.selectedCount), Int64(selection.selectedCount)))
                         .font(.caption)
                 }
                 if group.comparisonSides != nil {
@@ -94,8 +96,8 @@ struct GroupReviewView: View {
                         .keyboardShortcut("0", modifiers: .command)
                     Toggle(L10n.text("app_sync_zoom"), isOn: Binding(get: { synchronizedZoom }, set: { setSynchronizedZoom($0) }))
                     Divider()
-                    Button(L10n.text("app_keep_entire_group")) { model.setStatus(.kept, for: group); advance() }
-                    Button(L10n.text("app_undo_group_decision")) { model.setStatus(.pending, for: group); resetDraft() }
+                    Button(L10n.text("app_keep_entire_group")) { changeStatus(.kept, advanceAfter: true) }
+                    Button(L10n.text("app_undo_group_decision")) { changeStatus(.pending, advanceAfter: false) }
                 }
                 .labelStyle(.iconOnly)
                 .disabled(!isActive || !model.canClean)
@@ -109,7 +111,7 @@ struct GroupReviewView: View {
                 unlocking = nil
             }
         } message: {
-            Text(L10n.text("app_unlock_linked_confirmation", unlocking.map { model.lockOwners(for: $0).map(\.item).joined(separator: "\n") } ?? ""))
+            Text(L10n.text("app_unlock_linked_confirmation", unlockingOwners.map(\.item).joined(separator: "\n")))
         }
         .sheet(isPresented: $showingInformation) { GroupInformationView(model: model, group: group) }
         .task(id: isActive && model.canClean) {
@@ -130,7 +132,7 @@ struct GroupReviewView: View {
                 checkedRemovability = true
             }
         }
-        .onChange(of: group) { resetZoom() }
+        .onChange(of: group.core.group) { resetZoom() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { resetZoom() } }
         .onChange(of: model.canClean) { _, allowed in if !allowed { resetZoom() } }
         .onDisappear { confirmationTask?.cancel(); resetZoom() }
@@ -163,9 +165,7 @@ struct GroupReviewView: View {
             HStack(spacing: 8) {
                 if hand == ReviewHand.left.rawValue { confirmButton } else { deleteAllButton }
                 Button {
-                    model.setStatus(.deferred, for: group)
-                    resetDraft()
-                    advance()
+                    changeStatus(.deferred, advanceAfter: true)
                 } label: {
                     actionTitle(L10n.text("app_skip"))
                 }
@@ -224,6 +224,15 @@ struct GroupReviewView: View {
             .minimumScaleFactor(0.65)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, minHeight: 32)
+    }
+
+    private func changeStatus(_ status: CoreReviewStatus, advanceAfter: Bool) {
+        confirmationTask = Task {
+            defer { confirmationTask = nil }
+            guard await model.setStatus(status, for: group), !Task.isCancelled, isActive else { return }
+            resetDraft()
+            if advanceAfter { advance() }
+        }
     }
 
     private func resetDraft() {
@@ -296,16 +305,21 @@ struct GroupReviewView: View {
             }
         }
         .contextMenu {
-            if asset.id.source == "photos-library" {
+            if asset.id.source == model.photoSourceID {
                 Button(L10n.text("app_download_and_rescan_this_photo"), systemImage: "icloud.and.arrow.down") {
                     model.downloadAndRescan(asset)
                 }
                 .disabled(!model.canScan)
             }
             Button(model.isLocked(asset) ? L10n.text("app_unlock_photo") : L10n.text("app_lock_photo"), systemImage: model.isLocked(asset) ? "lock.open" : "lock") {
-                let owners = model.lockOwners(for: asset)
-                if model.isLocked(asset), owners != [asset.id] { unlocking = asset }
-                else { model.setLocked(asset, locked: !model.isLocked(asset)) }
+                Task {
+                    if model.isLocked(asset) {
+                        let owners = await model.lockOwners(for: asset)
+                        guard model.protectionAvailable else { return }
+                        if owners != [asset.id] { unlockingOwners = owners; unlocking = asset }
+                        else { model.setLocked(asset, locked: false) }
+                    } else { model.setLocked(asset, locked: true) }
+                }
             }
             .disabled(!model.canEditSources || !model.protectionAvailable)
         }

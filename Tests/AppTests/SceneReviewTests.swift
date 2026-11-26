@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import ImageIO
 import XCTest
 @testable import AlbumWinnowAcceptance
@@ -6,17 +6,10 @@ import XCTest
 final class SceneReviewTests: XCTestCase {
     @MainActor
     func testIndependentQueuesPreserveManualPlansAcrossCacheClearAndAnalysisToggle() async throws {
-        let defaults = UserDefaults.standard
-        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled", "AlbumWinnow.interruptedScan"]
-        let saved = keys.map { defaults.object(forKey: $0) }
-        keys.forEach { defaults.removeObject(forKey: $0) }
-        let root = URL.acceptanceDocumentsDirectory.appending(path: "SceneReview-\(UUID())")
-        let folder = root.appending(path: "photos"), data = root.appending(path: "state")
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let folder = workspace.root.appending(path: "photos")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        defer {
-            for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
-            try? FileManager.default.removeItem(at: root)
-        }
         let fixtures = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures")
         let scene = try Data(contentsOf: fixtures.appending(path: "scene.png"))
         try scene.write(to: folder.appending(path: "scene-a.png"))
@@ -31,69 +24,85 @@ final class SceneReviewTests: XCTestCase {
         try (encoded as Data).write(to: folder.appending(path: "scene-b.png"))
         let duplicate = try Data(contentsOf: fixtures.appending(path: "detail-a.png"))
         for name in ["duplicate-a.png", "duplicate-b.png"] { try duplicate.write(to: folder.appending(path: name)) }
-        let model = ReviewModel(dataDirectory: data)
-        model.addFolder(folder)
-        model.setSimilarScenesEnabled(true)
-        model.scan()
-        await waitUntil { !model.running }
-        XCTAssertNil(model.errorMessage)
-        XCTAssertEqual(model.result?.groups.count, 2, "Scene issues: \(String(describing: model.result?.issues))")
-        let sceneGroup = try XCTUnwrap(model.result?.groups.first { $0.match == .sceneSimilar })
-        let duplicateGroup = try XCTUnwrap(model.result?.groups.first { $0.match == .exactDuplicate })
-        XCTAssertEqual(model.visibleGroups.map(\.id), [duplicateGroup.id])
-        XCTAssertFalse(sceneGroup.hasQualityRecommendation ?? true)
-        XCTAssertTrue(model.estimatedRemovals(for: sceneGroup).isEmpty)
-        let manualKeep = try XCTUnwrap(sceneGroup.assets.first { $0.name == "scene-b.png" })
-        let confirmed = await model.confirmSelection(in: sceneGroup, keepID: manualKeep.id, deleteAll: false)
-        XCTAssertTrue(confirmed)
-        XCTAssertEqual(model.hiddenCandidateCount, 1)
-        XCTAssertNotNil(model.cleanupGroups.first?.pairs.first?.sceneAlgorithm)
-        model.rememberPosition(sceneGroup)
-        XCTAssertNotEqual(model.resumeGroup?.id, sceneGroup.id)
-        model.setReviewCollection(.similarScenes)
-        XCTAssertEqual(model.visibleGroups.map(\.id), [sceneGroup.id])
-        XCTAssertEqual(model.resumeGroup?.id, sceneGroup.id)
-        model.clearResultFilters()
-        XCTAssertEqual(model.reviewCollection, .similarScenes)
-        let duplicateConfirmed = await model.confirmSelection(in: duplicateGroup, keepID: duplicateGroup.preferred.id, deleteAll: false)
-        XCTAssertTrue(duplicateConfirmed)
-        XCTAssertEqual(model.selectedCount, 2)
-        XCTAssertEqual(model.hiddenCandidateCount, 1)
-        model.setSimilarScenesEnabled(false)
-        model.scan()
-        await waitUntil { !model.running }
-        XCTAssertEqual(model.selectedCount, 1)
-        model.setSimilarScenesEnabled(true)
-        model.scan()
-        await waitUntil { !model.running }
-        XCTAssertEqual(model.selectedCount, 2, "Disabling optional analysis cannot erase a still-valid manual scene plan")
-        await model.clearScanCache()
-        model.scan()
-        await waitUntil { !model.running }
-        XCTAssertEqual(model.selectedCount, 2)
-        let currentScene = try XCTUnwrap(model.result?.groups.first { $0.match == .sceneSimilar })
-        XCTAssertEqual(model.selection(for: currentScene.id).keepID, manualKeep.id)
-        let reopened = ReviewModel(dataDirectory: data)
+        let manualKeep = try await workspace.withModel { model in
+            model.addFolder(folder)
+            try await awaitModel(model)
+            model.setSimilarScenesEnabled(true)
+            try await awaitModel(model)
+            model.scan()
+            try await awaitModel(model)
+            XCTAssertNil(model.errorMessage)
+            XCTAssertEqual(model.totalGroupCount, 2, "Scene issues: \(String(describing: model.result?.issues))")
+            let duplicateSummary = try XCTUnwrap(model.visibleGroups.first)
+            XCTAssertEqual(duplicateSummary.match, .exactDuplicate)
+            model.setReviewCollection(.similarScenes)
+            try await awaitModel(model)
+            let sceneSummary = try XCTUnwrap(model.visibleGroups.first)
+            let sceneGroup = try await scannedGroup(model)
+            XCTAssertFalse(sceneGroup.hasQualityRecommendation)
+            XCTAssertEqual(sceneGroup.core.summary.estimate.knownCount, 0)
+            XCTAssertEqual(sceneGroup.core.summary.estimate.unknownCount, 0)
+            let manualKeep = try XCTUnwrap(sceneGroup.assets.first { $0.name == "scene-b.png" })
+            model.setReviewCollection(.duplicates)
+            try await awaitModel(model)
+            XCTAssertEqual(model.visibleGroups.map(\.id), [duplicateSummary.id])
+            let confirmed = await model.confirmSelection(in: sceneGroup, keepID: manualKeep.id, deleteAll: false)
+            XCTAssertTrue(confirmed)
+            XCTAssertEqual(model.hiddenCandidateCount, 1)
+            let plan = try await preparedPreviews(model)
+            XCTAssertEqual(plan.first?.match, .sceneSimilar)
+            XCTAssertNotNil(sceneGroup.core.group.scene)
+            await model.rememberPosition(sceneSummary)?.value
+            XCTAssertNotEqual(model.resumeGroup?.id, sceneGroup.id)
+            model.setReviewCollection(.similarScenes)
+            try await awaitModel(model)
+            XCTAssertEqual(model.visibleGroups.map(\.id), [sceneGroup.id])
+            XCTAssertEqual(model.resumeGroup?.id, sceneGroup.id)
+            model.clearResultFilters()
+            try await awaitModel(model)
+            XCTAssertEqual(model.reviewCollection, .similarScenes)
+            await model.loadDetails(for: [duplicateSummary])
+            let duplicateGroup = try XCTUnwrap(model.details[duplicateSummary.id])
+            let duplicateConfirmed = await model.confirmSelection(in: duplicateGroup, keepID: duplicateGroup.preferred.id, deleteAll: false)
+            XCTAssertTrue(duplicateConfirmed)
+            XCTAssertEqual(model.selectedCount, 2)
+            XCTAssertEqual(model.hiddenCandidateCount, 1)
+            model.setSimilarScenesEnabled(false)
+            try await awaitModel(model)
+            model.scan()
+            try await awaitModel(model)
+            XCTAssertEqual(model.selectedCount, 1)
+            model.setSimilarScenesEnabled(true)
+            try await awaitModel(model)
+            model.scan()
+            try await awaitModel(model)
+            XCTAssertEqual(model.selectedCount, 2, "Disabling optional analysis cannot erase a still-valid manual scene plan")
+            await model.clearScanCache()
+            model.scan()
+            try await awaitModel(model)
+            XCTAssertEqual(model.selectedCount, 2)
+            let current = try await scannedGroup(model)
+            XCTAssertEqual(model.selection(for: current.id).keepID, manualKeep.id)
+            return manualKeep.id
+        }
+        let reopened = try await workspace.open()
         XCTAssertTrue(reopened.similarScenesEnabled)
         XCTAssertEqual(reopened.reviewCollection, .similarScenes)
-        reopened.sceneChanged(.active)
-        await waitUntil { !reopened.running }
+        XCTAssertNil(reopened.result)
+        reopened.scan()
+        try await awaitModel(reopened)
         XCTAssertEqual(reopened.selectedCount, 2)
-        XCTAssertEqual(reopened.selection(for: currentScene.id).keepID, manualKeep.id)
-        let removable = try XCTUnwrap(reopened.cleanupGroups.first { $0.match == .sceneSimilar }?.pairs.first?.remove)
+        let current = try await scannedGroup(reopened)
+        XCTAssertEqual(reopened.selection(for: current.id).keepID, manualKeep)
+        let previews = try await preparedPreviews(reopened)
+        let removable = try XCTUnwrap(previews.first { $0.match == .sceneSimilar }?.removing.first)
         reopened.setLocked(removable, locked: true)
+        try await awaitModel(reopened)
         XCTAssertEqual(reopened.selectedCount, 1)
         reopened.setLocked(removable, locked: false)
+        try await awaitModel(reopened)
         XCTAssertEqual(reopened.selectedCount, 1)
         XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appending(path: "scene-a.png").path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: folder.appending(path: "scene-b.png").path))
-    }
-
-    @MainActor private func waitUntil(_ condition: () -> Bool) async {
-        for _ in 0..<1000 {
-            if condition() { return }
-            try? await Task.sleep(for: .milliseconds(20))
-        }
-        XCTFail("Timed out waiting for scene scan")
     }
 }

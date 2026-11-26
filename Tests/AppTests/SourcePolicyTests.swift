@@ -1,73 +1,68 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import XCTest
 @testable import AlbumWinnowAcceptance
 
 final class SourcePolicyTests: XCTestCase {
     @MainActor
     func testCrossScopePreferenceAndReadOnlyChangesPreserveManualChoices() async throws {
-        let defaults = UserDefaults.standard
-        let keys = ["AlbumWinnow.folderBookmarks", "AlbumWinnow.photosEnabled", "AlbumWinnow.interruptedScan"]
-        let saved = keys.map { defaults.object(forKey: $0) }
-        keys.forEach { defaults.removeObject(forKey: $0) }
-        let root = URL.acceptanceDocumentsDirectory.appending(path: UUID().uuidString)
-        let a = root.appending(path: "A"), b = root.appending(path: "B"), data = root.appending(path: "state")
-        try FileManager.default.createDirectory(at: a, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: b, withIntermediateDirectories: true)
-        defer {
-            for (key, value) in zip(keys, saved) { defaults.set(value, forKey: key) }
-            try? FileManager.default.removeItem(at: root)
-        }
-        let fixture = try XCTUnwrap(Bundle.main.resourceURL).appending(path: "Fixtures/burst-a.png")
-        let bytes = try Data(contentsOf: fixture)
-        for name in ["a1.png", "a2.png"] { try bytes.write(to: a.appending(path: name)) }
-        try bytes.write(to: b.appending(path: "b1.png"))
-        let model = ReviewModel(dataDirectory: data)
-        model.addFolder(a); model.addFolder(b)
-        let sources = model.folders.map(\.id)
-        let sides = ComparisonSides(first: sources[0], second: sources[1])
-        model.setComparisonSides(sides)
-        model.setPreferredSource(sources[1])
-        model.scan()
-        await waitUntil { !model.running }
-        let group = try XCTUnwrap(model.result?.groups.first)
-        XCTAssertEqual(group.assets.count, 3)
-        XCTAssertEqual(group.recommendation.id.source, sources[1])
-        let manualKeep = try XCTUnwrap(group.assets.first { $0.id.source == sources[0] })
-        let confirmed = await model.confirmSelection(in: group, keepID: manualKeep.id, deleteAll: false)
-        XCTAssertTrue(confirmed)
-        XCTAssertEqual(model.selectedCount, 1)
-        XCTAssertEqual(model.cleanupGroups.first?.retained.count, 2)
-        XCTAssertTrue(model.cleanupGroups.flatMap(\.pairs).allSatisfy { sides.permits($0.keep!.id, $0.remove.id) })
-        model.setPreferredSource(sources[0])
-        model.scan()
-        await waitUntil { !model.running }
-        let updated = try XCTUnwrap(model.result?.groups.first)
-        XCTAssertEqual(model.selection(for: updated.id).keepID, manualKeep.id)
-        XCTAssertEqual(model.selectedCount, 1)
-        await model.setReadOnly(sources[1], enabled: true)
-        XCTAssertEqual(model.selectedCount, 0)
-        XCTAssertEqual(model.selection(for: updated.id).keepID, manualKeep.id)
-        await model.setReadOnly(sources[1], enabled: false)
-        XCTAssertEqual(model.selectedCount, 0, "Removing protection cannot silently reinstate cancelled removals")
-        await model.setReadOnly(sources[0], enabled: true)
+        let workspace = try ModelWorkspace()
+        defer { workspace.dispose() }
+        let a = try workspace.folder("A", files: ["a1.png", "a2.png"])
+        let b = try workspace.folder("B", files: ["b1.png"])
         var scope = PhotoScope()
         scope.albums = ["missing": "Saved Album"]
         scope.dates = try CaptureRange(firstDay: Date(), lastDay: Date(), includesUnknown: true)
-        model.setPhotoScope(scope)
-        let reopened = ReviewModel(dataDirectory: data)
-        XCTAssertEqual(reopened.photoScope, scope)
-        XCTAssertEqual(reopened.comparisonSides, sides)
-        XCTAssertTrue(reopened.readOnlySources.contains(sources[0]))
-        await reopened.clearScanCache()
-        XCTAssertTrue(reopened.readOnlySources.contains(sources[0]))
-        XCTAssertEqual(reopened.photoScope, scope)
-    }
-
-    @MainActor private func waitUntil(_ condition: () -> Bool) async {
-        for _ in 0..<500 {
-            if condition() { return }
-            try? await Task.sleep(for: .milliseconds(20))
+        let savedScope = scope
+        let sides = try await workspace.withModel { model in
+            model.addFolder(a)
+            try await awaitModel(model)
+            model.addFolder(b)
+            try await awaitModel(model)
+            let first = try XCTUnwrap(model.folders.first { $0.name == "A" }).id
+            let second = try XCTUnwrap(model.folders.first { $0.name == "B" }).id
+            let sides = ComparisonSides(first: first, second: second)
+            model.setComparisonSides(sides)
+            try await awaitModel(model)
+            model.setPreferredSource(second)
+            try await awaitModel(model)
+            model.scan()
+            try await awaitModel(model)
+            let group = try await scannedGroup(model)
+            XCTAssertEqual(group.assets.count, 3)
+            XCTAssertEqual(group.recommendation.id.source, second)
+            let manualKeep = try XCTUnwrap(group.assets.first { $0.id.source == first })
+            let confirmed = await model.confirmSelection(in: group, keepID: manualKeep.id, deleteAll: false)
+            XCTAssertTrue(confirmed)
+            XCTAssertEqual(model.selectedCount, 1)
+            let previews = try await preparedPreviews(model)
+            XCTAssertEqual(previews.first?.retained.count, 2)
+            XCTAssertTrue(previews.allSatisfy { preview in
+                guard preview.keep?.id == manualKeep.id else { return false }
+                return preview.removing.allSatisfy { $0.id.source == second && $0.id != manualKeep.id }
+            })
+            model.setPreferredSource(first)
+            try await awaitModel(model)
+            model.scan()
+            try await awaitModel(model)
+            let updated = try await scannedGroup(model)
+            XCTAssertEqual(model.selection(for: updated.id).keepID, manualKeep.id)
+            XCTAssertEqual(model.selectedCount, 1)
+            await model.setReadOnly(second, enabled: true)
+            XCTAssertEqual(model.selectedCount, 0)
+            XCTAssertEqual(model.selection(for: updated.id).keepID, manualKeep.id)
+            await model.setReadOnly(second, enabled: false)
+            XCTAssertEqual(model.selectedCount, 0, "Removing protection cannot silently reinstate cancelled removals")
+            await model.setReadOnly(first, enabled: true)
+            model.setPhotoScope(savedScope)
+            try await awaitModel(model)
+            return sides
         }
-        XCTFail("Timed out waiting for scan")
+        let reopened = try await workspace.open()
+        XCTAssertEqual(reopened.photoScope, savedScope)
+        XCTAssertEqual(reopened.comparisonSides, sides)
+        XCTAssertTrue(reopened.readOnlySources.contains(sides.first))
+        await reopened.clearScanCache()
+        XCTAssertTrue(reopened.readOnlySources.contains(sides.first))
+        XCTAssertEqual(reopened.photoScope, savedScope)
     }
 }

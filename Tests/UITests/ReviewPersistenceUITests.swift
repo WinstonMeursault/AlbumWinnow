@@ -14,7 +14,7 @@ final class ReviewPersistenceUITests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", animation, "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["-reviewAnimation", animation, "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15))
@@ -36,14 +36,16 @@ final class ReviewPersistenceUITests: XCTestCase {
 
         app.launchArguments.append("--preserve-review-state")
         app.launchInEnglish()
+        XCTAssertTrue(scan.waitForExistence(timeout: 15))
+        XCTAssertFalse(app.buttons["review-batch-cleanup"].exists)
+        scan.tap()
         XCTAssertTrue(app.staticTexts["Scan Complete"].waitForExistence(timeout: 90))
-        XCTAssertTrue(app.buttons["review-batch-cleanup"].exists, "Relaunch should restore the plan without executing it")
+        XCTAssertTrue(app.buttons["review-batch-cleanup"].exists, "An explicit scan restores valid v2 decisions without executing them")
         XCTAssertTrue(cover.waitForExistence(timeout: 10))
         cover.tap()
         let b = app.buttons["review-photo-gallery-landscape-b.png"]
         XCTAssertTrue(b.waitForExistence(timeout: 10))
-        b.press(forDuration: 1)
-        app.buttons["Lock Photo"].tap()
+        app.reviewContextAction("Lock Photo", on: b).tap()
         XCTAssertTrue(b.waitForExistence(timeout: 5))
         XCTAssertTrue(b.waitForReviewValue("Locked, must be kept"))
         XCTAssertEqual(a.value as? String, "Selected", "Protection changes must preserve the manual keep choice")

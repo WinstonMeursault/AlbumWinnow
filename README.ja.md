@@ -4,11 +4,19 @@
 
 AlbumWinnow は macOS、iOS、iPadOS 向けの写真整理アプリです。アクセスを許可した Apple の写真ライブラリと選択したフォルダから重複を探し、写真を見比べて残すものを選べます。macOS 26、iOS 26、iPadOS 26 以降に対応します。
 
-## v1.7 の信頼性
+## v2.0.0 ローカル候補
+
+Apple アプリは Rust Core と Swift/SwiftUI のプラットフォームサービスへ接続済みです。Apple Release のクリーンビルドとローカル検証を完了しました。公開はしていません。Kotlin バインディングと最小 Android 検証ホストも含みます。完全な Android クライアントと Windows/Linux アプリは今回の対象外です。
+
+v2 は出所・写真の識別子、確認・キャッシュ用データベース、署名、設定を独立させます。更新後は出所と保護を設定し直して再スキャンしてください。v1 のデータを移行・自動削除せず、削除候補も復元しません。既存のアプリ bundle ID は維持します。
+
+通常の再起動後は手動でスキャンすると、現在の資源と一致する確認済み v2 計画を復元します。再起動だけではスキャンや写真の削除を開始しません。バックグラウンド移行で中断したスキャンは保存済みの同意で再開できますが、明示的なキャンセルは自動再開を停止します。
+
+## 信頼性
 
 利用できないフォルダ記録を再起動後も保持し、設定から再試行、再選択、明示的な削除ができます。保存済みの保護では個別のロック記録を管理でき、リンク先から継承したロックの解除は対象パスを確認します。保護を解除しても削除候補は復元されません。無効な判断だけを削除でき、有効な選択と保護は保持されます。
 
-破損したファイル識別情報は整理を無効にします。状態データベースは schema 3 に移行し、判断を個別の行に、表示位置を別に保存します。旧版では新構造を読めないため、ダウングレード前にバックアップしてください。照合動作と有効な既存の判断署名は変わりません。
+v2 の保護情報が利用できない、または破損した場合は整理を無効にします。Rust が判断、出所の保護、確認位置を v2 データベースのトランザクションで保存し、位置は独立したシーケンスを使用します。確認状況をリセットしても v2 のロックと出所の保護は残ります。v1 データベースや署名は開かず、移行もしません。
 
 macOS の回帰テストは `Tests/run-macos-tests.sh`、公開手順は [Tools/Release](Tools/Release/README.md) を参照してください。macOS の公証や IPA の署名は別途必要です。
 
@@ -28,17 +36,29 @@ macOS の回帰テストは `Tests/run-macos-tests.sh`、公開手順は [Tools/
 
 ## ビルドとテスト
 
-Xcode で `AlbumWinnow.xcodeproj` を開き、macOS は **AlbumWinnow**、iPhone／iPad は **AlbumWinnowMobile** を選びます。
+rustup の固定 Rust ツールチェーンと完全な Xcode を準備し、Swift パッケージを解決する前にネイティブライブラリを生成します。
 
 ```sh
-swift test --package-path Packages/AlbumWinnowCore
+Tools/Core/build-apple.sh debug
+```
+
+その後 Xcode で `AlbumWinnow.xcodeproj` を開き、macOS は **AlbumWinnow**、iPhone／iPad は **AlbumWinnowMobile** を選びます。
+
+```sh
+cargo test --workspace --locked
+swift test --package-path Packages/AlbumWinnowRust
+swift test --package-path Packages/AlbumWinnowApple
 python3 -m unittest discover -s Tests/Localization
 python3 Tools/Localization/export.py --check
 Tests/run-app-tests.sh SIMULATOR_UDID
 ```
 
-UI テストには XcodeGen と標準の iOS シミュレータが必要です。生成した画像を使用するため、実機、自然写真ライブラリ、実際の iCloud アカウントでの検証を意味しません。翻訳の管理方法は [Localization](Localization/README.md)、機能の詳しい説明は [English README](README.md) を参照してください。Android アプリは本リリースに含まれません。
+UI テストには XcodeGen と標準の iOS シミュレータが必要です。生成した画像を使用するため、実機、自然写真ライブラリ、実際の iCloud アカウントでの検証を意味しません。翻訳の管理方法は [Localization](Localization/README.md)、機能の詳しい説明は [English README](README.md) を参照してください。ネイティブライブラリの各 slice、バインディング、Android smoke 検証は [Core ビルド手順](Tools/Core/README.md) を参照してください。開発中は変更に必要な検証だけを選び、候補の納品前に全マトリクスとクリーンビルドを実行します。
 
-macOS 配布アプリは Apple Silicon／Intel 共通で、一時的な ad hoc 署名を使用します。iOS／iPadOS の IPA は未署名で、インストール前に署名が必要です。GitHub の正式リリースは [v1.0.0](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) です。
+## 構成
+
+Rust が指紋、分類、重複・場面のグループ化、推奨、確認状態、出所・別名の保護、SQLite 保存、一時的な整理許可を管理します。UniFFI が Swift/Kotlin を接続し、Apple 側は PhotoKit/Foundation、ImageIO/Core Image、Vision 測定、ブックマークと OS の復元可能な移動を担当します。SwiftUI は有界の概要と必要なグループ詳細だけを読みます。既存の照合規則、手動確認、保護の意味を維持します。
+
+[移行カバレッジ](Tools/Core/TEST-COVERAGE.md)に既存の検証の移行先を記録しています。依存関係の通知は `python3 Tools/Core/notices.py` で生成し、`--check` で照合します。macOS は Apple Silicon／Intel の universal 配布を目指し、ad hoc 署名と未署名 IPA の扱いは [公開手順](Tools/Release/README.md) を参照してください。候補の生成や公開はまだ完了していません。
 
 [プライバシーポリシー](PRIVACY.md) · [AGPL-3.0 ライセンス](LICENSE) · [サードパーティ通知](THIRD-PARTY-NOTICES.txt)

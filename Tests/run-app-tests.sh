@@ -15,6 +15,7 @@ print(versions.pop())
 PY
 )"
 python3 Tools/Localization/export.py --check
+Tools/Core/build-apple.sh release --if-needed
 xcrun simctl bootstatus "$simulator_id" -b
 mkdir -p .local/app-tests
 xcodegen generate --spec Tests/project.yml --project-root "$repo_root/.local/app-tests" --project .local/app-tests

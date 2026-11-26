@@ -1,4 +1,5 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
+import AlbumWinnowRust
 import SwiftUI
 
 struct ResultFiltersView: View {
@@ -9,26 +10,26 @@ struct ResultFiltersView: View {
         NavigationStack {
             Form {
                 Picker(L10n.text("app_review_status"), selection: binding(\.status)) {
-                    ForEach(ReviewStatusFilter.allCases, id: \.self) { Text($0.title).tag($0) }
+                    ForEach(CoreReviewStatusFilter.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
                 .accessibilityIdentifier("result-status-filter")
-                Picker(L10n.text("app_match_category"), selection: binding(\.match)) {
-                    Text(L10n.text("app_all_categories")).tag(nil as DuplicateMatch?)
-                    ForEach(model.reviewCollection == .similarScenes ? [DuplicateMatch.sceneSimilar] : [DuplicateMatch.exactDuplicate, .visualDuplicate, .similarPhoto], id: \.self) {
+                Picker(L10n.text("app_match_category"), selection: binding(\.kind)) {
+                    Text(L10n.text("app_all_categories")).tag(nil as CoreMatch?)
+                    ForEach(model.reviewCollection == .similarScenes ? [CoreMatch.sceneSimilar] : [CoreMatch.exactDuplicate, .visualDuplicate, .similarPhoto], id: \.self) {
                         Text($0.title).tag(Optional($0))
                     }
                 }
                 Picker(L10n.text("app_source"), selection: binding(\.source)) {
                     Text(L10n.text("app_all_sources")).tag(nil as String?)
-                    Text(L10n.text("app_photos")).tag(Optional("photos-library"))
+                    if let photoSourceID = model.photoSourceID { Text(L10n.text("app_photos")).tag(Optional(photoSourceID)) }
                     ForEach(model.folders) { Text($0.name).tag(Optional($0.id)) }
-                    if let source = model.resultQuery.source, source != "photos-library",
+                    if let source = model.resultQuery.source, source != model.photoSourceID,
                        !model.folders.contains(where: { $0.id == source }) {
                         Text(L10n.text("app_unavailable_source")).tag(Optional(source))
                     }
                 }
                 Picker(L10n.text("app_sort"), selection: binding(\.sort)) {
-                    ForEach(ReviewSort.allCases, id: \.self) { Text($0.title).tag($0) }
+                    ForEach(CoreReviewSort.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
                 .accessibilityIdentifier("result-sort")
                 Text(L10n.text("app_dates_use_the_latest_known_capture_metadata_in_each_group_unknown_dates_stay_last_in_either_direction_size_sorting_uses_known_candidate_bytes_partial_sizes_are_lower_bounds"))
@@ -48,7 +49,7 @@ struct ResultFiltersView: View {
         #endif
     }
 
-    private func binding<Value>(_ path: WritableKeyPath<ReviewResultQuery, Value>) -> Binding<Value> {
+    private func binding<Value>(_ path: WritableKeyPath<CoreReviewQuery, Value>) -> Binding<Value> {
         Binding(get: { model.resultQuery[keyPath: path] }, set: {
             var query = model.resultQuery
             query[keyPath: path] = $0
@@ -59,7 +60,7 @@ struct ResultFiltersView: View {
 
 struct GroupInformationView: View {
     let model: ReviewModel
-    let group: DuplicateGroup
+    let group: ReviewGroupDetail
     @Environment(\.dismiss) private var dismiss
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
 
@@ -104,7 +105,7 @@ struct GroupInformationView: View {
                         Text(L10n.text("app_arg1_actual_pair_comparisons", Int64(group.sceneEvidence?.count ?? 0)))
                         DisclosureGroup(L10n.text("app_pair_details")) {
                             ForEach(Array((group.sceneEvidence ?? []).enumerated()), id: \.offset) { index, evidence in
-                                Text(L10n.text("app_pair_arg1_feature_distance_arg2", Int64(index + 1), Double(evidence.featureDistance).formatted(.number.precision(.fractionLength(3)))))
+                                Text(L10n.text("app_pair_arg1_feature_distance_arg2", Int64(index + 1), Double(evidence.distance).formatted(.number.precision(.fractionLength(3)))))
                                 if evidence.sharedBurst { Text(L10n.text("app_shared_photos_burst_identifier")) }
                             }
                         }
@@ -123,7 +124,7 @@ struct GroupInformationView: View {
                                 Text(evidence.bitDepth.map { L10n.text("app_arg1_bit", Int64($0)) } ?? L10n.text("app_bit_depth_unknown"))
                             } else { Text(L10n.text("app_resolution_and_bit_depth_unknown")) }
                             Text(asset.byteCount.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? L10n.text("app_size_unknown"))
-                            let date = asset.captureDate ?? evidence?.captureDate
+                            let date = asset.captureDate ?? evidence?.captureDate.map(Date.init(timeIntervalSince1970:))
                             Text(date.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? L10n.text("app_capture_date_unknown"))
                             if let quality = group.sceneQuality?[asset.id] {
                                 Text(L10n.text("app_thumbnail_focus_energy_arg1", quality.focusEnergy.formatted(.number.precision(.fractionLength(4)))))
@@ -142,7 +143,7 @@ struct GroupInformationView: View {
                        !model.selection(for: group.id).deleteAll {
                         Text(L10n.text("app_choose_and_confirm_a_keeper_before_estimating_candidate_size"))
                     } else {
-                        Text(group.sizeEstimate(removing: model.estimatedRemovals(for: group)).summary)
+                        Text(group.core.summary.estimate.summary)
                     }
                     Text(L10n.text("app_this_is_not_a_promise_of_immediately_released_device_storage_icloud_optimization_and_recently_deleted_affect_actual_free_space"))
                         .font(.caption).foregroundStyle(.secondary)
@@ -172,7 +173,7 @@ struct GroupInformationView: View {
         #endif
     }
 
-    private func reason(_ reason: RecommendationReason) -> String {
+    private func reason(_ reason: CoreRecommendationReason) -> String {
         let evidence = group.evidence?[group.recommendation.id]
         switch reason {
         case .focusSignal: return L10n.text("app_more_measured_thumbnail_edge_energy_at_the_same_image_dimensions_and_comparable_exposure_check_subject_focus_manually_intentional_blur_can_be_appropriate")
@@ -192,7 +193,7 @@ struct GroupInformationView: View {
     }
 }
 
-extension ReviewStatusFilter {
+extension CoreReviewStatusFilter {
     var title: String {
         switch self {
         case .active: L10n.text("app_all_except_kept")
@@ -205,7 +206,7 @@ extension ReviewStatusFilter {
     }
 }
 
-extension ReviewSort {
+extension CoreReviewSort {
     var title: String {
         switch self {
         case .stable: L10n.text("app_stable_order")
@@ -217,7 +218,7 @@ extension ReviewSort {
     }
 }
 
-extension DuplicateMatch {
+extension CoreMatch {
     var title: String {
         switch self {
         case .sceneSimilar: L10n.text("app_burst_similar_scene")
@@ -239,9 +240,9 @@ extension DuplicateMatch {
     }
 }
 
-extension SizeEstimate {
+extension CoreSizeEstimate {
     var summary: String {
-        let bytes = ByteCountFormatter.string(fromByteCount: knownBytes, countStyle: .file)
+        let bytes = ByteCountFormatter.string(fromByteCount: Int64(clamping: knownBytes), countStyle: .file)
         if knownCount == 0, unknownCount > 0 { return L10n.text("app_size_unknown") }
         if unknownCount > 0 { return L10n.text("app_at_least_arg1_plus_arg2_photos_of_unknown_size", Int64(unknownCount), bytes) }
         if overflowed { return L10n.text("app_at_least_arg1", bytes) }

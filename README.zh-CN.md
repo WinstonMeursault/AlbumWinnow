@@ -6,22 +6,36 @@ AlbumWinnow 是面向 macOS、iOS 和 iPadOS 的原生照片整理工具。应�
 
 ## 项目状态
 
-AlbumWinnow v1.7.0 修复保护记录异常、不可用来源恢复、关联路径解锁及跨来源错误归因，并减少核对状态写入成本。继续支持英文、简体中文、日语，面向 macOS 26、iOS 26、iPadOS 26 及以上版本，可扫描已授权的照片图库和文件夹，将重复照片分组，并支持核对后移入可恢复位置。
+AlbumWinnow v2.0.0 为本地交付候选，Apple 应用已接入 Rust Core 与 Swift/SwiftUI 平台服务，Apple Release 干净构建和本地平台验收已完成，尚未发布。继续支持英文、简体中文、日语及 macOS 26、iOS 26、iPadOS 26 以上版本。本轮同时交付 Kotlin 绑定和最小 Android 验证宿主；完整 Android 客户端及 Windows/Linux 应用不在范围内。
+
+v2 使用独立的来源/资源身份、核对与缓存数据库、签名和偏好。升级后需要重新设置来源与保护并重新扫描；不迁移、不自动删除 v1 数据，也不恢复其删除候选。保留既有应用 bundle ID。
+
+日常重启后，需要手动扫描，才会恢复与当前资源仍一致的已确认 v2 计划；重启不会自动开始扫描或删除照片。因进入后台中断的扫描可按已保存的授权续扫，主动取消会停止自动恢复。
 
 上一个 GitHub 正式版本 v1.0.0 可在 [GitHub Releases](https://github.com/WinstonMeursault/AlbumWinnow/releases/tag/v1.0.0) 下载发布产物。macOS 包包含兼容 Apple Silicon 与 Intel 的通用应用，采用临时签名；iOS/iPadOS IPA 未签名，需要签名后安装。
 
 ## 构建与运行
 
+先安装 rustup 管理的固定 Rust 工具链并选择完整 Xcode，再准备原生库，然后解析 Swift 包或打开工程：
+
+```sh
+Tools/Core/build-apple.sh debug
+```
+
+Apple slices、绑定再生成和 Android smoke 步骤见 [Core 构建说明](Tools/Core/README.md)。
+
 在 Xcode 中打开 `AlbumWinnow.xcodeproj`。运行 macOS 版时选择 **AlbumWinnow**，运行 iPhone 或 iPad 模拟器时选择 **AlbumWinnowMobile**。在**设置**的**扫描来源**分区启用照片图库或添加文件夹，再回到重复项页面点击**扫描**。
 
-也可以用 `swift build --package-path Packages/AlbumWinnowCore` 独立构建共享 Swift 包。
+也可以用 `swift build --package-path Packages/AlbumWinnowApple` 独立构建共享 Swift 包。
 
 ## 测试
 
-在 macOS 26 或更高版本上选用 Xcode 26 或更高版本，直接运行核心回归测试。
+准备原生库后，在 macOS 26 或更高版本上选用 Swift 6 和完整 Xcode 运行核心回归测试。
 
 ```sh
-swift test --package-path Packages/AlbumWinnowCore
+cargo test --workspace --locked
+swift test --package-path Packages/AlbumWinnowRust
+swift test --package-path Packages/AlbumWinnowApple
 ```
 
 随包图片均为生成的测试图集。测试覆盖字节一致、高位深图片、跨格式及跨分辨率匹配、局部变化、方向、增量扫描、取消、缓存恢复和测试副本的可恢复清理。GitHub Actions 在 Apple Silicon 和 Intel macOS 环境运行测试，并构建 macOS、iOS/iPadOS 应用。
@@ -36,11 +50,11 @@ Tests/run-app-tests.sh SIMULATOR_UDID
 
 可选的 Photos 相册范围用例需要在专用模拟器上设置 `TEST_RUNNER_ALBUMWINNOW_PHOTOS_FIXTURE=1` 才会运行，请求模拟器照片权限，并在其中保留生成的照片与相册样本；默认回归跳过该用例。
 
-## v1.7 可靠性与发布工具
+## 可靠性与发布工具
 
 不可用文件夹记录在重启后保留；设置提供重试、重新选择与明确移除，均保留原有锁定和只读策略。「已保存的保护」可管理当前结果之外的独立锁记录；解锁继承保护时先确认关联路径范围。解除保护不会恢复已取消的清理候选。可明确移除失效决定，有效选择及保护不受影响。
 
-文件身份记录损坏会禁用清理。核对状态数据库升级到 schema 3，以事务迁移决定为独立记录，导航位置单独保存；旧版应用不能读取新结构，降级前请备份。匹配行为和有效旧签名不变；决定签名版本与扫描缓存版本分别管理。
+v2 保护数据不可用或损坏时关闭清理。Rust 在 v2 数据库事务中保存决定、来源策略与核对位置，位置使用独立序列。重置进度保留 v2 锁与来源保护；不打开或迁移 v1 数据库与签名。
 
 macOS 原生回归入口为 `Tests/run-macos-tests.sh`，模拟器回归支持标准 iPhone/iPad。通用打包、IPAes 临时上传/原子发布及实际下载校验已纳入 [Tools/Release](Tools/Release/README.md)。构建成功不代表 macOS 已公证或 IPA 已签名。
 
@@ -86,7 +100,7 @@ Vision 特征距离是相似依据，不代表置信百分比或内容相同。�
 
 ## v1.1 核对进度与云端策略
 
-已确认计划、保留整组、稍后处理、照片锁定与核对位置独立于扫描缓存保存。重新启动会先重建扫描结果，再恢复有效决定，不会自动删除照片。未经 Confirm 的临时点选不保存为删除计划。**Skip** 只推迟处理，不撤销已有计划；**Group Actions** 可保留整组或撤销本组决定。长按或右键照片可锁定；锁定照片与选定保留照片一并留下，有任意受保护成员时不能 Delete All。实际执行清理也检查同一保护上下文，防止重叠目录或硬链接绕过保护。
+已确认计划、保留整组、稍后处理、照片锁定与核对位置独立于扫描缓存保存。重新启动后，需手动扫描以重建结果并恢复有效决定，不会自动删除照片。未经 Confirm 的临时点选不保存为删除计划。**Skip** 只推迟处理，不撤销已有计划；**Group Actions** 可保留整组或撤销本组决定。长按或右键照片可锁定；锁定照片与选定保留照片一并留下，有任意受保护成员时不能 Delete All。实际执行清理也检查同一保护上下文，防止重叠目录或硬链接绕过保护。
 
 概览提供 **Continue Review** 与 **Review Ten Groups**；保留整组默认隐藏，可通过 Review Options 查看。成员、资源版本或匹配证据变化会使旧删除决定失效。**Reset Review Progress** 重置决定但保留锁定；清除扫描缓存不删除核对状态。无法加载保护数据库或保存决定时，清理会被禁用。
 
@@ -99,7 +113,7 @@ Vision 特征距离是相似依据，不代表置信百分比或内容相同。�
 - 将匹配项分组供用户并排对比，结合画质、分辨率及 Live Photo 配对视频、编辑前原件等关联数据推荐保留版本。
 - 复用未变化资源的指纹，每次扫描重建分组，并在允许清理前检查资源变化。
 
-扫描会读取本地可用的图库资源，并在 Scan Issues 列出仅存于 iCloud 的照片。点击 **Download Pending Photos from iCloud** 可授权下载并重试这些项目。下载重试会重新读取所选资源，不因命中指纹缓存而跳过下载。重复项页面分别显示 iCloud 下载和扫描进度，并列出可用、失败和待处理数量。下载未全部完成时显示 **iCloud Download Incomplete**，并提示检查 Scan Issues。扫描结束后，重复项概览以瀑布流显示分组封面。点开一组即可在组内核对照片。在设置里打开 **Show Filenames in Review** 可显示文件名。详情页左滑进入下一组，右滑返回上一组。在 **Settings → Interaction → Group Transition** 中可选择平移、覆盖、淡化或无动画。点击想保留的照片后确认当前组，也可以跳过当前组。**Delete All** 会以红框预览整组删除。在 **Settings → Interaction → Review Button Layout** 中可以选择左手或右手布局，把确认按钮放在顺手的一侧。核对完成后，回到重复项概览，通过 **Confirm Cleanup** 检查并确认整批清理。在 iOS 和 iPadOS 上，因进入后台而中断的扫描会在回到前台后按已保存来源续扫，复用缓存指纹，并恢复此前已授权的待下载集合。主动取消会停止自动恢复。PhotoKit 提供具体错误时，Scan Issues 会保留系统错误说明、错误域和代码。扫描期间发生图库内容变化时，必须重新扫描后才能清理。更广泛的连拍分组等视觉相似照片整理功能计划在 v1.4 加入。
+扫描会读取本地可用的图库资源，并在 Scan Issues 列出仅存于 iCloud 的照片。点击 **Download Pending Photos from iCloud** 可授权下载并重试这些项目。下载重试会重新读取所选资源，不因命中指纹缓存而跳过下载。重复项页面分别显示 iCloud 下载和扫描进度，并列出可用、失败和待处理数量。下载未全部完成时显示 **iCloud Download Incomplete**，并提示检查 Scan Issues。扫描结束后，重复项概览以瀑布流显示分组封面。点开一组即可在组内核对照片。在设置里打开 **Show Filenames in Review** 可显示文件名。详情页左滑进入下一组，右滑返回上一组。在 **Settings → Interaction → Group Transition** 中可选择平移、覆盖、淡化或无动画。点击想保留的照片后确认当前组，也可以跳过当前组。**Delete All** 会以红框预览整组删除。在 **Settings → Interaction → Review Button Layout** 中可以选择左手或右手布局，把确认按钮放在顺手的一侧。核对完成后，回到重复项概览，通过 **Confirm Cleanup** 检查并确认整批清理。在 iOS 和 iPadOS 上，因进入后台而中断的扫描会在回到前台后按已保存来源续扫，复用缓存指纹，并恢复此前已授权的待下载集合。主动取消会停止自动恢复。PhotoKit 提供具体错误时，Scan Issues 会保留系统错误说明、错误域和代码。扫描期间发生图库内容变化时，必须重新扫描后才能清理。
 
 ## 匹配与清理
 
@@ -113,11 +127,11 @@ Vision 特征距离是相似依据，不代表置信百分比或内容相同。�
 
 ## 技术设计
 
-`AlbumWinnowCore` 以 Swift Package 形式供各平台的 SwiftUI 应用共享。PhotoKit 和 Foundation 分别用于访问系统图库和文件。BLAKE3 判断文件字节是否一致，文件夹资源采用流式读取。ImageIO 生成受限尺寸的缩略图，提供 pHash 和 dHash 候选，再通过多尺度像素核验区分同画面候选与存在局部差异的高度相似项。推荐算法保留原始分辨率并考虑位深。SQLite 和 GRDB 存储增量指纹，损坏缓存项会重新生成；下一次扫描完成后回收不再使用的来源缓存。Swift Concurrency 限制并行图片处理数量。详情与清理预览和概览缩略图共用按大小计费的队列：最多四个小请求，大文件或大小未知的图库预览单独执行。文件提供方允许时，文件夹预览使用安全文件映射，避免额外复制整份文件到堆内存；ImageIO 将普通解码预览限制在 1024 像素，可见放大细节限制在 2560 像素。**Settings → Storage → Clear Scan Cache** 可删除指纹缓存并压缩数据库以释放磁盘空间，保留照片与来源授权；下一次扫描将重新读取照片。
+Rust 负责指纹与字节身份、分类、重复和场景分组、推荐、核对状态、来源及别名保护、SQLite 存储和临时清理授权，通过 UniFFI 提供 Swift/Kotlin 绑定。`AlbumWinnowApple` 保留 PhotoKit/Foundation 访问、ImageIO/Core Image 解码、Vision 测量、书签授权与系统可恢复操作。SwiftUI 展示有界摘要并按需加载单组详情；原生回调跨 await 持有来源授权，只有核心当前有效的一次性票据能授权系统回收。保留 BLAKE3、感知哈希、多尺度像素核验和既有场景规则。Swift Concurrency 限制并行图片处理数量。详情与清理预览和概览缩略图共用按大小计费的队列：最多四个小请求，大文件或大小未知的图库预览单独执行。文件提供方允许时，文件夹预览使用安全文件映射，避免额外复制整份文件到堆内存；ImageIO 将普通解码预览限制在 1024 像素，可见放大细节限制在 2560 像素。**Settings → Storage → Clear Scan Cache** 可删除指纹缓存并压缩数据库以释放磁盘空间，保留照片与来源授权；下一次扫描将重新读取照片。
 
 ## 实现与验证状态
 
-识别核心、文件夹扫描、增量缓存、PhotoKit 接入、SwiftUI 核对、可恢复清理及 iOS/iPadOS 布局均已实现。候选检索采用按汉明距离分段的多索引。当前匹配使用感知哈希与多尺度像素核验，没有使用 Vision 特征向量。
+Apple 正式流程已接入 Rust。候选检索采用按汉明距离分段的多索引；重复照片分类使用感知哈希与多尺度像素核验，可选场景分组使用原生 Vision 测量。[迁移覆盖表](Tools/Core/TEST-COVERAGE.md)记录原断言的新位置。此开发状态不代表 v2 完整验收通过。开发中只运行受改动影响的必要检查，完整矩阵和干净构建留到候选交付前。
 
 `Tests/Performance` 提供确定性的全分辨率 JPEG 生成器及调用实际扫描引擎的基准程序。覆盖冷扫、未变化扫描、1% 资源变化和取消后的缓存恢复，并逐一核对已知重复配对。在新的本地目录生成素材：
 
@@ -128,12 +142,12 @@ python3 -m venv .local/performance-venv
 swift run --package-path Tests/Performance -c release ScanBenchmark .local/benchmark-10000 10000 .local/benchmark-10000/results.json
 ```
 
-较大规模将数量改为 50000 或 100000，使用新目录，并预留磁盘空间。每张图片为 4032 × 3072，10 万张素材及两份指纹缓存约需 50 GB。RSS 为进程累计峰值；冷扫仅表示应用缓存为空，不会清空文件系统缓存。合成图用于验证规模和已知完全重复配对，不能代表自然照片识别准确率或 PhotoKit 端到端速度。
+先使用小集与 10,000 张；仅在发现规模问题时扩大到 50,000/100,000 张，并使用新目录、预留足够磁盘空间。每张图片为 4032 × 3072，10 万张素材及两份指纹缓存约需 50 GB。RSS 为进程累计峰值；冷扫仅表示应用缓存为空，不会清空文件系统缓存。合成图用于验证规模和已知完全重复配对，不能代表自然照片识别准确率或 PhotoKit 端到端速度。
 
 发布回归使用生成的测试图片和模拟器。iCloud 自动化测试在没有实际账户的条件下覆盖请求回调、取消竞争、错误传递及图库变化处理。这些测试不代表自然照片图库的完整准确率，也不代表所有设备、账户和网络条件下的性能。
 
 ## 许可证
 
-公开源码采用 GNU Affero General Public License 第 3 版。详见 [许可证](LICENSE)与[第三方许可声明](THIRD-PARTY-NOTICES.txt)。
+公开源码采用 GNU Affero General Public License 第 3 版。详见 [许可证](LICENSE)与[第三方许可声明](THIRD-PARTY-NOTICES.txt)。用 `python3 Tools/Core/notices.py` 生成当前锁定依赖声明，用 `--check` 检查一致性。
 
 [隐私政策](PRIVACY.md)说明图库访问、iCloud 下载与设备上的数据保存方式。

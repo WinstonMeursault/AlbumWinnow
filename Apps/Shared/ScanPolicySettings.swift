@@ -1,14 +1,14 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import SwiftUI
 
 struct ScanPolicySettings: View {
     let model: ReviewModel
     @State private var showingScope = false
-    @State private var first = "photos-library"
+    @State private var first = ""
     @State private var second = ""
 
     private var sources: [(id: String, name: String)] {
-        (model.photosEnabled && model.allowsPhotos ? [("photos-library", L10n.text("app_photos"))] : []) +
+        (model.photosEnabled && model.allowsPhotos ? model.photoSourceID.map { [($0, L10n.text("app_photos"))] } ?? [] : []) +
             model.folders.map { ($0.id, $0.name) }
     }
 
@@ -39,9 +39,9 @@ struct ScanPolicySettings: View {
         }
         .disabled(!model.canEditSources)
         .sheet(isPresented: $showingScope) { PhotoScopeEditor(model: model) }
-        .onAppear {
-            first = model.comparisonSides?.first ?? sources.first?.id ?? ""
-            second = model.comparisonSides?.second ?? sources.dropFirst().first?.id ?? ""
+        .onChange(of: sources.map(\.id), initial: true) {
+            first = model.comparisonSides?.first ?? (sources.contains { $0.id == first } ? first : sources.first?.id ?? "")
+            second = model.comparisonSides?.second ?? (sources.contains { $0.id == second } ? second : sources.dropFirst().first?.id ?? "")
         }
         Section(L10n.text("app_source_policy")) {
             Picker(L10n.text("app_quality_tie_preference"), selection: Binding(get: { model.preferredSource ?? "" }, set: {

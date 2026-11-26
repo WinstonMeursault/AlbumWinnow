@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import SwiftUI
 
 struct SavedProtectionSettings: View {
@@ -8,7 +8,7 @@ struct SavedProtectionSettings: View {
 
     var body: some View {
         Section(L10n.text("app_saved_protection")) {
-            ForEach(model.reviewState.locked.sorted { $0.source == $1.source ? $0.item < $1.item : $0.source < $1.source }, id: \.self) { id in
+            ForEach(model.savedLocks.sorted { $0.source == $1.source ? $0.item < $1.item : $0.source < $1.source }, id: \.self) { id in
                 VStack(alignment: .leading, spacing: 6) {
                     Label(id.item, systemImage: "lock.fill").textSelection(.enabled)
                     Text(model.sourceLabel(id.source)).font(.caption).foregroundStyle(.secondary)

@@ -8929,6 +8929,78 @@
         }
       }
     },
+    "core_request_rejected": {
+      "comment": "Typed core validation error",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This action could not be accepted. Check your selection and settings, then try again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この操作は受け付けられませんでした。選択した写真と設定を確認して、もう一度お試しください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法接受本次操作。请检查所选照片和设置后重试。"
+          }
+        }
+      }
+    },
+    "core_state_changed": {
+      "comment": "Rust rejected a stale state command",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The review state changed. Check the current group and try again."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認状態が変更されました。現在のグループを確認して、もう一度お試しください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "核对状态已更改。请检查当前组后重试。"
+          }
+        }
+      }
+    },
+    "core_write_failed": {
+      "comment": "Rust transaction did not commit",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your change could not be saved. Cleanup is disabled. Check available storage and reopen the app."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更を保存できませんでした。クリーンアップは無効です。空き容量を確認してアプリを開き直してください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存本次更改，清理已停用。请检查可用存储空间后重新打开应用。"
+          }
+        }
+      }
+    },
     "diagnostic_original_detail": {
       "comment": "App presentation of structured failure or platform privacy purpose; diagnostic text is user/system data.",
       "extractionState": "manual",
@@ -9333,6 +9405,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "所选相册不可用或已改名，请检查“照片相册与日期”。扫描范围没有扩大到全部照片。"
+          }
+        }
+      }
+    },
+    "v2_setup_message": {
+      "comment": "Fresh v2 workspace, no legacy import or automatic actions",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version 2 starts with a new workspace. Choose your scan sources and set up photo locks and read-only sources again, then scan. Previous review decisions and cleanup candidates are not imported. Previous data is left untouched. Nothing is scanned, downloaded or moved automatically."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バージョン 2 は新しい作業領域で開始します。スキャン対象、写真のロック、読み取り専用の対象を設定し直してからスキャンしてください。以前の確認結果や削除候補は読み込まれません。以前のデータはそのまま残ります。自動でスキャン、ダウンロード、写真の移動を行うことはありません。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版本 2 使用全新工作区。请重新选择扫描来源、设置照片锁和只读来源，然后重新扫描。旧版核对决定和删除候选不会导入，旧数据保持原样。应用不会自动扫描、下载或移动照片。"
+          }
+        }
+      }
+    },
+    "v2_setup_title": {
+      "comment": "First v2 setup notice",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up AlbumWinnow 2"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AlbumWinnow 2 の設定"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设置 AlbumWinnow 2"
           }
         }
       }

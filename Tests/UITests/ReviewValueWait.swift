@@ -14,4 +14,14 @@ extension XCUIApplication {
         launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         launch()
     }
+
+    func reviewContextAction(_ title: String, on photo: XCUIElement) -> XCUIElement {
+        photo.press(forDuration: 1)
+        let action = descendants(matching: .any).matching(identifier: title).firstMatch
+        // Simulator input can miss the first long press while the card settles.
+        // Retry only that gesture; the action and resulting protection still must pass.
+        if !action.waitForExistence(timeout: 2) { photo.press(forDuration: 2) }
+        XCTAssertTrue(action.waitForExistence(timeout: 5), debugDescription)
+        return action
+    }
 }

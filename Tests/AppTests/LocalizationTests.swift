@@ -1,4 +1,4 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
 import XCTest
 @testable import AlbumWinnowAcceptance
 
@@ -52,9 +52,9 @@ final class LocalizationTests: XCTestCase {
     }
 
     func testKnownFailuresUseStructuredReasonsAndUnknownDiagnosticsRemainLiteral() {
-        XCTAssertEqual(L10n.cleanupFailure(.inaccessible), "This photo is no longer accessible from its source.")
-        XCTAssertEqual(L10n.cleanupFailure(.cleanup(.readOnlySource)), L10n.error(CleanupError.readOnlySource))
-        XCTAssertEqual(L10n.cleanupFailure(.cleanup(.userProtected)), L10n.error(CleanupError.userProtected))
+        XCTAssertEqual(L10n.cleanupReason(.inaccessible), "This photo is no longer accessible from its source.")
+        XCTAssertEqual(L10n.cleanupReason(.readOnlySource), L10n.error(CleanupError.readOnlySource))
+        XCTAssertEqual(L10n.cleanupReason(.userProtected), L10n.error(CleanupError.userProtected))
         XCTAssertEqual(L10n.error(CleanupError.protectedResources), CleanupError.protectedResources.localizedDescription)
         let detail = "100% \"camera\" {literal}\n原始情報"
         XCTAssertTrue(L10n.error(NSError(domain: "Fixture", code: 7, userInfo: [NSLocalizedDescriptionKey: detail])).contains(detail))

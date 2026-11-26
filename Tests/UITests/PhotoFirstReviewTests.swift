@@ -6,8 +6,8 @@ final class PhotoFirstReviewTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "slide",
-                               "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["-reviewAnimation", "slide",
+                               "-showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
 
         XCTAssertFalse(app.buttons["Cleanup History"].exists)
@@ -56,6 +56,7 @@ final class PhotoFirstReviewTests: XCTestCase {
 
         configureHand("Left Hand")
         app.terminate()
+        app.launchArguments.append("--preserve-review-state")
         app.launchInEnglish()
         configureHand("Left Hand", change: false)
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
@@ -204,7 +205,7 @@ final class PhotoFirstReviewTests: XCTestCase {
     func testClearScanCachePreservesSourcesAndAllowsScanningAgain() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
         app.buttons["Settings"].tap()
         let clear = app.buttons["clear-scan-cache"]
@@ -231,7 +232,7 @@ final class PhotoFirstReviewTests: XCTestCase {
     func testCleanupFailuresShowPhotosAndReasonsWithoutHistory() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO",
+        app.launchArguments = ["-showReviewFilenames", "NO",
                                "--cleanup-outcome-fixture", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
         XCTAssertTrue(app.staticTexts["No Photos Moved"].waitForExistence(timeout: 90), app.debugDescription)
@@ -252,7 +253,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["-showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
@@ -297,7 +298,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
+        app.launchArguments = ["-showReviewFilenames", "NO", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
         let scan = app.buttons["start-scan"]
         XCTAssertTrue(scan.waitForExistence(timeout: 15) && scan.isEnabled)
@@ -348,7 +349,7 @@ final class PhotoFirstReviewTests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.showReviewFilenames", "NO",
+        app.launchArguments = ["-showReviewFilenames", "NO",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launchInEnglish()
         let scan = app.buttons["start-scan"]

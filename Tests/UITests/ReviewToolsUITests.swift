@@ -6,7 +6,7 @@ final class ReviewToolsUITests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
+        app.launchArguments = ["-reviewAnimation", "none",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
         let scan = app.buttons["start-scan"]
@@ -43,7 +43,7 @@ final class ReviewToolsUITests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
+        app.launchArguments = ["-reviewAnimation", "none",
                                "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launchInEnglish()
         let scan = app.buttons["start-scan"]

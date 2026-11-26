@@ -1,4 +1,5 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
+import AlbumWinnowRust
 import SwiftUI
 
 struct DuplicateMasonry {
@@ -11,7 +12,7 @@ struct DuplicateMasonry {
     let height: CGFloat
     private let tallestTile: CGFloat
 
-    init(groups: [DuplicateGroup] = [], width: CGFloat = 0, columns: Int = 1, captionHeight: CGFloat = 0) {
+    init(groups: [ReviewGroupSummary] = [], width: CGFloat = 0, columns: Int = 1, captionHeight: CGFloat = 0) {
         let gap: CGFloat = 12
         let inset: CGFloat = 16
         let cardWidth = max(1, (width - 2 * inset - CGFloat(columns - 1) * gap) / CGFloat(columns))
@@ -59,14 +60,14 @@ struct DuplicateMasonry {
 }
 
 struct DuplicateGallery<Header: View>: View {
-    let groups: [DuplicateGroup]
+    let groups: [ReviewGroupSummary]
     let model: ReviewModel
     let selectedGroup: AssetID?
     let narrowed: Bool
     let isActive: Bool
     let bottomRequest: Int
     let header: () -> Header
-    let open: (DuplicateGroup) -> Void
+    let open: (ReviewGroupSummary) -> Void
 
     @Environment(\.displayScale) private var displayScale
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -184,7 +185,7 @@ struct DuplicateGallery<Header: View>: View {
 }
 
 private struct GalleryCard: View {
-    let group: DuplicateGroup
+    let group: ReviewGroupSummary
     let model: ReviewModel
     let isOpen: Bool
     let imageHeight: CGFloat
@@ -204,11 +205,10 @@ private struct GalleryCard: View {
     }
 
     var body: some View {
-        let selection = model.selection(for: group.id)
-        let asset = selection.keepID.flatMap { id in group.duplicates.first { $0.id == id }?.asset } ?? group.preferred
+        let asset = group.preview
         let key = isActive ? GalleryThumbnailKey(asset: asset, pixelSize: pixelSize) : nil
-        let count = group.duplicates.count + 1
-        let selected = selection.selected.count
+        let count = group.count
+        let selected = group.selectedCount
 
         Button(action: open) {
             VStack(spacing: 0) {

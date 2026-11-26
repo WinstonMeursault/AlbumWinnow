@@ -7,8 +7,8 @@ final class LocalizationUITests: XCTestCase {
     func testJapaneseAtLargestTextInDarkAppearance() { exercise(language: "ja", locale: "ja_JP", largest: true) }
 
     private func launch(_ app: XCUIApplication, language: String, locale: String, largest: Bool = false, preserve: Bool = false) {
-        app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AlbumWinnow.reviewAnimation", "none",
-                               "-AlbumWinnow.showReviewFilenames", "NO", "-AppleLanguages", "(\(language))", "-AppleLocale", locale,
+        app.launchArguments = ["-reviewAnimation", "none",
+                               "-showReviewFilenames", "NO", "-AppleLanguages", "(\(language))", "-AppleLocale", locale,
                                "-UIPreferredContentSizeCategoryName", largest ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
         if language == "ja" { app.launchArguments.append("--dark-appearance") }
         if preserve { app.launchArguments.append("--preserve-review-state") }
@@ -110,8 +110,7 @@ final class LocalizationUITests: XCTestCase {
         XCTAssertTrue(a.waitForExistence(timeout: 10))
         a.tap()
         XCTAssertTrue(a.waitForReviewValue("Selected"))
-        a.press(forDuration: 1)
-        app.buttons["Lock Photo"].tap()
+        app.reviewContextAction("Lock Photo", on: a).tap()
         XCTAssertTrue(a.waitForReviewValue("Locked, must be kept"))
         app.buttons["review-confirm"].tap()
         XCTAssertTrue(a.waitForNonExistence(timeout: 10))
@@ -120,6 +119,10 @@ final class LocalizationUITests: XCTestCase {
         for (language, locale, locked, title) in [("zh-Hans", "zh_CN", "已锁定，必须保留", "确认清理"), ("ja", "ja_JP", "ロック済み、必ず残します", "整理内容の確認")] {
             app.terminate()
             launch(app, language: language, locale: locale, preserve: true)
+            let scan = app.buttons["start-scan"]
+            XCTAssertTrue(scan.waitForExistence(timeout: 15))
+            XCTAssertFalse(app.buttons["review-batch-cleanup"].exists, "Relaunch requires an explicit scan before restoring candidates")
+            scan.tap()
             XCTAssertTrue(app.buttons["review-batch-cleanup"].waitForExistence(timeout: 90), app.debugDescription)
             cover.tap()
             XCTAssertTrue(a.waitForReviewValue(locked))

@@ -1,10 +1,11 @@
-import AlbumWinnowCore
+import AlbumWinnowApple
+import AlbumWinnowRust
 import SwiftUI
 
 struct LibraryView: View {
     let model: ReviewModel
     @State private var showingFilters = false
-    @State private var reviewQueue: [DuplicateGroup] = []
+    @State private var reviewQueue: [ReviewGroupSummary] = []
     @State private var batchSummary: String?
     @State private var selectedGroup: AssetID?
     @State private var reviewPath: [AssetID] = []
@@ -70,9 +71,14 @@ struct LibraryView: View {
                 reviewPath.removeAll()
             }
         }
+        .defaultAppStorage(model.preferenceStore)
+        .task { await model.bootstrap() }
+        .alert(L10n.text("v2_setup_title"), isPresented: Binding(get: { model.showingSetupNotice }, set: { _ in })) {
+            Button(L10n.text("app_ok")) { Task { await model.acknowledgeSetupNotice() } }
+        } message: { Text(L10n.text("v2_setup_message")) }
         .sheet(isPresented: $showingFilters) { ResultFiltersView(model: model) }
         .sheet(isPresented: $showingIssues) { issues }
-        .sheet(isPresented: $confirmingCleanup) { cleanupConfirmation }
+        .sheet(isPresented: $confirmingCleanup, onDismiss: { Task { await model.cancelCleanup() } }) { cleanupConfirmation }
         #if os(iOS)
         .sheet(isPresented: $showingSettings) {
             NavigationStack {
@@ -96,13 +102,13 @@ struct LibraryView: View {
         }
     }
 
-    private func group(withID id: AssetID?) -> DuplicateGroup? {
+    private func group(withID id: AssetID?) -> ReviewGroupSummary? {
         guard let id else { return nil }
-        return model.result?.groups.first { $0.id == id }
+        return (reviewQueue.isEmpty ? model.visibleGroups : reviewQueue).first { $0.id == id }
     }
 
     private var review: some View {
-        ReviewPager(groups: reviewQueue.isEmpty ? model.result?.groups ?? [] : reviewQueue, selectedID: $selectedGroup,
+        ReviewPager(groups: reviewQueue.isEmpty ? model.visibleGroups : reviewQueue, selectedID: $selectedGroup,
                     model: model, finishReview: finishReview)
     }
 
@@ -233,9 +239,9 @@ struct LibraryView: View {
         }
     }
 
-    private func scanResults(_ result: ScanResult, wide: Bool, narrowed: Bool) -> some View {
+    private func scanResults(_ result: ReviewScanPresentation, wide: Bool, narrowed: Bool) -> some View {
         Group {
-            if result.groups.isEmpty {
+            if model.totalGroupCount == 0 {
                 VStack(spacing: 0) {
                     scanSummaryCard(result)
                     ContentUnavailableView(model.reviewCollection == .similarScenes ? L10n.text("app_no_similar_photos_found") : L10n.text("app_no_duplicates_found"), systemImage: "checkmark.circle")
@@ -264,12 +270,12 @@ struct LibraryView: View {
         }
     }
 
-    private func scanSummaryCard(_ result: ScanResult) -> some View {
+    private func scanSummaryCard(_ result: ReviewScanPresentation) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             scanSummary(result)
             Picker(L10n.text("app_review_collection"), selection: Binding(get: { model.reviewCollection }, set: { model.setReviewCollection($0) })) {
-                Text(L10n.text("app_duplicates")).tag(ReviewCollection.duplicates)
-                Text(L10n.text("app_similar_photos_caption")).tag(ReviewCollection.similarScenes)
+                Text(L10n.text("app_duplicates")).tag(CoreReviewCollection.duplicates)
+                Text(L10n.text("app_similar_photos_caption")).tag(CoreReviewCollection.similarScenes)
             }
             .pickerStyle(.segmented)
             .disabled(!model.canEditSources)
@@ -277,18 +283,18 @@ struct LibraryView: View {
             if model.reviewCollection == .similarScenes && !model.similarScenesEnabled {
                 Text(L10n.text("app_find_burst_frames_and_similar_scenes_in_a_separate_review_queue_all_cleanup_requires_your_confirmation"))
                     .font(.caption)
-                Button(L10n.text("app_scan_similar_photos")) { model.setSimilarScenesEnabled(true); model.scan() }
+                Button(L10n.text("app_scan_similar_photos")) { Task { await model.enableScenesAndScan() } }
                     .disabled(!model.canScan)
             }
             if !model.protectionAvailable {
                 Label(L10n.text("app_protection_unavailable_cleanup_disabled"), systemImage: "lock.trianglebadge.exclamationmark")
             }
-            Text(L10n.text("app_arg1_of_arg2_groups_shown_arg3", Int64(model.visibleGroups.count), Int64(result.groups.count), model.resultQuery.sort.title))
+            Text(L10n.text("app_arg1_of_arg2_groups_shown_arg3", Int64(model.visibleGroups.count), Int64(model.totalGroupCount), model.resultQuery.sort.title))
                 .font(.caption).foregroundStyle(.secondary)
             if let notice = model.reviewNotice { Text(notice).font(.caption).foregroundStyle(.secondary) }
             if let batchSummary { Text(batchSummary).font(.caption) }
-            if model.visibleGroups.isEmpty, !result.groups.isEmpty {
-                if model.collectionGroups.isEmpty {
+            if model.visibleGroups.isEmpty, model.totalGroupCount != 0 {
+                if model.collectionGroupCount == 0 {
                     Text(model.reviewCollection == .similarScenes ? L10n.text("app_no_similar_scenes_found_in_this_scan") : L10n.text("app_no_duplicates_found_in_this_scan"))
                         .font(.subheadline)
                 } else {
@@ -297,10 +303,10 @@ struct LibraryView: View {
                 }
             }
             HStack {
-                Button(L10n.text("app_continue_review")) { openSession(result, limit: nil) }
+                Button(L10n.text("app_continue_review")) { Task { await openSession(limit: nil) } }
                     .disabled(model.resumeGroup == nil || !model.canClean)
                 Menu(L10n.text("app_review_options"), systemImage: "ellipsis.circle") {
-                    Button(L10n.text("app_review_ten_groups")) { openSession(result, limit: 10) }
+                    Button(L10n.text("app_review_ten_groups")) { Task { await openSession(limit: 10) } }
                     Button(L10n.text("app_filter_and_sort")) { showingFilters = true }
                 }
                 .disabled(!model.canClean)
@@ -311,16 +317,16 @@ struct LibraryView: View {
         .padding(.top, 8)
     }
 
-    private func openSession(_ result: ScanResult, limit: Int?) {
+    private func openSession(limit: Int?) async {
         let visible = model.visibleGroups
-        let pending = visible.filter { model.status(for: $0) == .pending || model.status(for: $0) == .deferred }
-        reviewQueue = limit.map { Array(pending.prefix($0)) } ?? visible
-        selectedGroup = limit == nil ? visible.first { $0.id == model.resumeGroup?.id }?.id ?? pending.first?.id : reviewQueue.first?.id
+        let pending = await model.pendingReview(limit: limit ?? 1)
+        reviewQueue = limit == nil ? visible : pending
+        selectedGroup = limit == nil ? model.resumeGroup?.id ?? pending.first?.id : reviewQueue.first?.id
         if let selectedGroup { reviewPath = [selectedGroup] }
         batchSummary = nil
     }
 
-    private func scanSummary(_ result: ScanResult) -> some View {
+    private func scanSummary(_ result: ReviewScanPresentation) -> some View {
         let shape = RoundedRectangle(cornerRadius: 18)
         return HStack(spacing: 12) {
             ZStack {
@@ -341,10 +347,10 @@ struct LibraryView: View {
                     .font(.caption)
                 if model.resultsStale {
                     Text(L10n.text("app_the_photo_library_changed_scan_again_before_cleanup"))
-                } else if result.groups.isEmpty {
+                } else if model.totalGroupCount == 0 {
                     Text(L10n.text("app_arg1_photos_checked", Int64(result.scanned + result.reused)))
                 } else {
-                    Text(result.groups.count == 1 ? L10n.text("app_1_duplicate_group_to_review") : L10n.text("app_arg1_duplicate_groups_to_review", Int64(result.groups.count)))
+                    Text(model.totalGroupCount == 1 ? L10n.text("app_1_duplicate_group_to_review") : L10n.text("app_arg1_duplicate_groups_to_review", Int64(model.totalGroupCount)))
                 }
             }
             .font(.subheadline)
@@ -402,7 +408,6 @@ struct LibraryView: View {
 
     private var cleanupConfirmation: some View {
         let groups = model.cleanupGroups
-        let pairs = groups.flatMap(\.pairs)
         let hiddenCount = model.hiddenCandidateCount
         return NavigationStack {
             GeometryReader { geometry in
@@ -413,7 +418,7 @@ struct LibraryView: View {
                                 .font(.subheadline)
                         }
                         ForEach(groups) { group in
-                            CleanupGroupPreview(model: model, group: group, width: max(1, geometry.size.width - 32),
+                            CleanupGroupPreview(model: model, reference: group, width: max(1, geometry.size.width - 32),
                                                 heightBudget: min(420, max(240, geometry.size.height * 0.55)))
                         }
                     }
@@ -429,14 +434,14 @@ struct LibraryView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L10n.text("app_move_selected"), role: .destructive) {
-                        confirmingCleanup = false
-                        Task { await model.applyCleanup(pairs) }
+                        Task { await model.applyCleanup(); confirmingCleanup = false }
                     }
-                    .disabled(!model.canClean || pairs.isEmpty)
+                    .disabled(!model.canClean || model.cleanupPlan?.itemCount == nil || model.cleanupPlan?.itemCount == 0)
                     .accessibilityIdentifier("confirm-cleanup")
                 }
             }
         }
+        .task { await model.prepareCleanup() }
         #if os(macOS)
         .frame(minWidth: 480, idealWidth: 720, minHeight: 340, idealHeight: 640)
         #endif
@@ -466,7 +471,7 @@ struct LibraryView: View {
                 }
                 ForEach(Array((model.result?.issues ?? []).filter { $0.reason != .cloudSkipped }.enumerated()), id: \.offset) { _, issue in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(issue.id.source.hasPrefix("folder:") ? URL(fileURLWithPath: issue.id.item).lastPathComponent : L10n.text("app_photos"))
+                        Text(issue.id.source != model.photoSourceID ? URL(fileURLWithPath: issue.id.item).lastPathComponent : L10n.text("app_photos"))
                         Text(issue.reason.label).font(.caption).foregroundStyle(.secondary)
                         if let detail = issue.detail {
                             Text(L10n.text("diagnostic_original_detail", detail)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
@@ -502,7 +507,9 @@ private extension AssetIssueReason {
 
 private struct CleanupGroupPreview: View {
     let model: ReviewModel
-    let group: ReviewModel.CleanupGroup
+    let reference: ReviewCleanupGroup
+    @State private var group: ReviewCleanupPreview?
+    @State private var loadingError: String?
     let width: CGFloat
     let heightBudget: CGFloat
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilenames = false
@@ -511,10 +518,11 @@ private struct CleanupGroupPreview: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            if let group {
             if group.keep != nil {
-                Text(L10n.text("app_will_remove_arg1", Int64(group.pairs.count))).font(.headline)
+                Text(L10n.text("app_will_remove_arg1", Int64(group.removing.count))).font(.headline)
             } else {
-                Label(L10n.text("app_delete_entire_group_arg1_photos", Int64(group.pairs.count)), systemImage: "trash")
+                Label(L10n.text("app_delete_entire_group_arg1_photos", Int64(group.removing.count)), systemImage: "trash")
                     .font(.headline)
                     .foregroundStyle(.red)
             }
@@ -528,13 +536,13 @@ private struct CleanupGroupPreview: View {
                     .foregroundStyle(.secondary)
             }
             let assets = group.retained
-            let photos = assets + group.pairs.map(\.remove)
+            let photos = assets + group.removing
             let columns = CleanupPreviewLayout.columns(width: width, minimumColumnWidth: minimumPreviewWidth)
             LazyVStack(alignment: .leading, spacing: 12) {
                 ForEach(Array(stride(from: 0, to: photos.count, by: columns)), id: \.self) { start in
                     CleanupPreviewLayout(heightBudget: heightBudget, minimumColumnWidth: minimumPreviewWidth) {
                         ForEach(photos[start..<min(start + columns, photos.count)]) { asset in
-                            CleanupPhotoPreview(model: model, asset: asset, removing: group.pairs.contains { $0.remove.id == asset.id },
+                            CleanupPhotoPreview(model: model, asset: asset, removing: group.removing.contains { $0.id == asset.id },
                                                 showFilename: showFilenames) {
                                 enlarged = asset
                             }
@@ -543,6 +551,12 @@ private struct CleanupGroupPreview: View {
                 }
             }
             Divider()
+            } else if let loadingError { Text(loadingError).foregroundStyle(.secondary) }
+            else { ProgressView() }
+        }
+        .task(id: reference.id) {
+            do { group = try await model.cleanupPreview(reference) }
+            catch { loadingError = L10n.error(error) }
         }
         .sheet(item: $enlarged) { asset in
             CleanupPhotoDetail(model: model, asset: asset)
@@ -663,7 +677,7 @@ private struct CleanupPhotoPreview: View {
                 PhotoMetadataView(preview: preview)
                 if showFilename { Text(asset.name).font(.caption).lineLimit(1) }
                 let source = model.sourceLabel(asset.id.source)
-                let destination = asset.id.source == "photos-library" ? L10n.text("app_recently_deleted") : L10n.text("app_trash")
+                let destination = asset.id.source == model.photoSourceID ? L10n.text("app_recently_deleted") : L10n.text("app_trash")
                 Text(removing ? "\(source) → \(destination)" : source)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -736,10 +750,10 @@ private struct CleanupPhotoDetail: View {
 }
 
 struct CleanupOutcomeView: View {
-    let items: [CleanupItem]
+    let items: [ReviewCleanupOutcome]
     let model: ReviewModel
 
-    private var incomplete: [CleanupItem] { items.filter { $0.status == .failed || $0.status == .skipped } }
+    private var incomplete: [ReviewCleanupOutcome] { items.filter { !$0.moved } }
     private var moved: Int { items.count - incomplete.count }
 
     var body: some View {
@@ -749,7 +763,7 @@ struct CleanupOutcomeView: View {
                       systemImage: incomplete.isEmpty ? "checkmark.circle" : "exclamationmark.triangle")
                     .font(.headline)
                     .foregroundStyle(incomplete.isEmpty ? Color.primary : .orange)
-                Text(L10n.text("app_arg1_moved_arg2_skipped_arg3_failed", Int64(moved), Int64(items.filter { $0.status == .skipped }.count), Int64(items.filter { $0.status == .failed }.count)))
+                Text(L10n.text("app_arg1_moved_arg2_skipped_arg3_failed", Int64(moved), Int64(items.filter { $0.skipped }.count), Int64(items.filter { !$0.moved && !$0.skipped }.count)))
                     .foregroundStyle(.secondary)
             }
             if !incomplete.isEmpty {
@@ -765,7 +779,7 @@ struct CleanupOutcomeView: View {
 }
 
 private struct CleanupIssueRow: View {
-    let item: CleanupItem
+    let item: ReviewCleanupOutcome
     let number: Int
     let model: ReviewModel
     @AppStorage(ReviewModel.showReviewFilenamesKey) private var showFilename = false
@@ -785,26 +799,26 @@ private struct CleanupIssueRow: View {
                 .clipShape(.rect(cornerRadius: 8))
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(L10n.text("app_photo_preview"))
-                .accessibilityIdentifier("cleanup-issue-preview-\(item.pair.remove.name)")
+                .accessibilityIdentifier("cleanup-issue-preview-\(item.asset.name)")
             VStack(alignment: .leading, spacing: 4) {
-                if showFilename { Text(item.pair.remove.name).lineLimit(2) }
+                if showFilename { Text(item.asset.name).lineLimit(2) }
                 else { Text(L10n.text("app_photo_arg1", Int64(number))) }
-                Text(item.status == .skipped ? L10n.text("app_skipped") : L10n.text("app_failed")).fontWeight(.medium)
-                if let reason = item.failureReason {
-                    Text(L10n.cleanupFailure(reason)).textSelection(.enabled)
+                Text(item.skipped ? L10n.text("app_skipped") : L10n.text("app_failed")).fontWeight(.medium)
+                if case let .skipped(reason) = item.core.outcome {
+                    Text(L10n.cleanupReason(reason)).textSelection(.enabled)
                 } else {
-                    Text(L10n.text("app_the_photo_could_not_be_moved_scan_again_to_retry"))
+                    Text(item.failureReason.map(L10n.cleanupReason) ?? L10n.text("app_the_photo_could_not_be_moved_scan_again_to_retry"))
                     if let detail = item.detail {
                         Text(L10n.text("diagnostic_original_detail", detail)).textSelection(.enabled)
                     }
                 }
-                Text(model.sourceLabel(item.pair.remove.id.source)).foregroundStyle(.secondary)
+                Text(model.sourceLabel(item.asset.id.source)).foregroundStyle(.secondary)
             }
             .font(.subheadline)
             .fixedSize(horizontal: false, vertical: true)
         }
         .task(id: item.id) {
-            image = try? await model.thumbnail(for: item.pair.remove, pixelSize: 256)
+            image = try? await model.thumbnail(for: item.asset, pixelSize: 256)
         }
     }
 }

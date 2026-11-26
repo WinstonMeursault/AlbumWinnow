@@ -6,7 +6,8 @@ final class MacReviewUITests: XCTestCase {
         continueAfterFailure = false
         for (language, locale, complete, protection) in [("en", "en_US", "Scan Complete", "Saved Protection"), ("zh-Hans", "zh_CN", "扫描完成", "已保存的保护"), ("ja", "ja_JP", "スキャン完了", "保存済みの保護")] {
             let app = XCUIApplication()
-            app.launchArguments = ["-AlbumWinnow.photosEnabled", "NO", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+            app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", locale,
+                                   "-ApplePersistenceIgnoreState", "YES"]
             app.launch()
             let scan = app.buttons["start-scan"]
             XCTAssertTrue(scan.waitForExistence(timeout: 20), app.debugDescription)

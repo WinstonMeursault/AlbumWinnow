@@ -1,0 +1,8 @@
+[bindings.swift]
+module_name = "AlbumWinnowRust"
+ffi_module_name = "AlbumWinnowRustFFI"
+generate_module_map = true
+
+[bindings.kotlin]
+package_name = "org.albumwinnow.core"
+cdylib_name = "albumwinnow_ffi"
