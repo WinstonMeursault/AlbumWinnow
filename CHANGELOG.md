@@ -8,7 +8,7 @@ v2 使用独立的来源/照片身份、核对与缓存数据库、签名和偏�
 
 ## 架构与功能
 
-Apple 应用采用 Rust Core + Swift/SwiftUI：Rust 统一负责识别、分组、推荐、核对状态、SQLite 存储和清理授权，Apple 端负责 PhotoKit、解码、Vision、书签授权与系统可恢复操作。保留既有识别规则、保护语义、iPhone/iPad/macOS 功能和英文、简体中文、日语界面。本次统一用户文档、构建说明、接口合同及测试覆盖说明，移除过期的开发阶段文字。
+Apple 应用采用 Rust Core + Swift/SwiftUI：Rust 统一负责识别、分组、推荐、核对状态、SQLite 存储和清理授权，Apple 端负责 PhotoKit、解码、Vision、书签授权与系统可恢复操作。保留既有识别规则、保护语义、iPhone/iPad/macOS 功能和英文、简体中文、日语界面。本次统一用户文档、构建说明、接口合同及测试覆盖说明，移除过期的开发阶段文字。同时修正 CI 环境依赖、跨工具链的测试资源打包和授权测试入口，保留原测试断言。
 
 仓库提供生成的 Swift/Kotlin 绑定及最小 Android 验证宿主；Android 组件用于核心接入验证，不是完整照片客户端。本版不包含 Windows/Linux 应用。
 

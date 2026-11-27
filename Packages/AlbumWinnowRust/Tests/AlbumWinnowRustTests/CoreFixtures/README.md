@@ -2,6 +2,12 @@
 
 All media is generated test material. No personal photos are included.
 
+This directory is the canonical corpus, stored inside the Swift package so
+SwiftPM copies real resources on supported Xcode versions. `Tests/CoreFixtures`
+is a shared alias for Rust, Android and Xcode test hosts. Do not replace this
+package resource directory with a symlink: older SwiftPM copies that link into
+the bundle without its target.
+
 - `swift-v1-fingerprints.json` and the root `.rgba` files freeze the v1 Swift
   fingerprint result at `ba4f125`. Each buffer is 128 × 128 RGBA8, sRGB,
   premultiplied alpha, top row first, stride 512. Hashes and means are exact;

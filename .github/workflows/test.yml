@@ -22,7 +22,7 @@ jobs:
       matrix:
         runner: [macos-26, macos-26-intel]
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - name: Validate localization sources and generated catalogs

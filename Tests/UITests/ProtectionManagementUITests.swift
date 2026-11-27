@@ -7,7 +7,7 @@ final class ProtectionManagementUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["--unavailable-folder-fixture", ]
         app.launchInEnglish()
-        let settings = app.buttons["open-settings"]
+        let settings = app.navigationBars.buttons["open-settings"].firstMatch
         XCTAssertTrue(settings.waitForExistence(timeout: 15))
         settings.tap()
         let alert = app.alerts["Scan Sources"]
@@ -44,7 +44,7 @@ final class ProtectionManagementUITests: XCTestCase {
         XCTAssertTrue(photo.waitForReviewValue("Locked, must be kept"))
         if app.buttons["close-review"].exists { app.buttons["close-review"].tap() }
         else { app.navigationBars.firstMatch.buttons.firstMatch.tap() }
-        app.buttons["open-settings"].tap()
+        app.navigationBars.buttons["open-settings"].firstMatch.tap()
         let remove = app.buttons["Remove This Saved Lock"]
         for _ in 0..<15 {
             if remove.isHittable && remove.frame.midY < app.frame.maxY - 140 { break }
