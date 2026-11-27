@@ -10,7 +10,7 @@ final class SimulatorPhotosPermissionTests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = []
         app.launchInEnglish()
-        let settings = app.buttons["open-settings"]
+        let settings = app.navigationBars.buttons["open-settings"].firstMatch
         XCTAssertTrue(settings.waitForExistence(timeout: 20))
         settings.tap()
         let toggle = app.switches["photos-source"]

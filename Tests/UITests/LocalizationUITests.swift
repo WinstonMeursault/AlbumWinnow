@@ -24,8 +24,8 @@ final class LocalizationUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
         launch(app, language: language, locale: locale, largest: largest)
-        XCTAssertTrue(app.buttons["open-settings"].waitForExistence(timeout: 15))
-        app.buttons["open-settings"].tap()
+        XCTAssertTrue(app.navigationBars.buttons["open-settings"].firstMatch.waitForExistence(timeout: 15))
+        app.navigationBars.buttons["open-settings"].firstMatch.tap()
         XCTAssertTrue(app.navigationBars[translated(language, "Settings", "设置", "設定")].exists)
         let about = app.buttons["about-open-source"]
         for _ in 0..<20 {
